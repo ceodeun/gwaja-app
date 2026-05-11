@@ -12,6 +12,8 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <style>
 :root{
   --cream:#F5EFE0;--cookie:#C8873A;--choco:#5C3317;
@@ -402,6 +404,53 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:var(--c
         </div>
       </div>
     </div>
+    <!-- 캘린더 탭 -->
+    <div id="st-calendar" class="tab-panel">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+        <button onclick="prevMonth()" style="background:none;border:none;cursor:pointer;font-size:20px;color:var(--muted);">‹</button>
+        <h3 id="cal-title" style="font-size:17px;font-weight:700;color:var(--choco);">2026년 5월</h3>
+        <button onclick="nextMonth()" style="background:none;border:none;cursor:pointer;font-size:20px;color:var(--muted);">›</button>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-bottom:12px;">
+        <div style="text-align:center;font-size:10px;font-weight:700;color:var(--peach);padding:5px 0;">일</div>
+        <div style="text-align:center;font-size:10px;font-weight:700;color:var(--muted);padding:5px 0;">월</div>
+        <div style="text-align:center;font-size:10px;font-weight:700;color:var(--muted);padding:5px 0;">화</div>
+        <div style="text-align:center;font-size:10px;font-weight:700;color:var(--muted);padding:5px 0;">수</div>
+        <div style="text-align:center;font-size:10px;font-weight:700;color:var(--muted);padding:5px 0;">목</div>
+        <div style="text-align:center;font-size:10px;font-weight:700;color:var(--muted);padding:5px 0;">금</div>
+        <div style="text-align:center;font-size:10px;font-weight:700;color:var(--muted);padding:5px 0;">토</div>
+      </div>
+      <div id="cal-grid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-bottom:16px;"></div>
+      <div class="section-head"><h3>📚 이달 수업</h3></div>
+      <div id="cal-lessons">
+        <div style="text-align:center;padding:20px;color:var(--muted);font-size:13px;">
+          수업 성사 등록 후 일정이 여기 표시돼요
+        </div>
+      </div>
+    </div>
+
+    <!-- 지도 탭 -->
+    <div id="st-map" class="tab-panel" style="padding:0;display:flex;flex-direction:column;">
+      <!-- 필터 -->
+      <div style="padding:10px 14px;background:white;border-bottom:1px solid var(--border);display:flex;gap:6px;overflow-x:auto;">
+        <button class="chip on" id="mf-all" onclick="filterMap('all',this)">전체</button>
+        <button class="chip" id="mf-cafe" onclick="filterMap('cafe',this)">☕ 카페</button>
+        <button class="chip" id="mf-study" onclick="filterMap('study',this)">📚 스터디룸</button>
+        <button class="chip" id="mf-school" onclick="filterMap('school',this)">🏫 학교</button>
+      </div>
+      <!-- 검색 -->
+      <div style="padding:8px 14px;background:white;border-bottom:1px solid var(--border);">
+        <input id="map-search" placeholder="🔍 지역 검색... (예: 신촌, 강남)" style="width:100%;padding:9px 14px;background:var(--cream);border:1.5px solid var(--border);border-radius:100px;font-size:13px;font-family:inherit;outline:none;" oninput="searchMap()">
+      </div>
+      <!-- 지도 -->
+      <div id="study-map" style="flex:1;min-height:350px;"></div>
+      <!-- 하단 장소 리스트 -->
+      <div style="padding:14px;background:white;border-top:1px solid var(--border);max-height:200px;overflow-y:auto;">
+        <div style="font-size:13px;font-weight:700;color:var(--choco);margin-bottom:10px;">📍 주변 과외 장소</div>
+        <div id="place-list-map"></div>
+      </div>
+    </div>
+
     <div id="st-chat" class="tab-panel" style="padding:0;">
       <div id="st-chat-list">
         <div style="text-align:center;padding:50px 20px;color:var(--muted);">
@@ -438,7 +487,8 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:var(--c
   <div class="bottom-bar">
     <button class="tab-btn on" id="st-b-home" onclick="stTab('home')"><span class="ti">🏠</span><span class="tl">홈</span></button>
     <button class="tab-btn" id="st-b-search" onclick="stTab('search')"><span class="ti">🔍</span><span class="tl">검색</span></button>
-    <button class="tab-btn" id="st-b-chat" onclick="stTab('chat')"><span class="ti">💬</span><span class="tl">채팅</span></button>
+    <button class="tab-btn" id="st-b-calendar" onclick="stTab('calendar')"><span class="ti">📅</span><span class="tl">캘린더</span></button>
+    <button class="tab-btn" id="st-b-map" onclick="stTab('map')"><span class="ti">📍</span><span class="tl">지도</span></button>
     <button class="tab-btn" id="st-b-me" onclick="stTab('me')"><span class="ti">🧑</span><span class="tl">나</span></button>
   </div>
 </div>
@@ -1059,6 +1109,8 @@ function goMain(data) {
     loadStudentProposals();
     loadChatList('student');
     loadNotifications('student');
+    calYear = new Date().getFullYear();
+    calMonth = new Date().getMonth();
   } else if (role === 'teacher') {
     document.getElementById('tc-hi').innerHTML = name + '님,<br>오늘도 달콤한 수업!';
     document.getElementById('tc-name').textContent = name;
@@ -1187,12 +1239,14 @@ function go(id) {
   window.scrollTo(0,0);
 }
 function stTab(n) {
-  ['home','search','chat','me'].forEach(t => {
+  ['home','search','calendar','map','chat','me'].forEach(t => {
     document.getElementById('st-'+t).classList.toggle('active', t===n);
     document.getElementById('st-b-'+t).classList.toggle('on', t===n);
   });
   if (n === 'search') loadTeachers();
   if (n === 'chat') loadChatList('student');
+  if (n === 'calendar') renderCalendar();
+  if (n === 'map') initMap();
 }
 function tcTab(n) {
   ['home','students','manage','chat','me'].forEach(t => {
@@ -1533,6 +1587,142 @@ function loadNotifications(role) {
         });
       }
     });
+}
+
+// ── 캘린더 ──
+let calYear = new Date().getFullYear();
+let calMonth = new Date().getMonth();
+
+function prevMonth() { calMonth--; if(calMonth<0){calMonth=11;calYear--;} renderCalendar(); }
+function nextMonth() { calMonth++; if(calMonth>11){calMonth=0;calYear++;} renderCalendar(); }
+
+function renderCalendar() {
+  const months = ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
+  document.getElementById('cal-title').textContent = calYear + '년 ' + months[calMonth];
+
+  const grid = document.getElementById('cal-grid');
+  const first = new Date(calYear, calMonth, 1).getDay();
+  const days = new Date(calYear, calMonth+1, 0).getDate();
+  const today = new Date();
+
+  let cells = '';
+  for(let i=0; i<first; i++) cells += '<div></div>';
+  for(let d=1; d<=days; d++) {
+    const isToday = d===today.getDate() && calMonth===today.getMonth() && calYear===today.getFullYear();
+    cells += `<div style="aspect-ratio:1;display:flex;align-items:center;justify-content:center;border-radius:10px;font-size:13px;cursor:pointer;${isToday?'background:var(--cookie);color:white;font-weight:700;':''}">${d}</div>`;
+  }
+  grid.innerHTML = cells;
+
+  // 성사된 수업 목록 로드
+  if (!currentUser) return;
+  db.collection('matches').where('studentUid', '==', currentUser.uid).where('status','==','active').get().then(snap => {
+    const lessons = document.getElementById('cal-lessons');
+    if (snap.empty) {
+      lessons.innerHTML = '<div style="text-align:center;padding:20px;color:var(--muted);font-size:13px;">수업 성사 등록 후 일정이 여기 표시돼요</div>';
+      return;
+    }
+    let html2 = '';
+    snap.forEach(d => {
+      const m = d.data();
+      html2 += `<div style="background:white;border-radius:14px;padding:14px;margin-bottom:10px;border-left:4px solid var(--cookie);box-shadow:var(--shadow);">
+        <div style="font-size:12px;font-weight:700;color:var(--cookie);margin-bottom:3px;">📚 ${m.subject||'과목 미정'}</div>
+        <div style="font-size:13px;font-weight:700;color:var(--choco);">${m.teacherName||'선생님'}</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:2px;">시작일: ${m.startDate||'미정'}</div>
+      </div>`;
+    });
+    lessons.innerHTML = html2;
+  });
+}
+
+// ── 지도 ──
+let mapInstance = null;
+let mapMarkers = [];
+let currentMapFilter = 'all';
+
+const PLACES = [
+  {name:'이화다방', type:'cafe', lat:37.5590, lng:126.9443, addr:'서대문구 이화여대길 75', tags:'Wi-Fi·콘센트·뷰맛집'},
+  {name:'북카페 파오', type:'cafe', lat:37.5584, lng:126.9460, addr:'서대문구 이화여대길 34', tags:'Wi-Fi·조용'},
+  {name:'캐치카페 신촌', type:'cafe', lat:37.5563, lng:126.9372, addr:'서대문구 연세로 8-1', tags:'학생할인·조용'},
+  {name:'포텐셜 스터디카페', type:'study', lat:37.5581, lng:126.9384, addr:'서대문구 명물길 32', tags:'24시간·개인좌석'},
+  {name:'프레쉬 스터디카페', type:'study', lat:37.5573, lng:126.9376, addr:'서대문구 명물길 10', tags:'24시간·저렴'},
+  {name:'마커닛 스터디룸', type:'study', lat:37.5579, lng:126.9377, addr:'서대문구 창천동 31', tags:'프라이빗룸·방음'},
+  {name:'이화여자대학교', type:'school', lat:37.5619, lng:126.9468, addr:'서대문구 이화여대길 52', tags:'선생님 편의'},
+  {name:'연세대학교', type:'school', lat:37.5664, lng:126.9387, addr:'서대문구 연세로 50', tags:''},
+  {name:'고려대학교', type:'school', lat:37.5893, lng:127.0325, addr:'성북구 안암로 145', tags:''},
+  {name:'강남 토즈', type:'study', lat:37.5020, lng:127.0270, addr:'강남구 테헤란로', tags:'프리미엄·Wi-Fi'},
+  {name:'스타벅스 강남역', type:'cafe', lat:37.4979, lng:127.0276, addr:'강남구 강남대로', tags:'Wi-Fi·넓음'},
+  {name:'서울대학교', type:'school', lat:37.4648, lng:126.9572, addr:'관악구 관악로 1', tags:''},
+];
+
+function initMap() {
+  if (mapInstance) { mapInstance.invalidateSize(); renderPlaceList(); return; }
+  setTimeout(() => {
+    mapInstance = L.map('study-map', { center:[37.5590, 126.9430], zoom:14, zoomControl:false });
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution:'© OpenStreetMap', maxZoom:19
+    }).addTo(mapInstance);
+    L.control.zoom({position:'topright'}).addTo(mapInstance);
+    // CSS 필터로 파스텔
+    const style = document.createElement('style');
+    style.textContent = '.leaflet-tile-pane{filter:saturate(0.7) brightness(1.05);}';
+    document.head.appendChild(style);
+    addMarkers();
+    renderPlaceList();
+  }, 100);
+}
+
+function addMarkers() {
+  mapMarkers.forEach(m => mapInstance.removeLayer(m));
+  mapMarkers = [];
+  const colors = {cafe:'#FF8A70', study:'#A89BE8', school:'#C8873A'};
+  const emojis = {cafe:'☕', study:'📚', school:'🏫'};
+  PLACES.forEach(p => {
+    if (currentMapFilter !== 'all' && p.type !== currentMapFilter) return;
+    const icon = L.divIcon({
+      className:'',
+      html:`<div style="width:32px;height:32px;background:${colors[p.type]};border-radius:50%;display:flex;align-items:center;justify-content:center;border:2.5px solid white;box-shadow:0 2px 8px rgba(0,0,0,.2);font-size:14px;">${emojis[p.type]}</div>`,
+      iconSize:[32,32], iconAnchor:[16,32], popupAnchor:[0,-32]
+    });
+    const m = L.marker([p.lat, p.lng], {icon})
+      .addTo(mapInstance)
+      .bindPopup(`<div style="font-family:'Noto Sans KR',sans-serif;min-width:160px;">
+        <div style="font-size:14px;font-weight:700;margin-bottom:4px;">${p.name}</div>
+        <div style="font-size:11px;color:#9A7E65;margin-bottom:4px;">📍 ${p.addr}</div>
+        ${p.tags?`<div style="font-size:10px;color:#C8873A;">${p.tags}</div>`:''}
+      </div>`);
+    mapMarkers.push(m);
+  });
+}
+
+function filterMap(type, btn) {
+  currentMapFilter = type;
+  document.querySelectorAll('#st-map .chip').forEach(c => c.classList.remove('on'));
+  btn.classList.add('on');
+  if (mapInstance) addMarkers();
+  renderPlaceList();
+}
+
+function searchMap() {
+  const q = document.getElementById('map-search').value.trim().toLowerCase();
+  if (!q || !mapInstance) return;
+  const found = PLACES.find(p => p.name.includes(q) || p.addr.includes(q));
+  if (found) mapInstance.flyTo([found.lat, found.lng], 16, {duration:1});
+}
+
+function renderPlaceList() {
+  const list = document.getElementById('place-list-map');
+  if (!list) return;
+  const filtered = currentMapFilter === 'all' ? PLACES : PLACES.filter(p => p.type === currentMapFilter);
+  const emojis = {cafe:'☕', study:'📚', school:'🏫'};
+  const colors = {cafe:'#FFE8E4', study:'#EDE7F6', school:'#FFF3E0'};
+  list.innerHTML = filtered.map(p => `
+    <div style="display:flex;align-items:center;gap:10px;padding:8px;background:${colors[p.type]};border-radius:10px;margin-bottom:6px;cursor:pointer;" onclick="${mapInstance?`mapInstance.flyTo([${p.lat},${p.lng}],16)`:''}">
+      <span style="font-size:20px;">${emojis[p.type]}</span>
+      <div style="flex:1;">
+        <div style="font-size:13px;font-weight:700;color:var(--choco);">${p.name}</div>
+        <div style="font-size:11px;color:var(--muted);">${p.addr}</div>
+      </div>
+    </div>`).join('');
 }
 
 // ── 스케줄 ──
