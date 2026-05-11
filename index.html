@@ -749,16 +749,18 @@ window.doLogout = async () => {
 
 // ── 역할 선택 저장 ──
 window.saveRole = async () => {
-  // 역할 선택 값을 window에서 가져오기
-  if (window._selectedRole) currentRole = window._selectedRole;
-  if (!currentRole) { showToast('역할을 선택해주세요 🍪'); return; }
+  const role = window._selectedRole;
+  if (!role) { showToast('역할을 선택해주세요 🍪'); return; }
+  currentRole = role;
   showLoading(true);
   try {
-    await setDoc(doc(db, 'users', currentUser.uid), { role: currentRole }, { merge: true });
+    const snap = await getDoc(doc(db, 'users', currentUser.uid));
+    const name = snap.data()?.name || '사용자';
+    await setDoc(doc(db, 'users', currentUser.uid), { role, name }, { merge: true });
     showLoading(false);
-    if (currentRole === 'teacher') go('s-teacher-setup');
-    else goMain({ role: currentRole });
-  } catch(e) { showLoading(false); showToast('저장 중 오류가 발생했어요'); }
+    if (role === 'teacher') go('s-teacher-setup');
+    else goMain({ role, name });
+  } catch(e) { showLoading(false); showToast('저장 중 오류: ' + e.message); }
 };
 
 // ── 선생님 프로필 저장 ──
@@ -865,19 +867,17 @@ window.sendChatReq = async () => {
 // ── 메인 화면 이동 ──
 function goMain(data) {
   const role = data?.role || currentRole;
+  const name = data?.name || '사용자';
   if (role === 'student') {
-    const name = data?.name || window._userName || '학생';
     document.getElementById('st-welcome').innerHTML = `${name}님,<br>찰떡 선생님을 찾아봐요!`;
     document.getElementById('st-profile-name').textContent = name;
     go('s-student');
-    searchTeachers(); // 선생님 목록 로드
+    searchTeachers();
   } else if (role === 'teacher') {
-    const name = data?.name || window._userName || '선생님';
     document.getElementById('tc-welcome').innerHTML = `${name}님,<br>오늘도 달콤한 수업!`;
     document.getElementById('tc-profile-name').textContent = name;
     go('s-teacher');
   } else if (role === 'parent') {
-    const name = data?.name || window._userName || '학부모님';
     document.getElementById('pr-profile-name').textContent = name;
     go('s-parent');
   }
@@ -897,18 +897,11 @@ function go(id) {
 }
 
 // ── 역할 선택 ──
-let _selectedRole = null;
 function pickRole(el, role) {
   document.querySelectorAll('.role-card').forEach(c => c.classList.remove('selected'));
   el.classList.add('selected');
-  _selectedRole = role;
-  window._currentRole = role; // module scope에서 접근할 수 있게
-  // module의 currentRole 업데이트를 위해 저장
-  document.body.dataset.role = role;
+  window._selectedRole = role;
 }
-
-// saveRole을 module에서 정의했으므로 pickRole이 role을 전달해야 함
-// saveRole은 module에서 처리 (위에서 window._selectedRole 사용)
 
 // ── 탭 전환 ──
 function stTab(n) {
