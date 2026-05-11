@@ -132,6 +132,15 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:var(--c
 .toast.show{opacity:1;}
 
 .overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:200;display:none;align-items:center;justify-content:center;padding:24px;}
+.req-card{background:white;border-radius:16px;padding:16px;margin-bottom:12px;border:1.5px solid var(--border);box-shadow:var(--shadow);}
+.req-card .rh{display:flex;align-items:center;gap:12px;margin-bottom:10px;}
+.req-card .rav{width:46px;height:46px;border-radius:50%;background:var(--cream);display:flex;align-items:center;justify-content:center;font-size:26px;}
+.req-card h4{font-size:14px;font-weight:700;color:var(--choco);}
+.req-card p{font-size:12px;color:var(--muted);}
+.new-tag{background:var(--peach);color:white;font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;margin-left:6px;}
+.req-actions{display:flex;gap:8px;}
+.accept-btn{flex:1;padding:10px;background:var(--cookie);color:white;border:none;border-radius:100px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;}
+.reject-btn{padding:10px 14px;background:transparent;color:var(--muted);border:1.5px solid var(--border);border-radius:100px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;}
 .overlay.on{display:flex;}
 .modal{background:white;border-radius:24px;padding:28px 22px;text-align:center;width:100%;max-width:300px;}
 .modal-icon{font-size:56px;margin-bottom:12px;display:block;}
@@ -274,6 +283,53 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:var(--c
   </div>
 </div>
 
+<!-- 학생 프로필 설정 -->
+<div id="s-ssetup" class="screen">
+  <div style="background:linear-gradient(160deg,var(--cookie),var(--choco));padding:40px 24px 24px;color:white;">
+    <h2 style="font-size:22px;font-weight:900;margin-bottom:4px;">🎒 학생 정보 설정</h2>
+    <p style="font-size:13px;opacity:.8;">이름은 매칭 전까지 공개되지 않아요 🔒</p>
+  </div>
+  <div style="padding:18px;flex:1;overflow-y:auto;padding-bottom:40px;">
+    <div class="profile-section">
+      <h3>📚 학교 정보</h3>
+      <label class="label" style="margin-top:0;">학교 이름</label>
+      <input class="inp" id="ss-school" placeholder="예) 방배중학교">
+      <label class="label">학년</label>
+      <select class="inp" id="ss-grade">
+        <option value="">학년 선택</option>
+        <option>중학교 1학년</option>
+        <option>중학교 2학년</option>
+        <option>중학교 3학년</option>
+        <option>고등학교 1학년</option>
+        <option>고등학교 2학년</option>
+        <option>고등학교 3학년</option>
+        <option>재수생</option>
+      </select>
+      <label class="label">지역</label>
+      <input class="inp" id="ss-location" placeholder="예) 서울 서초구">
+      <label class="label">희망 과목</label>
+      <input class="inp" id="ss-subjects" placeholder="예) 수학, 영어">
+    </div>
+    <div class="profile-section">
+      <h3>📊 현재 성적대</h3>
+      <p style="font-size:12px;color:var(--muted);margin-bottom:10px;">선생님에게 익명으로 표시돼요</p>
+      <select class="inp" id="ss-grade-level">
+        <option value="">성적대 선택</option>
+        <option>1등급</option>
+        <option>2등급</option>
+        <option>3등급</option>
+        <option>4등급</option>
+        <option>5등급 이하</option>
+        <option>성적 없음 (초등/중등)</option>
+      </select>
+    </div>
+    <button class="btn btn-cookie" onclick="saveStudent()" style="margin-top:8px;">프로필 저장하기 🎒</button>
+    <p style="text-align:center;margin-top:12px;font-size:12px;color:var(--muted);">
+      <a onclick="db.collection('users').doc(currentUser.uid).get().then(s=>goMain(s.data()))" style="cursor:pointer;">나중에 하기 →</a>
+    </p>
+  </div>
+</div>
+
 <!-- 학생 메인 -->
 <div id="s-student" class="screen">
   <div class="topbar">
@@ -296,6 +352,10 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:var(--c
         <div class="quick-cell" onclick="toast('준비 중 🍪')"><div class="qi">📅</div><div class="ql">수업 일정</div></div>
         <div class="quick-cell" onclick="toast('준비 중 🍪')"><div class="qi">💬</div><div class="ql">채팅</div></div>
         <div class="quick-cell" onclick="toast('준비 중 🍪')"><div class="qi">🎯</div><div class="ql">목표</div></div>
+      </div>
+      <div class="section-head"><h3>📬 선생님 수업 제안</h3></div>
+      <div id="proposal-list">
+        <div style="text-align:center;padding:20px;color:var(--muted);font-size:13px;">아직 수업 제안이 없어요</div>
       </div>
       <div class="section-head"><h3>🎓 선생님 찾기</h3><a onclick="stTab('search')" style="font-size:12px;color:var(--cookie);cursor:pointer;">전체보기</a></div>
       <p style="font-size:13px;color:var(--muted);text-align:center;padding:20px;">검색 탭에서 선생님을 찾아보세요! 🔍</p>
@@ -372,9 +432,25 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:var(--c
         <div style="font-size:11px;opacity:.75;margin-top:4px;">학생 연결 후 수익이 표시돼요</div>
       </div>
       <div class="section-head"><h3>🔔 대화 요청</h3></div>
-      <div style="text-align:center;padding:30px;color:var(--muted);">
-        <div style="font-size:32px;margin-bottom:8px;">💬</div>
-        <div style="font-size:13px;">아직 대화 요청이 없어요</div>
+      <div id="req-list">
+        <div style="text-align:center;padding:30px;color:var(--muted);">
+          <div style="font-size:32px;margin-bottom:8px;">💬</div>
+          <div style="font-size:13px;">아직 대화 요청이 없어요<br>학생이 요청을 보내면 여기 표시돼요</div>
+        </div>
+      </div>
+    </div>
+    <div id="tc-students" class="tab-panel">
+      <div class="search-bar">
+        <input class="search-inp" id="ts-inp" placeholder="🔍 학교, 지역, 과목 검색..." oninput="loadStudents()">
+      </div>
+      <div style="background:#FFF8EE;border-radius:12px;padding:10px 14px;margin-bottom:14px;font-size:12px;color:var(--cookie);">
+        🔒 학생 이름은 매칭 수락 전까지 공개되지 않아요
+      </div>
+      <div id="s-list">
+        <div style="text-align:center;padding:40px;color:var(--muted);">
+          <div style="font-size:36px;margin-bottom:10px;">🔍</div>
+          <div>학생을 검색해보세요!</div>
+        </div>
       </div>
     </div>
     <div id="tc-chat" class="tab-panel">
@@ -410,6 +486,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:var(--c
   </div>
   <div class="bottom-bar">
     <button class="tab-btn on" id="tc-b-home" onclick="tcTab('home')"><span class="ti">🏠</span><span class="tl">홈</span></button>
+    <button class="tab-btn" id="tc-b-students" onclick="tcTab('students')"><span class="ti">🔍</span><span class="tl">학생 찾기</span></button>
     <button class="tab-btn" id="tc-b-chat" onclick="tcTab('chat')"><span class="ti">💬</span><span class="tl">채팅</span></button>
     <button class="tab-btn" id="tc-b-me" onclick="tcTab('me')"><span class="ti">🧑</span><span class="tl">나</span></button>
   </div>
@@ -578,10 +655,9 @@ function saveRole() {
     .then(() => {
       showLoad(false);
       if (selectedRole === 'teacher') go('s-tsetup');
+      else if (selectedRole === 'student') go('s-ssetup');
       else {
-        db.collection('users').doc(currentUser.uid).get().then(snap => {
-          goMain(snap.data());
-        });
+        db.collection('users').doc(currentUser.uid).get().then(snap => goMain(snap.data()));
       }
     })
     .catch(e => { showLoad(false); toast('저장 실패: ' + e.message); });
@@ -614,6 +690,56 @@ function saveTeacher() {
     toast('프로필 저장 완료! 🎓');
     db.collection('users').doc(currentUser.uid).get().then(snap => goMain(snap.data()));
   }).catch(e => { showLoad(false); toast('저장 실패: ' + e.message); });
+}
+
+// ── 학생 목록 로드 (선생님용 - 익명) ──
+function loadStudents() {
+  const q = (document.getElementById('ts-inp').value || '').trim().toLowerCase();
+  db.collection('students').get().then(snap => {
+    const list = document.getElementById('s-list');
+    if (!list) return;
+    const students = [];
+    snap.forEach(d => {
+      const s = d.data();
+      if (!q || (s.school||'').includes(q) || (s.location||'').includes(q) || (s.subjects||'').includes(q) || (s.grade||'').includes(q)) {
+        students.push(s);
+      }
+    });
+    if (!students.length) {
+      list.innerHTML = '<div style="text-align:center;padding:40px;color:var(--muted);"><div style="font-size:36px;margin-bottom:10px;">🔍</div><div>검색 결과가 없어요</div></div>';
+      return;
+    }
+    list.innerHTML = students.map(s => `
+      <div class="tcard">
+        <div class="tcard-top">
+          <div class="tcard-av">🎒</div>
+          <div class="tcard-body" style="flex:1;">
+            <h4>익명의 학생</h4>
+            <span class="school-badge">${s.school||'학교 미입력'} · ${s.grade||''}</span>
+            <div class="desc">📍 ${s.location||'지역 미입력'}</div>
+            <div class="tags">
+              ${(s.subjects||'').split(',').map(x=>`<span class="tag">${x.trim()}</span>`).join('')}
+              ${s.gradeLevel?`<span class="tag">📊 ${s.gradeLevel}</span>`:''}
+            </div>
+          </div>
+        </div>
+        <button class="chat-btn" style="background:var(--green);" onclick="proposeLesson('${s.uid}')">📚 수업 제안하기</button>
+      </div>
+    `).join('');
+  }).catch(e => console.error('loadStudents:', e));
+}
+
+// ── 수업 제안 (선생님 → 학생) ──
+function proposeLesson(studentUid) {
+  if (!currentUser) return;
+  db.collection('chatRequests').doc(currentUser.uid + '_propose_' + studentUid).set({
+    teacherUid: currentUser.uid,
+    studentUid: studentUid,
+    type: 'teacherPropose',
+    status: 'pending',
+    createdAt: new Date().toISOString()
+  }).then(() => toast('수업 제안을 보냈어요! 📚🍪'))
+    .catch(e => toast('제안 실패: ' + e.message));
 }
 
 // ── 선생님 목록 로드 ──
@@ -678,14 +804,124 @@ function goMain(data) {
     document.getElementById('st-name').textContent = name;
     go('s-student');
     loadTeachers();
+    loadStudentProposals();
   } else if (role === 'teacher') {
     document.getElementById('tc-hi').innerHTML = name + '님,<br>오늘도 달콤한 수업!';
     document.getElementById('tc-name').textContent = name;
     go('s-teacher');
+    loadRequests();
   } else if (role === 'parent') {
     document.getElementById('pr-hi').innerHTML = name + '님,<br>자녀 수업을 확인해요';
     go('s-parent');
   }
+}
+
+// ── 대화 요청 목록 로드 (선생님) ──
+function loadRequests() {
+  if (!currentUser) return;
+  db.collection('chatRequests')
+    .where('teacherUid', '==', currentUser.uid)
+    .where('status', '==', 'pending')
+    .get()
+    .then(snap => {
+      const list = document.getElementById('req-list');
+      if (!list) return;
+      if (snap.empty) {
+        list.innerHTML = '<div style="text-align:center;padding:30px;color:var(--muted);"><div style="font-size:32px;margin-bottom:8px;">💬</div><div style="font-size:13px;">아직 대화 요청이 없어요<br>학생이 요청을 보내면 여기 표시돼요</div></div>';
+        return;
+      }
+      // 학생 정보 가져오기
+      const promises = [];
+      snap.forEach(doc => {
+        const req = doc.data();
+        promises.push(
+          db.collection('users').doc(req.studentUid).get().then(usnap => ({
+            reqId: doc.id, req, student: usnap.data() || {}
+          }))
+        );
+      });
+      Promise.all(promises).then(items => {
+        list.innerHTML = items.map(({reqId, req, student}) => `
+          <div class="req-card">
+            <div class="rh">
+              <div class="rav">🎒</div>
+              <div>
+                <h4>${student.name || '학생'} <span class="new-tag">NEW</span></h4>
+                <p>${student.email || ''}</p>
+              </div>
+            </div>
+            <div class="req-actions">
+              <button class="accept-btn" onclick="acceptReq('${reqId}','${req.studentUid}','${student.name||'학생'}')">수락 🍪</button>
+              <button class="reject-btn" onclick="rejectReq('${reqId}')">거절</button>
+            </div>
+          </div>
+        `).join('');
+      });
+    })
+    .catch(e => console.error('loadRequests error:', e));
+}
+
+// ── 학생 수업 제안 알림 로드 ──
+function loadStudentProposals() {
+  if (!currentUser) return;
+  db.collection('chatRequests')
+    .where('studentUid', '==', currentUser.uid)
+    .where('type', '==', 'teacherPropose')
+    .where('status', '==', 'pending')
+    .get()
+    .then(snap => {
+      const list = document.getElementById('proposal-list');
+      if (!list || snap.empty) return;
+      const promises = [];
+      snap.forEach(doc => {
+        const req = doc.data();
+        promises.push(
+          db.collection('teachers').doc(req.teacherUid).get().then(tsnap => ({
+            reqId: doc.id, req, teacher: tsnap.data() || {}
+          }))
+        );
+      });
+      Promise.all(promises).then(items => {
+        list.innerHTML = items.map(({reqId, req, teacher}) => `
+          <div class="req-card">
+            <div class="rh">
+              <div class="rav">🎓</div>
+              <div>
+                <h4>${teacher.name||'선생님'} <span class="new-tag">제안</span></h4>
+                <p>${teacher.univ||''} · ${teacher.subjects||''} · ${(teacher.price||0).toLocaleString()}원/시간</p>
+              </div>
+            </div>
+            <div class="req-actions">
+              <button class="accept-btn" onclick="acceptProposal('${reqId}')">수락 🍪</button>
+              <button class="reject-btn" onclick="rejectReq('${reqId}')">거절</button>
+            </div>
+          </div>
+        `).join('');
+      });
+    }).catch(e => console.error('loadProposals:', e));
+}
+
+function acceptProposal(reqId) {
+  db.collection('chatRequests').doc(reqId).update({ status: 'accepted' })
+    .then(() => { toast('선생님과 연결됐어요! 🍪'); loadStudentProposals(); })
+    .catch(e => toast('수락 실패: ' + e.message));
+}
+
+// ── 요청 수락 ──
+function acceptReq(reqId, studentUid, studentName) {
+  db.collection('chatRequests').doc(reqId).update({ status: 'accepted' })
+    .then(() => {
+      toast(studentName + ' 학생과 연결됐어요! 🍪');
+      loadRequests();
+    })
+    .catch(e => toast('수락 실패: ' + e.message));
+}
+
+// ── 요청 거절 ──
+function rejectReq(reqId) {
+  db.collection('chatRequests').doc(reqId).update({ status: 'rejected' })
+    .then(() => { toast('거절했어요'); loadRequests(); })
+    .catch(e => toast('거절 실패: ' + e.message));
 }
 
 // ── 탭 전환 ──
@@ -702,10 +938,11 @@ function stTab(n) {
   if (n === 'search') loadTeachers();
 }
 function tcTab(n) {
-  ['home','chat','me'].forEach(t => {
+  ['home','students','chat','me'].forEach(t => {
     document.getElementById('tc-'+t).classList.toggle('active', t===n);
     document.getElementById('tc-b-'+t).classList.toggle('on', t===n);
   });
+  if (n === 'students') loadStudents();
 }
 
 // ── 이동거리 선택 ──
@@ -725,6 +962,27 @@ function toast(msg) {
   const t = document.getElementById('toast');
   t.textContent = msg; t.classList.add('show');
   setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// ── 학생 프로필 저장 ──
+function saveStudent() {
+  const school = document.getElementById('ss-school').value.trim();
+  const grade = document.getElementById('ss-grade').value;
+  const location = document.getElementById('ss-location').value.trim();
+  const subjects = document.getElementById('ss-subjects').value.trim();
+  const gradeLevel = document.getElementById('ss-grade-level').value;
+  if (!school || !grade) { toast('학교와 학년은 필수예요 🍪'); return; }
+  showLoad(true);
+  db.collection('students').doc(currentUser.uid).set({
+    uid: currentUser.uid, school, grade, location, subjects, gradeLevel,
+    createdAt: new Date().toISOString()
+  }).then(() => {
+    return db.collection('users').doc(currentUser.uid).update({ profileComplete: true });
+  }).then(() => {
+    showLoad(false);
+    toast('프로필 저장 완료! 🎒');
+    db.collection('users').doc(currentUser.uid).get().then(snap => goMain(snap.data()));
+  }).catch(e => { showLoad(false); toast('저장 실패: ' + e.message); });
 }
 
 // Enter 키
