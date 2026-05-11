@@ -10,6 +10,7 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
 <style>
 :root{
@@ -132,6 +133,16 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:var(--c
 .toast.show{opacity:1;}
 
 .overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:200;display:none;align-items:center;justify-content:center;padding:24px;}
+.msg-row{display:flex;gap:8px;align-items:flex-end;margin-bottom:4px;}
+.msg-row.me{flex-direction:row-reverse;}
+.bubble{max-width:70%;padding:10px 14px;border-radius:16px;font-size:14px;line-height:1.5;word-break:break-word;}
+.bubble.them{background:white;border-bottom-left-radius:4px;}
+.bubble.me{background:var(--cookie);color:white;border-bottom-right-radius:4px;}
+.msg-time{font-size:10px;color:var(--border);padding-bottom:2px;}
+.notif-badge{position:absolute;top:0;right:0;background:var(--peach);color:white;border-radius:50%;width:16px;height:16px;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;}
+.chat-list-item{background:white;padding:14px 18px;display:flex;gap:12px;align-items:center;border-bottom:1px solid var(--border);cursor:pointer;}
+.chat-list-item:hover{background:#FFF8EE;}
+.chat-av-sm{width:46px;height:46px;border-radius:50%;background:var(--cream);display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;}
 .req-card{background:white;border-radius:16px;padding:16px;margin-bottom:12px;border:1.5px solid var(--border);box-shadow:var(--shadow);}
 .req-card .rh{display:flex;align-items:center;gap:12px;margin-bottom:10px;}
 .req-card .rav{width:46px;height:46px;border-radius:50%;background:var(--cream);display:flex;align-items:center;justify-content:center;font-size:26px;}
@@ -371,11 +382,13 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:var(--c
         </div>
       </div>
     </div>
-    <div id="st-chat" class="tab-panel">
-      <div style="text-align:center;padding:50px 20px;color:var(--muted);">
-        <div style="font-size:40px;margin-bottom:12px;">💬</div>
-        <div style="font-size:15px;font-weight:700;margin-bottom:6px;">아직 채팅이 없어요</div>
-        <div style="font-size:13px;">선생님에게 대화를 요청해보세요!</div>
+    <div id="st-chat" class="tab-panel" style="padding:0;">
+      <div id="st-chat-list">
+        <div style="text-align:center;padding:50px 20px;color:var(--muted);">
+          <div style="font-size:40px;margin-bottom:12px;">💬</div>
+          <div style="font-size:15px;font-weight:700;margin-bottom:6px;">아직 채팅이 없어요</div>
+          <div style="font-size:13px;">선생님에게 대화를 요청해보세요!</div>
+        </div>
       </div>
     </div>
     <div id="st-me" class="tab-panel">
@@ -453,11 +466,13 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:var(--c
         </div>
       </div>
     </div>
-    <div id="tc-chat" class="tab-panel">
-      <div style="text-align:center;padding:50px 20px;color:var(--muted);">
-        <div style="font-size:40px;margin-bottom:12px;">💬</div>
-        <div style="font-size:15px;font-weight:700;margin-bottom:6px;">아직 채팅이 없어요</div>
-        <div style="font-size:13px;">학생이 대화를 요청하면 여기 표시돼요</div>
+    <div id="tc-chat" class="tab-panel" style="padding:0;">
+      <div id="tc-chat-list">
+        <div style="text-align:center;padding:50px 20px;color:var(--muted);">
+          <div style="font-size:40px;margin-bottom:12px;">💬</div>
+          <div style="font-size:15px;font-weight:700;margin-bottom:6px;">아직 채팅이 없어요</div>
+          <div style="font-size:13px;">요청을 수락하면 채팅이 시작돼요!</div>
+        </div>
       </div>
     </div>
     <div id="tc-me" class="tab-panel">
@@ -489,6 +504,23 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:var(--c
     <button class="tab-btn" id="tc-b-students" onclick="tcTab('students')"><span class="ti">🔍</span><span class="tl">학생 찾기</span></button>
     <button class="tab-btn" id="tc-b-chat" onclick="tcTab('chat')"><span class="ti">💬</span><span class="tl">채팅</span></button>
     <button class="tab-btn" id="tc-b-me" onclick="tcTab('me')"><span class="ti">🧑</span><span class="tl">나</span></button>
+  </div>
+</div>
+
+<!-- 채팅방 -->
+<div id="s-chatroom" class="screen" style="background:var(--cream);">
+  <div style="background:white;padding:14px 18px;display:flex;align-items:center;gap:12px;border-bottom:1.5px solid var(--border);position:sticky;top:0;z-index:50;">
+    <button id="chat-back" style="background:none;border:none;cursor:pointer;font-size:22px;color:var(--muted);">←</button>
+    <div style="width:36px;height:36px;border-radius:50%;background:var(--cream);display:flex;align-items:center;justify-content:center;font-size:20px;" id="chat-av">🎓</div>
+    <div>
+      <div style="font-size:15px;font-weight:700;color:var(--choco);" id="chat-name">상대방</div>
+      <div style="font-size:11px;color:var(--mint);font-weight:600;">● 온라인</div>
+    </div>
+  </div>
+  <div id="chat-msgs" style="flex:1;padding:16px 14px;display:flex;flex-direction:column;gap:10px;overflow-y:auto;min-height:0;"></div>
+  <div style="background:white;padding:10px 14px;display:flex;gap:8px;align-items:center;border-top:1.5px solid var(--border);">
+    <input id="chat-inp" placeholder="메시지 입력..." style="flex:1;padding:11px 14px;background:var(--cream);border:1.5px solid var(--border);border-radius:100px;font-size:14px;font-family:inherit;outline:none;" onkeydown="if(event.key==='Enter')sendMsg()">
+    <button onclick="sendMsg()" style="width:40px;height:40px;border-radius:50%;background:var(--cookie);color:white;border:none;cursor:pointer;font-size:16px;flex-shrink:0;">➤</button>
   </div>
 </div>
 
@@ -538,11 +570,13 @@ const firebaseConfig = {
   projectId: "gwaja-app",
   storageBucket: "gwaja-app.firebasestorage.app",
   messagingSenderId: "779948307676",
-  appId: "1:779948307676:web:5c9050b08df0c86ecff019"
+  appId: "1:779948307676:web:5c9050b08df0c86ecff019",
+  databaseURL: "https://gwaja-app-default-rtdb.asia-southeast1.firebasedatabase.app"
 };
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
+const rtdb = firebase.database();
 
 // ── 전역 변수 ──
 let currentUser = null;
@@ -805,11 +839,15 @@ function goMain(data) {
     go('s-student');
     loadTeachers();
     loadStudentProposals();
+    loadChatList('student');
+    loadNotifications('student');
   } else if (role === 'teacher') {
     document.getElementById('tc-hi').innerHTML = name + '님,<br>오늘도 달콤한 수업!';
     document.getElementById('tc-name').textContent = name;
     go('s-teacher');
     loadRequests();
+    loadChatList('teacher');
+    loadNotifications('teacher');
   } else if (role === 'parent') {
     document.getElementById('pr-hi').innerHTML = name + '님,<br>자녀 수업을 확인해요';
     go('s-parent');
@@ -936,6 +974,7 @@ function stTab(n) {
     document.getElementById('st-b-'+t).classList.toggle('on', t===n);
   });
   if (n === 'search') loadTeachers();
+  if (n === 'chat') loadChatList('student');
 }
 function tcTab(n) {
   ['home','students','chat','me'].forEach(t => {
@@ -943,6 +982,7 @@ function tcTab(n) {
     document.getElementById('tc-b-'+t).classList.toggle('on', t===n);
   });
   if (n === 'students') loadStudents();
+  if (n === 'chat') loadChatList('teacher');
 }
 
 // ── 이동거리 선택 ──
@@ -985,12 +1025,132 @@ function saveStudent() {
   }).catch(e => { showLoad(false); toast('저장 실패: ' + e.message); });
 }
 
+// ── 채팅방 열기 ──
+let currentChatId = null;
+let currentChatUnsubscribe = null;
+
+function openChat(chatId, name, emoji, backScreen) {
+  currentChatId = chatId;
+  document.getElementById('chat-name').textContent = name;
+  document.getElementById('chat-av').textContent = emoji || '🎓';
+  document.getElementById('chat-back').onclick = () => {
+    if (currentChatUnsubscribe) currentChatUnsubscribe();
+    go(backScreen || 's-student');
+  };
+  document.getElementById('chat-msgs').innerHTML = '';
+  go('s-chatroom');
+
+  // 실시간 메시지 구독
+  const msgRef = rtdb.ref('chats/' + chatId + '/messages');
+  if (currentChatUnsubscribe) currentChatUnsubscribe();
+  msgRef.on('value', snap => {
+    const msgs = document.getElementById('chat-msgs');
+    msgs.innerHTML = '';
+    snap.forEach(child => {
+      const m = child.val();
+      const isMe = m.uid === currentUser.uid;
+      const div = document.createElement('div');
+      div.className = 'msg-row' + (isMe ? ' me' : '');
+      div.innerHTML = `
+        <div>
+          <div class="bubble ${isMe?'me':'them'}">${m.text}</div>
+          <div class="msg-time" style="${isMe?'text-align:right':''}">${m.time||''}</div>
+        </div>`;
+      msgs.appendChild(div);
+    });
+    msgs.scrollTop = msgs.scrollHeight;
+  });
+  currentChatUnsubscribe = () => msgRef.off();
+}
+
+// ── 메시지 전송 ──
+function sendMsg() {
+  const inp = document.getElementById('chat-inp');
+  const text = inp.value.trim();
+  if (!text || !currentChatId || !currentUser) return;
+  const now = new Date();
+  const time = now.getHours() + ':' + String(now.getMinutes()).padStart(2,'0');
+  rtdb.ref('chats/' + currentChatId + '/messages').push({
+    uid: currentUser.uid, text, time, createdAt: now.toISOString()
+  });
+  inp.value = '';
+  // 알림 저장 (Firestore)
+  rtdb.ref('chats/' + currentChatId).update({ lastMsg: text, lastTime: time });
+}
+
+// ── 채팅 목록 로드 ──
+function loadChatList(role) {
+  if (!currentUser) return;
+  const field = role === 'teacher' ? 'teacherUid' : 'studentUid';
+  const listEl = document.getElementById(role === 'teacher' ? 'tc-chat-list' : 'st-chat-list');
+  
+  db.collection('chatRequests')
+    .where(field, '==', currentUser.uid)
+    .where('status', '==', 'accepted')
+    .get()
+    .then(snap => {
+      if (snap.empty) return;
+      const promises = [];
+      snap.forEach(doc => {
+        const req = doc.data();
+        const otherUid = role === 'teacher' ? req.studentUid : req.teacherUid;
+        const otherCollection = role === 'teacher' ? 'users' : 'teachers';
+        promises.push(
+          db.collection(otherCollection).doc(otherUid).get().then(oSnap => ({
+            req, other: oSnap.data() || {}, chatId: doc.id
+          }))
+        );
+      });
+      Promise.all(promises).then(items => {
+        if (!listEl) return;
+        listEl.innerHTML = items.map(({req, other, chatId}) => {
+          const name = role === 'teacher' ? (other.name ? '익명의 학생' : '학생') : (other.name || '선생님');
+          const emoji = role === 'teacher' ? '🎒' : '🎓';
+          const backScreen = role === 'teacher' ? 's-teacher' : 's-student';
+          return `<div class="chat-list-item" onclick="openChat('${chatId}','${name}','${emoji}','${backScreen}')">
+            <div class="chat-av-sm">${emoji}</div>
+            <div style="flex:1;">
+              <div style="font-size:14px;font-weight:700;color:var(--choco);">${name}</div>
+              <div style="font-size:12px;color:var(--muted);">${other.subjects||other.school||'대화를 시작해보세요'}</div>
+            </div>
+            <div style="font-size:10px;color:var(--border);">›</div>
+          </div>`;
+        }).join('');
+      });
+    });
+}
+
+// ── 알림 (수락된 요청 알림) ──
+function loadNotifications(role) {
+  if (!currentUser) return;
+  const field = role === 'teacher' ? 'teacherUid' : 'studentUid';
+  db.collection('chatRequests')
+    .where(field, '==', currentUser.uid)
+    .where('status', '==', 'accepted')
+    .get()
+    .then(snap => {
+      if (!snap.empty) {
+        // 알림 도트 표시
+        document.querySelectorAll('.notif-btn').forEach(b => {
+          b.style.position = 'relative';
+          if (!b.querySelector('.notif-badge')) {
+            const badge = document.createElement('div');
+            badge.className = 'notif-badge';
+            badge.textContent = snap.size;
+            b.appendChild(badge);
+          }
+        });
+      }
+    });
+}
+
 // Enter 키
 document.addEventListener('keydown', e => {
   if (e.key !== 'Enter') return;
   const id = document.querySelector('.screen.active')?.id;
   if (id === 's-login') doLogin();
   if (id === 's-signup') doSignup();
+  if (id === 's-chatroom') sendMsg();
 });
 </script>
 </body>
