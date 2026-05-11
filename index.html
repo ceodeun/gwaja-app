@@ -556,7 +556,10 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:var(--c
       <div style="font-size:15px;font-weight:700;color:var(--choco);" id="chat-name">상대방</div>
       <div style="font-size:11px;color:var(--mint);font-weight:600;">● 온라인</div>
     </div>
-    <button id="review-btn" onclick="openReview()" style="background:var(--cookie);color:white;border:none;border-radius:100px;padding:6px 12px;font-size:11px;font-weight:700;cursor:pointer;display:none;">⭐ 후기</button>
+    <div style="display:flex;gap:6px;">
+      <button id="match-btn" onclick="openMatchModal()" style="background:var(--green);color:white;border:none;border-radius:100px;padding:6px 12px;font-size:11px;font-weight:700;cursor:pointer;display:none;">✅ 성사</button>
+      <button id="review-btn" onclick="openReview()" style="background:var(--cookie);color:white;border:none;border-radius:100px;padding:6px 12px;font-size:11px;font-weight:700;cursor:pointer;display:none;">⭐ 후기</button>
+    </div>
   </div>
   <div id="chat-msgs" style="flex:1;padding:16px 14px;display:flex;flex-direction:column;gap:10px;overflow-y:auto;min-height:0;"></div>
   <div style="background:white;padding:10px 14px;display:flex;gap:8px;align-items:center;border-top:1.5px solid var(--border);">
@@ -593,6 +596,25 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:var(--c
 </div>
 
 <!-- 대화 요청 모달 -->
+<!-- 수업 성사 등록 모달 -->
+<div class="overlay" id="modal-match" onclick="if(event.target===this)document.getElementById('modal-match').classList.remove('on')">
+  <div class="modal">
+    <span class="modal-icon">🎉</span>
+    <h3>수업 성사 등록</h3>
+    <p>수업이 확정됐나요?<br>성사 등록하면 첫 달 수수료 10%가<br>안내돼요 🍪</p>
+    <div style="background:var(--cream);border-radius:12px;padding:12px;margin-bottom:16px;text-align:left;">
+      <label style="font-size:12px;font-weight:700;color:var(--muted);display:block;margin-bottom:6px;">📚 과목</label>
+      <input class="inp" id="match-subject" placeholder="예) 수학" style="margin-bottom:10px;">
+      <label style="font-size:12px;font-weight:700;color:var(--muted);display:block;margin-bottom:6px;">💰 시급 (원)</label>
+      <input class="inp" id="match-price" type="number" placeholder="예) 40000" style="margin-bottom:10px;">
+      <label style="font-size:12px;font-weight:700;color:var(--muted);display:block;margin-bottom:6px;">📅 수업 시작일</label>
+      <input class="inp" id="match-date" type="date" style="margin-bottom:0;">
+    </div>
+    <button class="btn btn-green" onclick="registerMatch()" style="margin-bottom:10px;">✅ 성사 등록하기</button>
+    <button class="btn btn-outline" onclick="document.getElementById('modal-match').classList.remove('on')">취소</button>
+  </div>
+</div>
+
 <!-- 후기 목록 모달 -->
 <div class="overlay" id="modal-reviews" onclick="if(event.target===this)document.getElementById('modal-reviews').classList.remove('on')">
   <div class="modal" style="max-height:80vh;overflow-y:auto;max-width:380px;">
@@ -1111,6 +1133,37 @@ function openReview() {
   go('s-review');
 }
 
+function openMatchModal() {
+  document.getElementById('match-subject').value = '';
+  document.getElementById('match-price').value = '';
+  document.getElementById('match-date').value = new Date().toISOString().slice(0,10);
+  document.getElementById('modal-match').classList.add('on');
+}
+
+function registerMatch() {
+  const subject = document.getElementById('match-subject').value.trim();
+  const price = document.getElementById('match-price').value;
+  const date = document.getElementById('match-date').value;
+  if (!subject || !price) { toast('과목과 시급을 입력해주세요 🍪'); return; }
+
+  showLoad(true);
+  const fee = Math.round(parseInt(price) * 0.10);
+  db.collection('matches').add({
+    studentUid: currentUser.uid,
+    teacherUid: window._currentChatTeacherId,
+    teacherName: window._currentChatTeacherName || '선생님',
+    subject, price: parseInt(price),
+    platformFee: fee,
+    startDate: date,
+    status: 'active',
+    createdAt: new Date().toISOString()
+  }).then(() => {
+    showLoad(false);
+    document.getElementById('modal-match').classList.remove('on');
+    toast(`수업 성사 등록 완료! 🎉 첫 달 수수료 ₩${fee.toLocaleString()} 안내`);
+  }).catch(e => { showLoad(false); toast('등록 실패: ' + e.message); });
+}
+
 function submitReview() {
   if (!currentStarRating) { toast('별점을 선택해주세요 ⭐'); return; }
   const text = document.getElementById('review-text').value.trim();
@@ -1173,13 +1226,17 @@ function openChat(chatId, name, emoji, backScreen, teacherUid) {
     if (currentChatUnsubscribe) currentChatUnsubscribe();
     go(backScreen || 's-student');
   };
-  // 학생이면 후기 버튼 표시
+  // 학생이면 후기 + 성사 버튼 표시
   const reviewBtn = document.getElementById('review-btn');
+  const matchBtn = document.getElementById('match-btn');
   if (teacherUid && backScreen === 's-student') {
     window._currentChatTeacherId = teacherUid;
+    window._currentChatTeacherName = name;
     reviewBtn.style.display = 'block';
+    matchBtn.style.display = 'block';
   } else {
     reviewBtn.style.display = 'none';
+    matchBtn.style.display = 'none';
   }
   document.getElementById('chat-msgs').innerHTML = '';
   go('s-chatroom');
