@@ -744,6 +744,10 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:var(--c
     <h3 id="match-modal-title">수업 성사 등록</h3>
     <p id="match-modal-desc">수업이 확정됐나요?<br>등록하면 매칭 기록이 저장돼요 🍪</p>
     <div style="background:var(--cream);border-radius:12px;padding:12px;margin-bottom:16px;text-align:left;">
+      <div id="match-student-wrap">
+        <label style="font-size:12px;font-weight:700;color:var(--muted);display:block;margin-bottom:6px;">🎒 학생 이름</label>
+        <input class="inp" id="match-student" placeholder="예) 홍길동" style="margin-bottom:10px;">
+      </div>
       <label style="font-size:12px;font-weight:700;color:var(--muted);display:block;margin-bottom:6px;">📚 과목</label>
       <input class="inp" id="match-subject" placeholder="예) 수학" style="margin-bottom:10px;">
       <div id="match-price-wrap">
@@ -1363,17 +1367,21 @@ function openMatchModal() {
   document.getElementById('match-date').value = new Date().toISOString().slice(0,10);
   
   const priceWrap = document.getElementById('match-price-wrap');
+  const studentWrap = document.getElementById('match-student-wrap');
   const title = document.getElementById('match-modal-title');
   const desc = document.getElementById('match-modal-desc');
-  
+  document.getElementById('match-student').value = '';
+
   if (window._chatRole === 'student') {
-    // 학생: 시급 숨기기, 돈 언급 없이
+    // 학생: 시급·이름 숨기기
     priceWrap.style.display = 'none';
+    studentWrap.style.display = 'none';
     title.textContent = '수업 확정하기 🎉';
     desc.innerHTML = '선생님과 수업이 확정됐나요?<br>기록해두면 수업 관리가 편해져요 🍪';
   } else {
-    // 선생님: 시급 보이기
+    // 선생님: 학생 이름 + 시급 보이기
     priceWrap.style.display = 'block';
+    studentWrap.style.display = 'block';
     title.textContent = '수업 성사 등록';
     desc.innerHTML = '수업이 확정됐나요?<br>등록하면 정산 내역에 반영돼요 🍪';
   }
@@ -1401,13 +1409,14 @@ function registerMatch() {
       toast('수업이 확정됐어요! 🎉🍪');
     }).catch(e => { showLoad(false); toast('등록 실패: ' + e.message); });
   } else {
-    // 선생님: 시급 + 수수료 저장
+    // 선생님: 학생 이름 + 시급 + 수수료 저장
+    const studentName = document.getElementById('match-student').value.trim() || '학생';
     const price = parseInt(document.getElementById('match-price').value || 0);
     if (!price) { toast('시급을 입력해주세요 🍪'); showLoad(false); return; }
     const fee = Math.round(price * 0.10);
     db.collection('matches').add({
       teacherUid: currentUser.uid,
-      studentName: window._currentChatStudentName || '학생',
+      studentName,
       subject, price, platformFee: fee,
       startDate: date, status: 'active',
       createdAt: new Date().toISOString()
@@ -1415,6 +1424,7 @@ function registerMatch() {
       showLoad(false);
       document.getElementById('modal-match').classList.remove('on');
       toast(`성사 등록 완료! 🎉 첫 달 수수료 ₩${fee.toLocaleString()} 안내`);
+      loadMyStudents();
     }).catch(e => { showLoad(false); toast('등록 실패: ' + e.message); });
   }
 }
