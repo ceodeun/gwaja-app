@@ -139,6 +139,26 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:var(--c
 .bubble.them{background:white;border-bottom-left-radius:4px;}
 .bubble.me{background:var(--cookie);color:white;border-bottom-right-radius:4px;}
 .msg-time{font-size:10px;color:var(--border);padding-bottom:2px;}
+.subtab-btn{flex:1;background:none;border:none;border-bottom:2.5px solid transparent;padding:10px 0;font-size:12px;font-weight:700;color:var(--muted);cursor:pointer;font-family:inherit;margin-bottom:-2px;}
+.subtab-btn.on{color:var(--cookie);border-bottom-color:var(--cookie);}
+.subpanel{display:none;}
+.subpanel.active{display:block;}
+.schedule-card{background:white;border-radius:14px;padding:14px;margin-bottom:10px;border-left:4px solid var(--cookie);box-shadow:var(--shadow);display:flex;align-items:flex-start;gap:12px;}
+.schedule-card .day{font-size:11px;font-weight:700;color:var(--cookie);min-width:44px;}
+.schedule-card .info h4{font-size:13px;font-weight:700;color:var(--choco);margin-bottom:2px;}
+.schedule-card .info p{font-size:11px;color:var(--muted);}
+.hw-item{background:white;border-radius:12px;padding:12px 14px;margin-bottom:8px;display:flex;align-items:center;gap:12px;box-shadow:var(--shadow);}
+.hw-check{width:22px;height:22px;border-radius:50%;border:2px solid var(--border);cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:12px;}
+.hw-check.done{background:var(--mint);border-color:var(--mint);color:white;}
+.hw-info{flex:1;}
+.hw-info h4{font-size:13px;font-weight:700;color:var(--choco);margin-bottom:2px;}
+.hw-info p{font-size:11px;color:var(--muted);}
+.hw-info h4.done-text{text-decoration:line-through;color:var(--muted);}
+.diary-card{background:white;border-radius:14px;padding:14px;margin-bottom:10px;box-shadow:var(--shadow);}
+.diary-card .dh{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
+.diary-card .dh h4{font-size:13px;font-weight:700;color:var(--choco);}
+.diary-card .dh span{font-size:11px;color:var(--muted);}
+.diary-card p{font-size:12px;color:var(--muted);line-height:1.7;}
 .notif-badge{position:absolute;top:0;right:0;background:var(--peach);color:white;border-radius:50%;width:16px;height:16px;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;}
 .chat-list-item{background:white;padding:14px 18px;display:flex;gap:12px;align-items:center;border-bottom:1px solid var(--border);cursor:pointer;}
 .chat-list-item:hover{background:#FFF8EE;}
@@ -466,6 +486,58 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:var(--c
         </div>
       </div>
     </div>
+    <!-- 수업 관리 탭 -->
+    <div id="tc-manage" class="tab-panel" style="padding:0;">
+      <!-- 서브탭 -->
+      <div style="display:flex;background:white;border-bottom:1.5px solid var(--border);position:sticky;top:0;z-index:40;">
+        <button class="subtab-btn on" id="sb-schedule" onclick="subTab('schedule')">📅 스케줄</button>
+        <button class="subtab-btn" id="sb-homework" onclick="subTab('homework')">✅ 숙제</button>
+        <button class="subtab-btn" id="sb-diary" onclick="subTab('diary')">📝 수업일지</button>
+      </div>
+
+      <!-- 스케줄 -->
+      <div id="sp-schedule" class="subpanel active" style="padding:16px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+          <h3 style="font-size:15px;font-weight:700;color:var(--choco);">📅 수업 스케줄</h3>
+          <button onclick="openAddSchedule()" style="background:var(--cookie);color:white;border:none;border-radius:100px;padding:6px 14px;font-size:12px;font-weight:700;cursor:pointer;">+ 추가</button>
+        </div>
+        <div id="schedule-list">
+          <div style="text-align:center;padding:30px;color:var(--muted);">
+            <div style="font-size:32px;margin-bottom:8px;">📅</div>
+            <div style="font-size:13px;">아직 스케줄이 없어요<br>+ 추가 버튼으로 등록해요!</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 숙제 -->
+      <div id="sp-homework" class="subpanel" style="padding:16px;display:none;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+          <h3 style="font-size:15px;font-weight:700;color:var(--choco);">✅ 숙제 체크리스트</h3>
+          <button onclick="openAddHomework()" style="background:var(--cookie);color:white;border:none;border-radius:100px;padding:6px 14px;font-size:12px;font-weight:700;cursor:pointer;">+ 추가</button>
+        </div>
+        <div id="homework-list">
+          <div style="text-align:center;padding:30px;color:var(--muted);">
+            <div style="font-size:32px;margin-bottom:8px;">✅</div>
+            <div style="font-size:13px;">숙제를 등록해보세요!</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 수업일지 -->
+      <div id="sp-diary" class="subpanel" style="padding:16px;display:none;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+          <h3 style="font-size:15px;font-weight:700;color:var(--choco);">📝 수업일지</h3>
+          <button onclick="openAddDiary()" style="background:var(--cookie);color:white;border:none;border-radius:100px;padding:6px 14px;font-size:12px;font-weight:700;cursor:pointer;">+ 작성</button>
+        </div>
+        <div id="diary-list">
+          <div style="text-align:center;padding:30px;color:var(--muted);">
+            <div style="font-size:32px;margin-bottom:8px;">📝</div>
+            <div style="font-size:13px;">수업 후 일지를 작성해보세요!</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <div id="tc-chat" class="tab-panel" style="padding:0;">
       <div id="tc-chat-list">
         <div style="text-align:center;padding:50px 20px;color:var(--muted);">
@@ -502,6 +574,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:var(--c
   <div class="bottom-bar">
     <button class="tab-btn on" id="tc-b-home" onclick="tcTab('home')"><span class="ti">🏠</span><span class="tl">홈</span></button>
     <button class="tab-btn" id="tc-b-students" onclick="tcTab('students')"><span class="ti">🔍</span><span class="tl">학생 찾기</span></button>
+    <button class="tab-btn" id="tc-b-manage" onclick="tcTab('manage')"><span class="ti">📋</span><span class="tl">수업관리</span></button>
     <button class="tab-btn" id="tc-b-chat" onclick="tcTab('chat')"><span class="ti">💬</span><span class="tl">채팅</span></button>
     <button class="tab-btn" id="tc-b-me" onclick="tcTab('me')"><span class="ti">🧑</span><span class="tl">나</span></button>
   </div>
@@ -623,6 +696,71 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:var(--c
     <h3 style="margin-bottom:14px;">⭐ 후기 목록</h3>
     <div id="review-list"></div>
     <button class="btn btn-outline" onclick="document.getElementById('modal-reviews').classList.remove('on')" style="margin-top:14px;">닫기</button>
+  </div>
+</div>
+
+<!-- 스케줄 추가 모달 -->
+<div class="overlay" id="modal-schedule" onclick="if(event.target===this)this.classList.remove('on')">
+  <div class="modal">
+    <span class="modal-icon">📅</span>
+    <h3>스케줄 추가</h3>
+    <div style="text-align:left;">
+      <label class="label" style="margin-top:0;">학생 이름</label>
+      <input class="inp" id="sch-student" placeholder="예) 홍길동">
+      <label class="label">요일</label>
+      <select class="inp" id="sch-day">
+        <option>월요일</option><option>화요일</option><option>수요일</option>
+        <option>목요일</option><option>금요일</option><option>토요일</option><option>일요일</option>
+      </select>
+      <label class="label">시간</label>
+      <input class="inp" id="sch-time" type="time" value="15:00">
+      <label class="label">과목</label>
+      <input class="inp" id="sch-subject" placeholder="예) 수학">
+      <label class="label">장소</label>
+      <input class="inp" id="sch-place" placeholder="예) 신촌 스터디카페">
+    </div>
+    <button class="btn btn-cookie" onclick="saveSchedule()" style="margin-bottom:10px;margin-top:6px;">저장하기</button>
+    <button class="btn btn-outline" onclick="document.getElementById('modal-schedule').classList.remove('on')">취소</button>
+  </div>
+</div>
+
+<!-- 숙제 추가 모달 -->
+<div class="overlay" id="modal-homework" onclick="if(event.target===this)this.classList.remove('on')">
+  <div class="modal">
+    <span class="modal-icon">✅</span>
+    <h3>숙제 추가</h3>
+    <div style="text-align:left;">
+      <label class="label" style="margin-top:0;">학생 이름</label>
+      <input class="inp" id="hw-student" placeholder="예) 홍길동">
+      <label class="label">숙제 내용</label>
+      <input class="inp" id="hw-content" placeholder="예) 수학 p.45~50 풀기">
+      <label class="label">마감일</label>
+      <input class="inp" id="hw-due" type="date">
+    </div>
+    <button class="btn btn-cookie" onclick="saveHomework()" style="margin-bottom:10px;margin-top:6px;">저장하기</button>
+    <button class="btn btn-outline" onclick="document.getElementById('modal-homework').classList.remove('on')">취소</button>
+  </div>
+</div>
+
+<!-- 수업일지 작성 모달 -->
+<div class="overlay" id="modal-diary" onclick="if(event.target===this)this.classList.remove('on')">
+  <div class="modal" style="max-width:360px;">
+    <span class="modal-icon">📝</span>
+    <h3>수업일지 작성</h3>
+    <div style="text-align:left;">
+      <label class="label" style="margin-top:0;">학생 이름</label>
+      <input class="inp" id="di-student" placeholder="예) 홍길동">
+      <label class="label">수업 날짜</label>
+      <input class="inp" id="di-date" type="date">
+      <label class="label">오늘 수업 내용</label>
+      <textarea class="inp" id="di-content" rows="3" placeholder="예) 이차방정식 개념 완료. 근의 공식 연습 필요" style="resize:none;line-height:1.7;"></textarea>
+      <label class="label">다음 수업 계획</label>
+      <textarea class="inp" id="di-next" rows="2" placeholder="예) 판별식 개념 → 연습문제" style="resize:none;line-height:1.7;"></textarea>
+      <label class="label">학부모님께 전달 메모 (선택)</label>
+      <textarea class="inp" id="di-memo" rows="2" placeholder="예) 숙제 꼭 확인해주세요!" style="resize:none;line-height:1.7;"></textarea>
+    </div>
+    <button class="btn btn-cookie" onclick="saveDiary()" style="margin-bottom:10px;margin-top:6px;">저장하기</button>
+    <button class="btn btn-outline" onclick="document.getElementById('modal-diary').classList.remove('on')">취소</button>
   </div>
 </div>
 
@@ -1057,12 +1195,21 @@ function stTab(n) {
   if (n === 'chat') loadChatList('student');
 }
 function tcTab(n) {
-  ['home','students','chat','me'].forEach(t => {
+  ['home','students','manage','chat','me'].forEach(t => {
     document.getElementById('tc-'+t).classList.toggle('active', t===n);
     document.getElementById('tc-b-'+t).classList.toggle('on', t===n);
   });
   if (n === 'students') loadStudents();
   if (n === 'chat') loadChatList('teacher');
+  if (n === 'manage') { loadSchedules(); loadHomeworks(); loadDiaries(); }
+}
+
+// ── 서브탭 ──
+function subTab(n) {
+  ['schedule','homework','diary'].forEach(t => {
+    document.getElementById('sb-'+t).classList.toggle('on', t===n);
+    document.getElementById('sp-'+t).style.display = t===n ? 'block' : 'none';
+  });
 }
 
 // ── 이동거리 선택 ──
@@ -1386,6 +1533,171 @@ function loadNotifications(role) {
         });
       }
     });
+}
+
+// ── 스케줄 ──
+function openAddSchedule() {
+  document.getElementById('sch-student').value = '';
+  document.getElementById('sch-subject').value = '';
+  document.getElementById('sch-place').value = '';
+  document.getElementById('modal-schedule').classList.add('on');
+}
+
+function saveSchedule() {
+  const student = document.getElementById('sch-student').value.trim();
+  const day = document.getElementById('sch-day').value;
+  const time = document.getElementById('sch-time').value;
+  const subject = document.getElementById('sch-subject').value.trim();
+  const place = document.getElementById('sch-place').value.trim();
+  if (!student || !subject) { toast('학생 이름과 과목은 필수예요 🍪'); return; }
+  showLoad(true);
+  db.collection('schedules').add({
+    teacherUid: currentUser.uid, student, day, time, subject, place,
+    createdAt: new Date().toISOString()
+  }).then(() => {
+    showLoad(false);
+    document.getElementById('modal-schedule').classList.remove('on');
+    toast('스케줄 추가됐어요! 📅');
+    loadSchedules();
+  }).catch(e => { showLoad(false); toast('저장 실패: ' + e.message); });
+}
+
+function loadSchedules() {
+  if (!currentUser) return;
+  db.collection('schedules').where('teacherUid', '==', currentUser.uid).get().then(snap => {
+    const list = document.getElementById('schedule-list');
+    if (!list) return;
+    if (snap.empty) {
+      list.innerHTML = '<div style="text-align:center;padding:30px;color:var(--muted);"><div style="font-size:32px;margin-bottom:8px;">📅</div><div style="font-size:13px;">아직 스케줄이 없어요</div></div>';
+      return;
+    }
+    const days = ['월요일','화요일','수요일','목요일','금요일','토요일','일요일'];
+    const items = [];
+    snap.forEach(d => items.push({id: d.id, ...d.data()}));
+    items.sort((a,b) => days.indexOf(a.day) - days.indexOf(b.day));
+    list.innerHTML = items.map(s => `
+      <div class="schedule-card">
+        <div class="day">${s.day?.slice(0,1)}<br>${s.time||''}</div>
+        <div class="info" style="flex:1;">
+          <h4>${s.student} · ${s.subject}</h4>
+          <p>📍 ${s.place||'장소 미정'}</p>
+        </div>
+        <button onclick="deleteDoc('schedules','${s.id}',loadSchedules)" style="background:none;border:none;cursor:pointer;font-size:16px;color:var(--muted);">🗑️</button>
+      </div>`).join('');
+  });
+}
+
+// ── 숙제 ──
+function openAddHomework() {
+  document.getElementById('hw-student').value = '';
+  document.getElementById('hw-content').value = '';
+  document.getElementById('hw-due').value = '';
+  document.getElementById('modal-homework').classList.add('on');
+}
+
+function saveHomework() {
+  const student = document.getElementById('hw-student').value.trim();
+  const content = document.getElementById('hw-content').value.trim();
+  const due = document.getElementById('hw-due').value;
+  if (!student || !content) { toast('학생 이름과 숙제 내용은 필수예요 🍪'); return; }
+  showLoad(true);
+  db.collection('homeworks').add({
+    teacherUid: currentUser.uid, student, content, due,
+    done: false, createdAt: new Date().toISOString()
+  }).then(() => {
+    showLoad(false);
+    document.getElementById('modal-homework').classList.remove('on');
+    toast('숙제 추가됐어요! ✅');
+    loadHomeworks();
+  }).catch(e => { showLoad(false); toast('저장 실패: ' + e.message); });
+}
+
+function toggleHomework(id, current) {
+  db.collection('homeworks').doc(id).update({ done: !current }).then(() => loadHomeworks());
+}
+
+function loadHomeworks() {
+  if (!currentUser) return;
+  db.collection('homeworks').where('teacherUid', '==', currentUser.uid).get().then(snap => {
+    const list = document.getElementById('homework-list');
+    if (!list) return;
+    if (snap.empty) {
+      list.innerHTML = '<div style="text-align:center;padding:30px;color:var(--muted);"><div style="font-size:32px;margin-bottom:8px;">✅</div><div style="font-size:13px;">숙제를 등록해보세요!</div></div>';
+      return;
+    }
+    const items = [];
+    snap.forEach(d => items.push({id: d.id, ...d.data()}));
+    items.sort((a,b) => a.done - b.done);
+    list.innerHTML = items.map(h => `
+      <div class="hw-item">
+        <div class="hw-check ${h.done?'done':''}" onclick="toggleHomework('${h.id}',${h.done})">${h.done?'✓':''}</div>
+        <div class="hw-info">
+          <h4 class="${h.done?'done-text':''}">${h.student} · ${h.content}</h4>
+          <p>마감: ${h.due||'미정'}</p>
+        </div>
+        <button onclick="deleteDoc('homeworks','${h.id}',loadHomeworks)" style="background:none;border:none;cursor:pointer;font-size:16px;color:var(--muted);">🗑️</button>
+      </div>`).join('');
+  });
+}
+
+// ── 수업일지 ──
+function openAddDiary() {
+  document.getElementById('di-student').value = '';
+  document.getElementById('di-date').value = new Date().toISOString().slice(0,10);
+  document.getElementById('di-content').value = '';
+  document.getElementById('di-next').value = '';
+  document.getElementById('di-memo').value = '';
+  document.getElementById('modal-diary').classList.add('on');
+}
+
+function saveDiary() {
+  const student = document.getElementById('di-student').value.trim();
+  const date = document.getElementById('di-date').value;
+  const content = document.getElementById('di-content').value.trim();
+  const next = document.getElementById('di-next').value.trim();
+  const memo = document.getElementById('di-memo').value.trim();
+  if (!student || !content) { toast('학생 이름과 수업 내용은 필수예요 🍪'); return; }
+  showLoad(true);
+  db.collection('diaries').add({
+    teacherUid: currentUser.uid, student, date, content, next, memo,
+    createdAt: new Date().toISOString()
+  }).then(() => {
+    showLoad(false);
+    document.getElementById('modal-diary').classList.remove('on');
+    toast('수업일지 저장됐어요! 📝');
+    loadDiaries();
+  }).catch(e => { showLoad(false); toast('저장 실패: ' + e.message); });
+}
+
+function loadDiaries() {
+  if (!currentUser) return;
+  db.collection('diaries').where('teacherUid', '==', currentUser.uid).get().then(snap => {
+    const list = document.getElementById('diary-list');
+    if (!list) return;
+    if (snap.empty) {
+      list.innerHTML = '<div style="text-align:center;padding:30px;color:var(--muted);"><div style="font-size:32px;margin-bottom:8px;">📝</div><div style="font-size:13px;">수업 후 일지를 작성해보세요!</div></div>';
+      return;
+    }
+    const items = [];
+    snap.forEach(d => items.push({id: d.id, ...d.data()}));
+    items.sort((a,b) => b.date?.localeCompare(a.date));
+    list.innerHTML = items.map(d => `
+      <div class="diary-card">
+        <div class="dh">
+          <h4>${d.student} · ${d.date||''}</h4>
+          <button onclick="deleteDoc('diaries','${d.id}',loadDiaries)" style="background:none;border:none;cursor:pointer;font-size:14px;color:var(--muted);">🗑️</button>
+        </div>
+        <p><strong style="color:var(--choco);">📚 수업</strong> ${d.content}</p>
+        ${d.next ? `<p style="margin-top:6px;"><strong style="color:var(--choco);">➡️ 다음</strong> ${d.next}</p>` : ''}
+        ${d.memo ? `<div style="background:#FFF8EE;border-radius:8px;padding:8px;margin-top:8px;font-size:11px;color:var(--cookie);">💌 학부모 메모: ${d.memo}</div>` : ''}
+      </div>`).join('');
+  });
+}
+
+// ── 공통 삭제 ──
+function deleteDoc(collection, id, callback) {
+  if (!confirm('삭제할까요?')) return;
+  db.collection(collection).doc(id).delete().then(() => { toast('삭제됐어요'); callback(); });
 }
 
 // Enter 키
