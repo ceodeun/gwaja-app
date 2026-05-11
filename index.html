@@ -870,17 +870,47 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:var(--c
       <label class="label" style="margin-top:0;">학생 이름</label>
       <select class="inp" id="ll-student"><option value="">학생 선택</option></select>
       <label class="label">수업 시간</label>
-      <div style="display:flex;gap:8px;align-items:center;">
-        <input class="inp" id="ll-time" type="time" value="15:00" style="flex:1;margin-bottom:0;">
-        <span style="color:var(--muted);font-size:13px;">~</span>
-        <select class="inp" id="ll-duration" style="flex:1;margin-bottom:0;" onchange="calcLessonFee()">
-          <option value="1">1시간</option>
-          <option value="1.5">1.5시간</option>
-          <option value="2" selected>2시간</option>
-          <option value="2.5">2.5시간</option>
-          <option value="3">3시간</option>
-        </select>
+      <div style="background:var(--cream);border-radius:16px;padding:14px;margin-bottom:8px;position:relative;">
+        <div style="display:flex;align-items:center;justify-content:center;gap:4px;position:relative;">
+          <!-- 선택 하이라이트 바 -->
+          <div style="position:absolute;left:0;right:0;top:50%;transform:translateY(-50%);height:44px;background:white;border-radius:10px;border:2px solid var(--cookie);pointer-events:none;"></div>
+
+          <!-- 오전/오후 -->
+          <div style="position:relative;z-index:1;">
+            <div id="drum-ampm" style="height:132px;overflow:hidden;position:relative;width:56px;">
+              <div id="drum-ampm-inner" style="display:flex;flex-direction:column;transition:transform .2s;cursor:pointer;" ontouchstart="drumTouchStart(event,'ampm')" ontouchend="drumTouchEnd(event,'ampm')" onmousedown="drumMouseStart(event,'ampm')">
+              </div>
+            </div>
+          </div>
+
+          <!-- 시 -->
+          <div style="position:relative;z-index:1;">
+            <div id="drum-hour" style="height:132px;overflow:hidden;position:relative;width:52px;">
+              <div id="drum-hour-inner" style="display:flex;flex-direction:column;transition:transform .2s;cursor:pointer;" ontouchstart="drumTouchStart(event,'hour')" ontouchend="drumTouchEnd(event,'hour')" onmousedown="drumMouseStart(event,'hour')">
+              </div>
+            </div>
+          </div>
+
+          <div style="font-size:22px;font-weight:900;color:var(--choco);position:relative;z-index:1;margin:0 2px;">:</div>
+
+          <!-- 분 -->
+          <div style="position:relative;z-index:1;">
+            <div id="drum-min" style="height:132px;overflow:hidden;position:relative;width:52px;">
+              <div id="drum-min-inner" style="display:flex;flex-direction:column;transition:transform .2s;cursor:pointer;" ontouchstart="drumTouchStart(event,'min')" ontouchend="drumTouchEnd(event,'min')" onmousedown="drumMouseStart(event,'min')">
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
+      <input id="ll-time" type="hidden" value="15:00">
+      <label class="label">수업 길이</label>
+      <select class="inp" id="ll-duration" onchange="calcLessonFee()">
+        <option value="1">1시간</option>
+        <option value="1.5">1.5시간</option>
+        <option value="2" selected>2시간</option>
+        <option value="2.5">2.5시간</option>
+        <option value="3">3시간</option>
+      </select>
       <label class="label">시급 (원)</label>
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
         <button type="button" onclick="stepPrice(-5000)" style="width:44px;height:44px;border-radius:50%;background:var(--cream);border:1.5px solid var(--border);font-size:22px;cursor:pointer;font-weight:700;color:var(--choco);flex-shrink:0;line-height:1;">−</button>
@@ -2019,6 +2049,7 @@ function clickTcDate(dateStr,d){
   const wrap = document.getElementById('ll-price-direct-wrap');
   if(wrap) wrap.style.display = 'none';
   document.getElementById('ll-calc').style.display='none';
+  initTimeUI(15, 0); // 기본 오후 3시
   document.getElementById('modal-lesson-log').classList.add('on');
   if(currentUser){
     db.collection('matches').where('teacherUid','==',currentUser.uid).get().then(snap=>{
@@ -2060,6 +2091,101 @@ function togglePriceDirect(){
 function setPrice(val){ document.getElementById('ll-price').value=val; document.getElementById('ll-price-view').textContent=val.toLocaleString()+'원'; calcLessonFee(); }
 function highlightPriceBtn(){}
 function toggleDirectInput(){}
+// ── 드럼롤 시간 선택기 ──
+const DRUM_ITEM_H = 44;
+let _drumState = { ampm: 0, hour: 14, min: 0 }; // 0=오전,1=오후 / hour=0~23 / min 인덱스
+const _minList = [0,5,10,15,20,25,30,35,40,45,50,55];
+let _drumDrag = {};
+
+function _drumItems(type) {
+  if(type==='ampm') return ['오전','오후'];
+  if(type==='hour') return Array.from({length:12},(_,i)=>String(i+1).padStart(2,'0'));
+  if(type==='min')  return _minList.map(m=>String(m).padStart(2,'0'));
+}
+function _drumIndex(type) {
+  if(type==='ampm') return _drumState.ampm;
+  if(type==='hour') {
+    const h = _drumState.hour % 12;
+    return h === 0 ? 11 : h - 1;
+  }
+  if(type==='min') return _minList.indexOf(_drumState.min) >= 0 ? _minList.indexOf(_drumState.min) : 0;
+}
+function _buildDrum(type) {
+  const items = _drumItems(type);
+  const inner = document.getElementById('drum-'+type+'-inner');
+  if(!inner) return;
+  inner.innerHTML = items.map((v,i) => `
+    <div onclick="drumClick('${type}',${i})" style="height:${DRUM_ITEM_H}px;display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:700;color:var(--muted);cursor:pointer;user-select:none;flex-shrink:0;">${v}</div>
+  `).join('');
+  _drumScroll(type, _drumIndex(type), false);
+}
+function _drumScroll(type, idx, animate=true) {
+  const inner = document.getElementById('drum-'+type+'-inner');
+  if(!inner) return;
+  if(!animate) inner.style.transition='none';
+  else inner.style.transition='transform .15s';
+  const offset = -idx * DRUM_ITEM_H + DRUM_ITEM_H;
+  inner.style.transform = `translateY(${offset}px)`;
+  // 선택된 항목 색상
+  [...inner.children].forEach((el,i) => {
+    el.style.color = i===idx ? 'var(--choco)' : 'var(--muted)';
+    el.style.fontSize = i===idx ? '19px' : '16px';
+  });
+}
+function drumClick(type, idx) {
+  const items = _drumItems(type);
+  if(type==='ampm'){
+    _drumState.ampm = idx;
+    _drumState.hour = idx===0
+      ? (_drumState.hour % 12 === 0 ? 0 : _drumState.hour % 12)
+      : (_drumState.hour % 12 === 0 ? 12 : _drumState.hour % 12 + 12);
+  } else if(type==='hour'){
+    const h12 = idx + 1;
+    _drumState.hour = _drumState.ampm===0
+      ? (h12===12 ? 0 : h12)
+      : (h12===12 ? 12 : h12+12);
+  } else if(type==='min'){
+    _drumState.min = _minList[idx];
+  }
+  _drumScroll(type, idx);
+  _drumUpdateTime();
+}
+function drumTouchStart(e, type){ _drumDrag[type]={y:e.touches[0].clientY, idx:_drumIndex(type)}; }
+function drumTouchEnd(e, type){
+  if(!_drumDrag[type]) return;
+  const dy = _drumDrag[type].y - e.changedTouches[0].clientY;
+  const delta = Math.round(dy / DRUM_ITEM_H);
+  if(delta !== 0) {
+    const items = _drumItems(type);
+    const newIdx = Math.max(0, Math.min(items.length-1, _drumDrag[type].idx + delta));
+    drumClick(type, newIdx);
+  }
+}
+function drumMouseStart(e, type){ _drumDrag[type]={y:e.clientY, idx:_drumIndex(type)}; }
+
+function _drumUpdateTime(){
+  const h = String(_drumState.hour).padStart(2,'0');
+  const m = String(_drumState.min).padStart(2,'0');
+  document.getElementById('ll-time').value = h+':'+m;
+  // 오전/오후 동기화
+  _drumState.ampm = _drumState.hour < 12 ? 0 : 1;
+  _buildDrum('ampm');
+}
+function initTimeUI(h24, min){
+  _drumState.hour = h24 || 15;
+  _drumState.min  = _minList.includes(min) ? min : 0;
+  _drumState.ampm = _drumState.hour < 12 ? 0 : 1;
+  _buildDrum('ampm');
+  _buildDrum('hour');
+  _buildDrum('min');
+  _drumUpdateTime();
+}
+function stepHour(d){ drumClick('hour', Math.max(0,Math.min(11,_drumIndex('hour')+d))); }
+function stepMin(d){  drumClick('min',  Math.max(0,Math.min(_minList.length-1,_drumIndex('min')+d))); }
+function setAmPm(v){  drumClick('ampm', v==='am'?0:1); }
+function highlightPriceBtn(){}
+function toggleDirectInput(){}
+
 function calcLessonFee(){
   const price=parseInt(document.getElementById('ll-price')?.value||0);
   const dur=parseFloat(document.getElementById('ll-duration')?.value||1);
