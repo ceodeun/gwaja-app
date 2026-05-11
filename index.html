@@ -41,6 +41,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:var(--c
 .tab-panels{padding-bottom:76px;overflow-y:auto;flex:1;}
 .tab-panel{display:none;padding:18px;}
 .tab-panel.active{display:block;}
+#st-map.active{display:flex !important;}
 #s-splash{background:linear-gradient(170deg,#F0E2C0,#D4A96A);align-items:center;justify-content:center;padding:40px 28px;text-align:center;}
 .splash-emoji{font-size:80px;margin-bottom:16px;display:block;animation:bounce 2s infinite;}
 @keyframes bounce{0%,100%{transform:translateY(0);}50%{transform:translateY(-16px);}}
@@ -447,7 +448,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:var(--c
       </div>
     </div>
 
-   <div id="st-map" class="tab-panel" style="padding:0;flex-direction:column;">
+    <div id="st-map" class="tab-panel" style="padding:0;flex-direction:column;">
       <div style="padding:10px 14px;background:white;border-bottom:1px solid var(--border);display:flex;gap:6px;overflow-x:auto;">
         <button class="chip on" id="mf-all" onclick="filterMap('all',this)">전체</button>
         <button class="chip" id="mf-cafe" onclick="filterMap('cafe',this)">☕ 카페</button>
@@ -1649,17 +1650,9 @@ function go(id) {
 }
 
 function stTab(n) {
-  ['home','search','calendar','map','chat','me'].forEach(t => {
+  ['home','search','calendar','map','chat','me'].forEach(t=>{
     const panel = document.getElementById('st-'+t);
-    if (panel) {
-      if (t === n) {
-        panel.style.display = t === 'map' ? 'flex' : 'block';
-        panel.classList.add('active');
-      } else {
-        panel.style.display = 'none';
-        panel.classList.remove('active');
-      }
-    }
+    if (panel) panel.classList.toggle('active', t===n);
     const btn = document.getElementById('st-b-'+t);
     if (btn) btn.classList.toggle('on', t===n);
   });
