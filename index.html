@@ -1424,15 +1424,25 @@ function loadChatList(role) {
         const req = doc.data();
         const otherUid = role === 'teacher' ? req.studentUid : req.teacherUid;
         const col = role === 'teacher' ? 'users' : 'teachers';
-        // chatId는 항상 studentUid_teacherUid
         const chatId = req.studentUid + '_' + req.teacherUid;
 
-        return db.collection(col).doc(otherUid).get().then(oSnap => ({
-          chatId,
-          req,
-          other: oSnap.data() || {},
-          otherUid
-        }));
+        const otherPromise = db.collection(col).doc(otherUid).get();
+
+        // 선생님일 때: matches에서 이 학생과 성사된 기록이 있는지 확인
+        const matchPromise = role === 'teacher'
+          ? db.collection('matches').where('teacherUid', '==', currentUser.uid).where('studentUid', '==', otherUid).get().catch(() => null)
+          : Promise.resolve(null);
+
+        return Promise.all([otherPromise, matchPromise]).then(([oSnap, matchSnap]) => {
+          const isMatched = matchSnap && !matchSnap.empty;
+          return {
+            chatId,
+            req,
+            other: oSnap.data() || {},
+            otherUid,
+            isMatched  // 성사 여부
+          };
+        });
       });
 
       Promise.all(promises).then(items => {
@@ -1444,9 +1454,10 @@ function loadChatList(role) {
         );
 
         Promise.all(rtdbPromises).then(finalItems => {
-          listEl.innerHTML = finalItems.map(({ chatId, req, other, lastMsg }) => {
+          listEl.innerHTML = finalItems.map(({ chatId, req, other, lastMsg, isMatched }) => {
+            // 선생님: 성사됐으면 실명, 아직 성사 전이면 익명
             const name = role === 'teacher'
-              ? (other.name || '학생')
+              ? (isMatched ? (other.name || '학생') : '익명의 학생')
               : (other.name || '선생님');
             const emoji = role === 'teacher' ? '🎒' : '🎓';
             const sub = role === 'teacher'
@@ -1742,7 +1753,7 @@ function openMatchModal() {
     title.textContent='수업 확정하기 🎉';
     desc.innerHTML='선생님과 수업이 확정됐나요?<br>기록해두면 수업 관리가 편해져요 🍪';
   } else {
-    priceWrap.style.display='block'; studentWrap.style.display='block';
+    priceWrap.style.display='block'; studentWrap.style.display='none'; // 이름은 자동으로 가져옴
     title.textContent='수업 성사 등록';
     desc.innerHTML='수업이 확정됐나요?<br>등록하면 정산 내역에 반영돼요 🍪';
   }
@@ -1764,16 +1775,23 @@ function registerMatch() {
     }).then(()=>{ showLoad(false); document.getElementById('modal-match').classList.remove('on'); toast('수업이 확정됐어요! 🎉🍪'); })
       .catch(e=>{showLoad(false);toast('등록 실패: '+e.message);});
   } else {
-    const studentName = document.getElementById('match-student').value.trim()||'학생';
     const price = parseInt(document.getElementById('match-price').value||0);
     if (!price) { toast('시급을 입력해주세요 🍪'); showLoad(false); return; }
     const fee = Math.round(price*0.10);
-    db.collection('matches').add({
-      teacherUid:currentUser.uid, studentName, subject, price,
-      platformFee:fee, startDate:date, status:'active',
-      createdAt:new Date().toISOString()
-    }).then(()=>{ showLoad(false); document.getElementById('modal-match').classList.remove('on'); toast('성사 등록 완료! 🎉'); loadMyStudents(); })
-      .catch(e=>{showLoad(false);toast('등록 실패: '+e.message);});
+    // chatId = studentUid_teacherUid 형태에서 studentUid 추출
+    const studentUid = currentChatId ? currentChatId.split('_')[0] : '';
+    // 학생 이름은 users 컬렉션에서 가져옴
+    const namePromise = studentUid
+      ? db.collection('users').doc(studentUid).get().then(s => s.data()?.name || '학생')
+      : Promise.resolve('학생');
+    namePromise.then(studentName => {
+      db.collection('matches').add({
+        teacherUid:currentUser.uid, studentUid, studentName, subject, price,
+        platformFee:fee, startDate:date, status:'active',
+        createdAt:new Date().toISOString()
+      }).then(()=>{ showLoad(false); document.getElementById('modal-match').classList.remove('on'); toast('성사 등록 완료! 🎉'); loadMyStudents(); })
+        .catch(e=>{showLoad(false);toast('등록 실패: '+e.message);});
+    });
   }
 }
 
