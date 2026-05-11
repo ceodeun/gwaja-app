@@ -2114,8 +2114,7 @@ function renderTcCalendar() {
   const first = new Date(tcCalYear, tcCalMonth, 1).getDay();
   const days = new Date(tcCalYear, tcCalMonth+1, 0).getDate();
   const today = new Date();
-  // 수업 있는 날짜
-  const lessonDates = new Set(tcLessonLogs.map(l => l.date?.slice(8,10)));
+  // 수업 있는 날짜 (loadTcLessons에서 처리)
   let cells = '';
   for(let i=0;i<first;i++) cells += '<div></div>';
   for(let d=1;d<=days;d++) {
@@ -2275,7 +2274,7 @@ function renderTcCalendar() {
   for(let d=1; d<=days; d++) {
     const isToday = d===today.getDate() && tcCalMonth===today.getMonth() && tcCalYear===today.getFullYear();
     const dateStr = tcCalYear+'-'+String(tcCalMonth+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
-    cells += `<div onclick="clickDay('${dateStr}',${d})" style="aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:10px;font-size:12px;cursor:pointer;transition:all .15s;${isToday?'background:var(--cookie);color:white;font-weight:700;':''}hover:background:#F0E8D8;" id="cal-d-${dateStr}">${d}</div>`;
+    cells += `<div onclick="clickDay('${dateStr}',${d})" style="aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:10px;font-size:12px;cursor:pointer;transition:all .15s;${isToday?'background:var(--cookie);color:white;font-weight:700;':'background:transparent;'}" id="cal-d-${dateStr}">${d}</div>`;
   }
   grid.innerHTML = cells;
   loadTcLessons();
