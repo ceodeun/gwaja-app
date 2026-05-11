@@ -1,0 +1,11 @@
+{
+  "name": "과자 🍪 - 과외하자",
+  "short_name": "과자 🍪",
+  "description": "크래커처럼 바삭한 선생님, 찹쌀떡처럼 찰떡인 과외 매칭",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#F5EFE0",
+  "theme_color": "#C8873A",
+  "orientation": "portrait",
+  "icons": []
+}

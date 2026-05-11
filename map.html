@@ -1,0 +1,755 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>과자 🍪 전국 과외 장소 찾기</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+:root {
+  --cream:#F5EFE0; --biscuit:#D4A96A; --cookie:#C8873A; --choco:#5C3317;
+  --mint:#5AC8A0; --peach:#FF8A70; --lavender:#A89BE8; --sky:#74B8E8;
+  --white:#FFFDF8; --muted:#9A7E65; --border:#E8DABC;
+  --shadow:0 4px 20px rgba(90,50,20,.12);
+}
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+html, body { height:100%; }
+body { font-family:'Noto Sans KR',sans-serif; background:var(--cream); color:#2C1A0E;
+  max-width:430px; margin:0 auto; display:flex; flex-direction:column; height:100dvh; overflow:hidden; }
+
+/* HEADER */
+.header { background:linear-gradient(135deg,var(--cookie),var(--choco));
+  padding:14px 16px 12px; display:flex; align-items:center; gap:10px; flex-shrink:0; z-index:10; }
+.back-btn { background:rgba(255,255,255,.2); border:none; cursor:pointer; color:white;
+  width:32px; height:32px; border-radius:50%; font-size:16px; display:flex; align-items:center; justify-content:center; }
+.header h2 { font-size:16px; font-weight:900; color:white; }
+.header p { font-size:11px; color:rgba(255,255,255,.75); }
+
+/* TABS */
+.tabs { background:var(--white); display:flex; border-bottom:2px solid var(--border); flex-shrink:0; z-index:10; }
+.tab { flex:1; padding:10px 0; font-size:12px; font-weight:700; color:var(--muted);
+  background:none; border:none; border-bottom:2.5px solid transparent; margin-bottom:-2px;
+  cursor:pointer; font-family:inherit; transition:all .15s; }
+.tab.on { color:var(--cookie); border-bottom-color:var(--cookie); }
+
+/* PANELS */
+.panels { flex:1; min-height:0; display:flex; flex-direction:column; }
+.panel { display:none; flex:1; min-height:0; flex-direction:column; }
+.panel.active { display:flex; }
+
+/* ── MAP PANEL ── */
+.map-wrap { flex:1; min-height:0; position:relative; }
+#map { width:100%; height:100%; }
+.leaflet-tile-pane { filter: saturate(0.65) brightness(1.08) hue-rotate(5deg); }
+
+/* 검색바 (지도 위) */
+.map-search { position:absolute; top:10px; left:10px; right:10px; z-index:500; }
+.ms-inner { position:relative; }
+.ms-inner input { width:100%; padding:11px 40px 11px 16px;
+  background:rgba(255,253,248,.97); border:1.5px solid var(--border); border-radius:100px;
+  font-size:13px; font-family:inherit; outline:none; box-shadow:0 3px 12px rgba(0,0,0,.12); color:#2C1A0E; }
+.ms-inner input:focus { border-color:var(--cookie); }
+.ms-icon { position:absolute; right:13px; top:50%; transform:translateY(-50%); font-size:16px; pointer-events:none; }
+
+/* 필터 칩 (지도 위, 검색 아래) */
+.map-chips { position:absolute; top:56px; left:10px; right:10px; z-index:500;
+  display:flex; gap:5px; overflow-x:auto; }
+.map-chips::-webkit-scrollbar { display:none; }
+.mc { background:rgba(255,253,248,.95); border:1.5px solid var(--border); border-radius:100px;
+  padding:5px 11px; font-size:11px; font-weight:700; color:var(--muted);
+  white-space:nowrap; cursor:pointer; font-family:inherit;
+  box-shadow:0 2px 8px rgba(0,0,0,.1); flex-shrink:0; transition:all .15s; }
+.mc.on.cafe    { background:var(--peach);   border-color:var(--peach);   color:white; }
+.mc.on.study   { background:var(--lavender);border-color:var(--lavender);color:white; }
+.mc.on.home    { background:var(--mint);    border-color:var(--mint);    color:white; }
+.mc.on.school  { background:var(--cookie);  border-color:var(--cookie);  color:white; }
+.mc.on.teacher { background:var(--sky);     border-color:var(--sky);     color:white; }
+
+/* 지역 선택 */
+.region-bar { position:absolute; bottom:10px; left:10px; right:10px; z-index:500;
+  display:flex; gap:5px; overflow-x:auto; justify-content:center; }
+.region-bar::-webkit-scrollbar { display:none; }
+.rb { background:rgba(255,253,248,.95); border:1.5px solid var(--border); border-radius:100px;
+  padding:6px 12px; font-size:11px; font-weight:700; color:var(--muted);
+  cursor:pointer; font-family:inherit; box-shadow:0 2px 8px rgba(0,0,0,.1); flex-shrink:0; transition:all .15s; }
+.rb.on { background:var(--choco); border-color:var(--choco); color:white; }
+
+/* 범례 */
+.legend { position:absolute; right:10px; top:108px; background:rgba(255,253,248,.96);
+  border-radius:14px; padding:9px 11px; z-index:500; box-shadow:var(--shadow); }
+.li { display:flex; align-items:center; gap:6px; font-size:10px; font-weight:600; color:var(--muted); margin-bottom:4px; }
+.li:last-child { margin:0; }
+.ld { width:10px; height:10px; border-radius:50%; border:2px solid white; box-shadow:0 1px 3px rgba(0,0,0,.15); }
+
+/* BOTTOM SHEET */
+.bsheet { position:absolute; bottom:0; left:0; right:0; background:var(--white);
+  border-radius:22px 22px 0 0; box-shadow:0 -6px 30px rgba(0,0,0,.18);
+  z-index:600; transform:translateY(100%); transition:transform .3s cubic-bezier(.34,1.56,.64,1);
+  max-height:70%; overflow-y:auto; }
+.bsheet.open { transform:translateY(0); }
+.bs-inner { padding:14px 16px 28px; }
+.bs-handle { width:36px; height:4px; background:var(--border); border-radius:100px; margin:0 auto 14px; }
+.bs-close { position:absolute; top:14px; right:14px; background:var(--cream); border:none;
+  border-radius:50%; width:28px; height:28px; cursor:pointer; font-size:13px; }
+.bs-badge { display:inline-flex; align-items:center; gap:4px; font-size:10px; font-weight:700;
+  padding:3px 10px; border-radius:20px; margin-bottom:8px; }
+.bs-name { font-size:18px; font-weight:900; margin-bottom:4px; }
+.bs-sub { font-size:12px; color:var(--muted); margin-bottom:12px; line-height:1.6; }
+
+/* 거리카드 */
+.dist-row { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:12px; }
+.dc { background:var(--cream); border-radius:12px; padding:10px 12px; }
+.dc-from { font-size:10px; color:var(--muted); margin-bottom:3px; }
+.dc-dist { font-size:16px; font-weight:900; color:#2C1A0E; }
+.dc-modes { display:flex; flex-direction:column; gap:2px; margin-top:4px; }
+.dc-mode { font-size:11px; color:var(--muted); display:flex; align-items:center; gap:4px; }
+.dc-mode strong { color:var(--cookie); }
+
+.am-row { display:flex; gap:5px; flex-wrap:wrap; margin-bottom:12px; }
+.am-tag { font-size:10px; background:#F5F0E8; color:var(--muted); padding:3px 9px; border-radius:20px; }
+
+.bs-btn { width:100%; padding:13px; background:var(--cookie); color:white; border:none;
+  border-radius:100px; font-size:14px; font-weight:700; cursor:pointer; font-family:inherit;
+  margin-bottom:8px; transition:all .15s; }
+.bs-btn:hover { background:var(--choco); }
+.bs-btn.sec { background:var(--lavender); }
+
+/* ── 거리 계산기 PANEL ── */
+.calc-scroll { flex:1; overflow-y:auto; padding:14px; }
+.csec { background:var(--white); border-radius:18px; padding:16px; margin-bottom:12px; box-shadow:var(--shadow); }
+.csec h3 { font-size:14px; font-weight:700; margin-bottom:12px; display:flex; align-items:center; gap:6px; }
+.loc-row { display:flex; align-items:center; gap:10px; margin-bottom:10px; }
+.loc-row:last-child { margin-bottom:0; }
+.loc-ico { width:38px; height:38px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:18px; flex-shrink:0; }
+.loc-ico.s { background:#E8F7EF; }
+.loc-ico.t { background:#EDE7F6; }
+.loc-ico.p { background:#FFF3E0; }
+.loc-inp { flex:1; padding:10px 12px; background:var(--cream); border:1.5px solid var(--border);
+  border-radius:12px; font-size:13px; font-family:inherit; color:#2C1A0E; outline:none;
+  transition:border-color .2s; }
+.loc-inp:focus { border-color:var(--cookie); }
+.loc-inp::placeholder { color:var(--muted); }
+
+/* 이동수단 */
+.modes { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
+.mode-btn { padding:10px 6px; border:1.5px solid var(--border); border-radius:12px;
+  background:var(--cream); font-size:12px; font-weight:700; color:var(--muted);
+  cursor:pointer; font-family:inherit; text-align:center; transition:all .15s; }
+.mode-btn.on { background:var(--cookie); border-color:var(--cookie); color:white; }
+
+.calc-go { width:100%; padding:14px; background:var(--cookie); color:white; border:none;
+  border-radius:100px; font-size:15px; font-weight:700; cursor:pointer; font-family:inherit;
+  transition:all .15s; box-shadow:0 4px 16px rgba(200,135,58,.35); }
+.calc-go:hover { background:var(--choco); transform:translateY(-1px); }
+
+/* 결과 카드 */
+.result { background:linear-gradient(135deg,#5AC8A0,#3AAA82); border-radius:18px;
+  padding:18px; color:white; margin-top:14px; display:none; }
+.result.show { display:block; }
+.result-head { font-size:13px; opacity:.85; font-weight:700; margin-bottom:14px; }
+.result-cards { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:14px; }
+.rc { background:rgba(255,255,255,.2); border-radius:12px; padding:12px; }
+.rc-label { font-size:10px; opacity:.8; margin-bottom:4px; }
+.rc-val { font-size:22px; font-weight:900; }
+.rc-sub { font-size:10px; opacity:.75; margin-top:2px; }
+.rc-modes { margin-top:6px; display:flex; flex-direction:column; gap:2px; }
+.rc-mode { font-size:11px; opacity:.85; }
+.result-addr { background:rgba(255,255,255,.15); border-radius:10px; padding:10px; font-size:12px; }
+.result-addr div { margin-bottom:4px; }
+.result-addr div:last-child { margin:0; }
+.result-tip { margin-top:10px; font-size:12px; opacity:.9; text-align:center; font-weight:600; }
+
+/* ── 목록 PANEL ── */
+.list-filters { padding:10px 14px; background:var(--white); border-bottom:1px solid var(--border);
+  display:flex; gap:5px; overflow-x:auto; flex-shrink:0; }
+.list-filters::-webkit-scrollbar { display:none; }
+.lf { background:var(--cream); border:1.5px solid var(--border); border-radius:100px;
+  padding:6px 12px; font-size:11px; font-weight:700; color:var(--muted);
+  cursor:pointer; font-family:inherit; white-space:nowrap; flex-shrink:0; transition:all .15s; }
+.lf.on { background:var(--cookie); border-color:var(--cookie); color:white; }
+.place-list { flex:1; overflow-y:auto; padding:12px 14px; }
+.pcard { background:var(--white); border-radius:16px; padding:14px; margin-bottom:10px;
+  border:1.5px solid var(--border); box-shadow:var(--shadow); cursor:pointer; transition:all .2s; }
+.pcard:hover { transform:translateY(-2px); border-color:var(--cookie); }
+.pcard-top { display:flex; gap:10px; align-items:flex-start; margin-bottom:10px; }
+.pcard-icon { width:42px; height:42px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:20px; flex-shrink:0; }
+.pcard-body h4 { font-size:14px; font-weight:700; margin-bottom:2px; }
+.pcard-body p { font-size:11px; color:var(--muted); }
+.pcard-dists { display:flex; gap:6px; flex-wrap:wrap; }
+.pcd { display:flex; align-items:center; gap:4px; background:var(--cream);
+  border-radius:100px; padding:4px 9px; font-size:11px; font-weight:600; color:var(--muted); }
+.pcd-dot { width:6px; height:6px; border-radius:50%; }
+.pcard-tags { display:flex; gap:4px; flex-wrap:wrap; margin-top:8px; }
+.pt { font-size:9px; background:#F5F0E8; color:var(--muted); padding:2px 7px; border-radius:20px; }
+
+/* TOAST */
+.toast { position:fixed; top:80px; left:50%; transform:translateX(-50%) translateY(-14px);
+  background:#2C1A0E; color:white; padding:10px 20px; border-radius:100px;
+  font-size:13px; font-weight:600; opacity:0; transition:all .3s; z-index:9999; pointer-events:none; }
+.toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+
+<div class="toast" id="toast"></div>
+
+<div class="header">
+  <button class="back-btn">←</button>
+  <div>
+    <h2>🗺️ 전국 과외 장소 찾기</h2>
+    <p>카페 · 스터디룸 · 이동시간 계산 · 전국 지원</p>
+  </div>
+</div>
+
+<div class="tabs">
+  <button class="tab on" id="tab-map"  onclick="goTab('map')">🗺️ 지도</button>
+  <button class="tab"    id="tab-list" onclick="goTab('list')">📋 목록</button>
+  <button class="tab"    id="tab-calc" onclick="goTab('calc')">⏱️ 시간 계산</button>
+</div>
+
+<div class="panels">
+
+  <!-- ── 지도 ── -->
+  <div class="panel active" id="panel-map">
+    <div class="map-wrap">
+      <div id="map"></div>
+
+      <!-- 검색 -->
+      <div class="map-search">
+        <div class="ms-inner">
+          <input id="map-search-inp" placeholder="🔍 지역, 학교, 카페 검색..." oninput="onMapSearch()">
+          <span class="ms-icon">🔍</span>
+        </div>
+      </div>
+
+      <!-- 타입 필터 -->
+      <div class="map-chips">
+        <button class="mc on cafe"    data-type="cafe"    onclick="toggleChip(this)">☕ 카페</button>
+        <button class="mc on study"   data-type="study"   onclick="toggleChip(this)">📚 스터디룸</button>
+        <button class="mc on home"    data-type="home"    onclick="toggleChip(this)">🏠 집</button>
+        <button class="mc on school"  data-type="school"  onclick="toggleChip(this)">🏫 학교</button>
+        <button class="mc on teacher" data-type="teacher" onclick="toggleChip(this)">🎓 선생님</button>
+      </div>
+
+      <!-- 범례 -->
+      <div class="legend">
+        <div class="li"><div class="ld" style="background:var(--peach)"></div>카페</div>
+        <div class="li"><div class="ld" style="background:var(--lavender)"></div>스터디룸</div>
+        <div class="li"><div class="ld" style="background:var(--mint)"></div>학생 집</div>
+        <div class="li"><div class="ld" style="background:var(--cookie)"></div>학교</div>
+        <div class="li"><div class="ld" style="background:var(--sky)"></div>선생님</div>
+      </div>
+
+      <!-- 지역 버튼 -->
+      <div class="region-bar">
+        <button class="rb on" onclick="flyTo(36.5,127.8,7,this)">전국</button>
+        <button class="rb" onclick="flyTo(37.566,126.978,12,this)">서울</button>
+        <button class="rb" onclick="flyTo(37.275,127.009,11,this)">경기</button>
+        <button class="rb" onclick="flyTo(35.179,129.075,12,this)">부산</button>
+        <button class="rb" onclick="flyTo(35.871,128.601,12,this)">대구</button>
+        <button class="rb" onclick="flyTo(36.350,127.384,12,this)">대전</button>
+        <button class="rb" onclick="flyTo(35.175,126.907,12,this)">광주</button>
+        <button class="rb" onclick="flyTo(37.456,126.705,12,this)">인천</button>
+        <button class="rb" onclick="flyTo(35.538,129.311,12,this)">울산</button>
+        <button class="rb" onclick="flyTo(37.870,127.744,11,this)">강원</button>
+        <button class="rb" onclick="flyTo(33.455,126.566,11,this)">제주</button>
+      </div>
+
+      <!-- 바텀 시트 -->
+      <div class="bsheet" id="bsheet">
+        <div class="bs-inner">
+          <div class="bs-handle"></div>
+          <button class="bs-close" onclick="closeBS()">✕</button>
+          <div id="bs-badge" class="bs-badge">☕ 카페</div>
+          <div id="bs-name" class="bs-name">이화다방</div>
+          <div id="bs-sub"  class="bs-sub">📍 주소</div>
+          <div class="dist-row" id="bs-dists"></div>
+          <div class="am-row" id="bs-ams"></div>
+          <button class="bs-btn" id="bs-book">📅 이 장소로 수업 잡기</button>
+          <button class="bs-btn sec" onclick="showToast('카카오맵 연동 준비 중 🗺️')">🗺️ 길찾기</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── 목록 ── -->
+  <div class="panel" id="panel-list">
+    <div class="list-filters">
+      <button class="lf on" onclick="filterList('all',this)">전체</button>
+      <button class="lf"    onclick="filterList('cafe',this)">☕ 카페</button>
+      <button class="lf"    onclick="filterList('study',this)">📚 스터디룸</button>
+      <button class="lf"    onclick="filterList('home',this)">🏠 집</button>
+      <button class="lf"    onclick="filterList('school',this)">🏫 학교</button>
+    </div>
+    <div class="place-list" id="place-list"></div>
+  </div>
+
+  <!-- ── 거리 계산기 ── -->
+  <div class="panel" id="panel-calc">
+    <div class="calc-scroll">
+
+      <div class="csec">
+        <h3>🎒 학생 출발지</h3>
+        <div class="loc-row">
+          <div class="loc-ico s">🏠</div>
+          <input class="loc-inp" id="s-addr" placeholder="예) 서울 서초구 방배동" value="서울 서초구 방배동">
+        </div>
+        <div class="loc-row">
+          <div class="loc-ico s">🏫</div>
+          <select class="loc-inp" id="s-preset" onchange="applyPreset('s')">
+            <option value="">-- 자주 쓰는 출발지 --</option>
+            <option value="37.4912,126.9910,서울 서초구 방배동 (학생 집)">학생 집 (방배동)</option>
+            <option value="37.5246,127.0480,서울 강남구 삼성로 (경기고)">경기고등학교</option>
+            <option value="37.5428,127.0760,서울 광진구 능동로 (건대입구)">건대입구역</option>
+            <option value="37.5068,127.0564,서울 강동구 (잠실)">잠실역</option>
+            <option value="35.1796,129.0756,부산 해운대구">부산 해운대</option>
+            <option value="35.8714,128.6014,대구 중구">대구 중구</option>
+            <option value="36.3504,127.3845,대전 유성구">대전 유성구</option>
+            <option value="35.1595,126.8526,광주 서구">광주 서구</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="csec">
+        <h3>🎓 선생님 출발지</h3>
+        <div class="loc-row">
+          <div class="loc-ico t">🎓</div>
+          <input class="loc-inp" id="t-addr" placeholder="예) 서울 서대문구 이화여대" value="서울 서대문구 이화여대">
+        </div>
+        <div class="loc-row">
+          <div class="loc-ico t">🏫</div>
+          <select class="loc-inp" id="t-preset" onchange="applyPreset('t')">
+            <option value="">-- 자주 쓰는 출발지 --</option>
+            <option value="37.5619,126.9468,이화여자대학교">이화여자대학교</option>
+            <option value="37.5664,126.9387,연세대학교 신촌">연세대학교</option>
+            <option value="37.5893,127.0325,고려대학교 안암">고려대학교</option>
+            <option value="37.4648,126.9572,서울대학교 관악">서울대학교</option>
+            <option value="36.3721,127.3604,KAIST 대전">KAIST</option>
+            <option value="36.0110,129.3227,POSTECH 포항">POSTECH</option>
+            <option value="35.2326,129.0826,부산대학교">부산대학교</option>
+            <option value="35.8888,128.6103,경북대학교 대구">경북대학교</option>
+            <option value="35.1755,126.9071,전남대학교 광주">전남대학교</option>
+            <option value="37.2820,127.0463,아주대학교 수원">아주대학교</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="csec">
+        <h3>📍 과외 장소</h3>
+        <div class="loc-row">
+          <div class="loc-ico p">☕</div>
+          <input class="loc-inp" id="p-addr" placeholder="예) 신촌 스터디카페" value="서울 서대문구 신촌">
+        </div>
+        <div class="loc-row">
+          <div class="loc-ico p">📌</div>
+          <select class="loc-inp" id="p-preset" onchange="applyPreset('p')">
+            <option value="">-- 장소 선택 --</option>
+            <optgroup label="☕ 신촌/이화 카페">
+              <option value="37.5590,126.9443,이화다방 (이화여대 인근 8층)">이화다방</option>
+              <option value="37.5584,126.9460,북카페 파오 (이화여대길)">북카페 파오</option>
+              <option value="37.5563,126.9372,캐치카페 신촌">캐치카페 신촌</option>
+            </optgroup>
+            <optgroup label="📚 신촌 스터디룸">
+              <option value="37.5581,126.9384,포텐셜 스터디카페 신촌">포텐셜 스터디카페</option>
+              <option value="37.5573,126.9376,프레쉬 스터디카페 신촌">프레쉬 스터디카페</option>
+              <option value="37.5581,126.9364,신촌 스터디룸 꿈틀">스터디룸 꿈틀</option>
+            </optgroup>
+            <optgroup label="☕ 강남 카페">
+              <option value="37.5172,127.0473,강남역 스타벅스">강남역 스타벅스</option>
+              <option value="37.5113,127.0595,잠실 메가커피">잠실 메가커피</option>
+            </optgroup>
+            <optgroup label="📚 강남 스터디룸">
+              <option value="37.5020,127.0270,강남 토즈 스터디센터">강남 토즈</option>
+              <option value="37.5016,127.0258,역삼 패스트파이브">역삼 패스트파이브</option>
+            </optgroup>
+            <optgroup label="📚 부산">
+              <option value="35.1588,129.0603,서면 스터디카페">부산 서면 스터디카페</option>
+              <option value="35.1581,129.1600,해운대 카페">부산 해운대 카페</option>
+            </optgroup>
+            <optgroup label="📚 대전">
+              <option value="36.3504,127.3845,대전 신세계 스터디카페">대전 신세계 카페</option>
+            </optgroup>
+            <optgroup label="🏠 학생 집">
+              <option value="37.4912,126.9910,학생 집 (서초구 방배동)">학생 집</option>
+            </optgroup>
+          </select>
+        </div>
+      </div>
+
+      <div class="csec">
+        <h3>🚌 이동 수단</h3>
+        <div class="modes">
+          <button class="mode-btn on" data-mode="walk"    onclick="setMode(this)">🚶 도보</button>
+          <button class="mode-btn"    data-mode="transit" onclick="setMode(this)">🚇 대중교통</button>
+          <button class="mode-btn"    data-mode="car"     onclick="setMode(this)">🚗 자차</button>
+        </div>
+      </div>
+
+      <button class="calc-go" onclick="doCalc()">⏱️ 이동 시간 계산하기</button>
+
+      <div class="result" id="result">
+        <div class="result-head">📊 이동 시간 분석 결과</div>
+        <div class="result-cards" id="result-cards"></div>
+        <div class="result-addr" id="result-addr"></div>
+        <div class="result-tip" id="result-tip"></div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<script>
+// =============================================
+// 전국 장소 DB
+// =============================================
+const PLACES = [
+  // 서울 신촌/이화
+  {id:'cafe_dabang',  type:'cafe',  region:'seoul', name:'이화다방 ☕',         icon:'☕', lat:37.5590,lng:126.9443, addr:'서울 서대문구 이화여대길 75 8층',  rating:4.6, tags:['Wi-Fi','콘센트','뷰맛집','조용'],        hours:'10:00~22:40'},
+  {id:'cafe_pao',     type:'cafe',  region:'seoul', name:'북카페 파오 📖',       icon:'📖', lat:37.5584,lng:126.9460, addr:'서울 서대문구 이화여대길 34',      rating:4.6, tags:['Wi-Fi','도서관분위기','공부ok'],           hours:'12:00~22:00'},
+  {id:'cafe_catch',   type:'cafe',  region:'seoul', name:'캐치카페 신촌 ☕',     icon:'☕', lat:37.5563,lng:126.9372, addr:'서울 서대문구 연세로 8-1 5층',     rating:4.7, tags:['취준생할인','조용','콘센트'],              hours:'12:00~22:00'},
+  {id:'cafe_24h',     type:'cafe',  region:'seoul', name:'카페앤 신촌 🌙',       icon:'🌙', lat:37.5566,lng:126.9377, addr:'서울 서대문구 연세로 14',           rating:3.8, tags:['24시간','Wi-Fi','콘센트'],               hours:'24시간'},
+  {id:'study_pot',    type:'study', region:'seoul', name:'포텐셜 스터디카페 📚', icon:'📚', lat:37.5581,lng:126.9384, addr:'서울 서대문구 명물길 32 6층',      rating:4.6, tags:['24시간','개인좌석','독서실'],              hours:'24시간'},
+  {id:'study_fresh',  type:'study', region:'seoul', name:'프레쉬 스터디카페 📖', icon:'📖', lat:37.5573,lng:126.9376, addr:'서울 서대문구 명물길 10 5층',      rating:4.4, tags:['24시간','조용','저렴'],                  hours:'24시간'},
+  {id:'study_maker',  type:'study', region:'seoul', name:'마커닛 스터디룸 🎯',   icon:'🎯', lat:37.5579,lng:126.9377, addr:'서울 서대문구 창천동 31-92',        rating:4.7, tags:['프라이빗룸','TV','넷플릭스','방음'],       hours:'24시간'},
+  {id:'study_ggum',   type:'study', region:'seoul', name:'스터디룸 꿈틀 💡',     icon:'💡', lat:37.5581,lng:126.9364, addr:'서울 서대문구 창천동 33-25 4층',   rating:4.1, tags:['학생할인','2인룸','에어컨'],              hours:'24시간'},
+  // 서울 강남
+  {id:'cafe_gangnam', type:'cafe',  region:'seoul', name:'강남 스터디카페 ☕',   icon:'☕', lat:37.4979,lng:127.0276, addr:'서울 강남구 강남대로 (강남역 인근)', rating:4.4, tags:['Wi-Fi','콘센트','24시간','넓음'],          hours:'24시간'},
+  {id:'study_toz',    type:'study', region:'seoul', name:'토즈 강남점 📚',        icon:'📚', lat:37.5020,lng:127.0270, addr:'서울 강남구 테헤란로 (토즈)',       rating:4.5, tags:['프리미엄룸','Wi-Fi','프로젝터'],           hours:'09:00~23:00'},
+  {id:'study_ff',     type:'study', region:'seoul', name:'패스트파이브 역삼 📖',  icon:'📖', lat:37.5016,lng:127.0258, addr:'서울 강남구 테헤란로 (역삼역)',     rating:4.3, tags:['코워킹','세미나룸','Wi-Fi'],              hours:'08:00~22:00'},
+  // 학생 집 / 학교
+  {id:'home_s',       type:'home',  region:'seoul', name:'홍길동 학생 집 🏠',    icon:'🏠', lat:37.4912,lng:126.9910, addr:'서울 서초구 방배동 (학생 자택)',     rating:null, tags:['이동없음','편안함','조용'],             hours:'협의'},
+  {id:'school_ewha',  type:'school',region:'seoul', name:'이화여대 인근 🏫',      icon:'🏫', lat:37.5619,lng:126.9468, addr:'서울 서대문구 이화여대길 52',      rating:4.6, tags:['선생님 편의','조용','교내시설'],          hours:'학교 일정'},
+  // 부산
+  {id:'cafe_busan1',  type:'cafe',  region:'busan', name:'서면 스터디카페 ☕',   icon:'☕', lat:35.1588,lng:129.0603, addr:'부산 부산진구 서면역 인근',          rating:4.3, tags:['24시간','Wi-Fi','넓음'],               hours:'24시간'},
+  {id:'study_busan1', type:'study', region:'busan', name:'해운대 스터디룸 📚',   icon:'📚', lat:35.1581,lng:129.1600, addr:'부산 해운대구 해운대해변로',        rating:4.4, tags:['프라이빗룸','바다뷰','Wi-Fi'],           hours:'09:00~24:00'},
+  {id:'cafe_busan2',  type:'cafe',  region:'busan', name:'광안리 카페 📖',        icon:'📖', lat:35.1528,lng:129.1187, addr:'부산 수영구 광안해변로',             rating:4.5, tags:['뷰맛집','Wi-Fi','조용'],               hours:'10:00~23:00'},
+  // 대전
+  {id:'cafe_dj1',     type:'cafe',  region:'daejeon', name:'카이스트 인근 카페 ☕',icon:'☕',lat:36.3700,lng:127.3650, addr:'대전 유성구 대학로 (카이스트 인근)', rating:4.4, tags:['연구자분위기','Wi-Fi','조용'],           hours:'08:00~22:00'},
+  {id:'study_dj1',    type:'study', region:'daejeon', name:'대전 스터디카페 📚',  icon:'📚', lat:36.3504,lng:127.3845, addr:'대전 유성구 (신세계 인근)',          rating:4.3, tags:['24시간','저렴','넓음'],               hours:'24시간'},
+  // 대구
+  {id:'cafe_dg1',     type:'cafe',  region:'daegu',   name:'동성로 카페 ☕',       icon:'☕', lat:35.8714,lng:128.5955, addr:'대구 중구 동성로 (동성로 인근)',     rating:4.2, tags:['24시간','Wi-Fi'],                    hours:'24시간'},
+  {id:'study_dg1',    type:'study', region:'daegu',   name:'경대 인근 스터디 📚', icon:'📚', lat:35.8888,lng:128.6103, addr:'대구 북구 대학로 (경북대 인근)',     rating:4.3, tags:['학생가','저렴','조용'],               hours:'24시간'},
+  // 광주
+  {id:'cafe_gj1',     type:'cafe',  region:'other',   name:'전남대 인근 카페 ☕', icon:'☕', lat:35.1755,lng:126.9071, addr:'광주 북구 용봉로 (전남대 인근)',     rating:4.3, tags:['Wi-Fi','학생할인'],                  hours:'09:00~23:00'},
+  // 인천
+  {id:'study_ic1',    type:'study', region:'other',   name:'인하대 인근 스터디 📚',icon:'📚',lat:37.4500,lng:126.6535, addr:'인천 미추홀구 인하로 (인하대 인근)', rating:4.3, tags:['24시간','저렴'],                     hours:'24시간'},
+  // 수원
+  {id:'cafe_sw1',     type:'cafe',  region:'gyeonggi',name:'수원 영통 카페 ☕',   icon:'☕', lat:37.2820,lng:127.0463, addr:'경기 수원시 영통구 (아주대 인근)',   rating:4.2, tags:['Wi-Fi','넓음','주차가능'],             hours:'09:00~23:00'},
+  // 강원
+  {id:'cafe_gw1',     type:'cafe',  region:'other',   name:'춘천 카페 ☕',         icon:'☕', lat:37.8700,lng:127.7440, addr:'강원 춘천시 (강원대 인근)',          rating:4.4, tags:['호수뷰','Wi-Fi','조용'],              hours:'10:00~22:00'},
+  // 제주
+  {id:'cafe_je1',     type:'cafe',  region:'other',   name:'제주 카페 ☕',          icon:'☕', lat:33.4554,lng:126.5660, addr:'제주시 (제주대 인근)',               rating:4.5, tags:['감성','Wi-Fi','뷰'],                 hours:'10:00~22:00'},
+];
+
+// 선생님 위치 (지도에 표시용)
+const TEACHERS = [
+  { name:'김이화 선생님', lat:37.5619, lng:126.9468, subject:'수학·과학', univ:'이화여대' },
+  { name:'박연세 선생님', lat:37.5664, lng:126.9387, subject:'영어', univ:'연세대' },
+  { name:'최고려 선생님', lat:37.5893, lng:127.0325, subject:'국어', univ:'고려대' },
+];
+
+// 학생 위치
+const STUDENT = { name:'홍길동 학생', lat:37.4912, lng:126.9910, school:'방배중학교' };
+
+// =============================================
+// Leaflet 지도
+// =============================================
+const map = L.map('map', { center:[36.5,127.8], zoom:7, zoomControl:false });
+
+// 파스텔 귀여운 타일
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  maxZoom:19, attribution:'© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+}).addTo(map);
+
+L.control.zoom({ position:'topright' }).addTo(map);
+
+// 색상 맵
+const C = { cafe:getComputedStyle(document.documentElement).getPropertyValue('--peach').trim()||'#FF8A70',
+            study:'#A89BE8', home:'#5AC8A0', school:'#C8873A', teacher:'#74B8E8' };
+
+function mkIcon(type, emoji) {
+  const color = C[type]||'#C8873A';
+  return L.divIcon({
+    className:'',
+    html:`<div style="width:34px;height:34px;background:${color};border-radius:50%;display:flex;align-items:center;justify-content:center;border:3px solid white;box-shadow:0 3px 10px rgba(0,0,0,.25);font-size:15px;">${emoji}</div>
+          <div style="width:0;height:0;border-left:5px solid transparent;border-right:5px solid transparent;border-top:7px solid ${color};margin:-1px auto 0;width:10px;"></div>`,
+    iconSize:[34,44], iconAnchor:[17,44], popupAnchor:[0,-44]
+  });
+}
+
+// 마커 저장
+const markerMap = {}; // id → marker
+let activeTypes = new Set(['cafe','study','home','school','teacher']);
+
+// 장소 마커
+PLACES.forEach(p => {
+  const m = L.marker([p.lat,p.lng], { icon:mkIcon(p.type, p.icon) });
+  m.on('click', () => openBS(p));
+  m.addTo(map);
+  markerMap[p.id] = { m, type:p.type };
+});
+
+// 학생 마커
+L.marker([STUDENT.lat, STUDENT.lng], { icon:mkIcon('home','🏠') })
+  .addTo(map)
+  .bindTooltip(STUDENT.name+' 🏠', { direction:'top' });
+
+// 선생님 마커
+TEACHERS.forEach(t => {
+  L.marker([t.lat, t.lng], { icon:mkIcon('teacher','🎓') })
+    .addTo(map)
+    .bindTooltip(`${t.name} 🎓 ${t.univ}`, { direction:'top' });
+});
+
+// 타입 필터
+function toggleChip(btn) {
+  const type = btn.dataset.type;
+  btn.classList.toggle('on');
+  if (activeTypes.has(type)) activeTypes.delete(type);
+  else activeTypes.add(type);
+  Object.values(markerMap).forEach(({m, type:t}) => {
+    if (activeTypes.has(t)) m.addTo(map); else map.removeLayer(m);
+  });
+}
+
+// 지역 이동
+function flyTo(lat, lng, zoom, btn) {
+  document.querySelectorAll('.rb').forEach(b => b.classList.remove('on'));
+  btn.classList.add('on');
+  map.flyTo([lat, lng], zoom, { duration:1.2 });
+}
+
+// 검색
+function onMapSearch() {
+  const q = document.getElementById('map-search-inp').value.trim().toLowerCase();
+  if (!q) return;
+  const found = PLACES.find(p => p.name.toLowerCase().includes(q) || p.addr.toLowerCase().includes(q));
+  if (found) { map.flyTo([found.lat, found.lng], 15, {duration:1}); openBS(found); }
+  else showToast('찾는 장소가 없어요 🍪 다시 검색해보세요');
+}
+
+// =============================================
+// 바텀 시트
+// =============================================
+const TYPE_LABEL = { cafe:'☕ 카페', study:'📚 스터디룸', home:'🏠 학생 집', school:'🏫 학교', teacher:'🎓 선생님' };
+const TYPE_BG = { cafe:'#FFE8E4', study:'#EDE7F6', home:'#E8F7EF', school:'#FFF3E0', teacher:'#E3F4FB' };
+const TYPE_COLOR = { cafe:'#FF8A70', study:'#A89BE8', home:'#5AC8A0', school:'#C8873A', teacher:'#74B8E8' };
+
+function openBS(p) {
+  const badge = document.getElementById('bs-badge');
+  badge.textContent = TYPE_LABEL[p.type] || p.type;
+  badge.style.background = TYPE_BG[p.type]||'#FFF3E0';
+  badge.style.color = TYPE_COLOR[p.type]||'#C8873A';
+
+  document.getElementById('bs-name').textContent = p.name;
+  document.getElementById('bs-sub').innerHTML =
+    `📍 ${p.addr}<br>🕐 ${p.hours || '협의'}`;
+
+  // 거리: 학생 집 → 장소 / 이화여대(선생님) → 장소
+  const sd = dist(STUDENT.lat, STUDENT.lng, p.lat, p.lng);
+  const td = dist(37.5619, 126.9468, p.lat, p.lng); // 이화여대 기준
+  const st = times(sd); const tt = times(td);
+
+  document.getElementById('bs-dists').innerHTML = `
+    <div class="dc">
+      <div class="dc-from">🎒 학생 이동거리</div>
+      <div class="dc-dist">${fmtDist(sd)}</div>
+      <div class="dc-modes">
+        <div class="dc-mode">🚶 도보 <strong>${st.walk}분</strong></div>
+        <div class="dc-mode">🚇 대중교통 <strong>${st.transit}분</strong></div>
+        <div class="dc-mode">🚗 자차 <strong>${st.car}분</strong></div>
+      </div>
+    </div>
+    <div class="dc">
+      <div class="dc-from">🎓 선생님 이동거리</div>
+      <div class="dc-dist">${fmtDist(td)}</div>
+      <div class="dc-modes">
+        <div class="dc-mode">🚶 도보 <strong>${tt.walk}분</strong></div>
+        <div class="dc-mode">🚇 대중교통 <strong>${tt.transit}분</strong></div>
+        <div class="dc-mode">🚗 자차 <strong>${tt.car}분</strong></div>
+      </div>
+    </div>`;
+
+  document.getElementById('bs-ams').innerHTML = (p.tags||[]).map(a=>`<span class="am-tag">${a}</span>`).join('');
+  document.getElementById('bs-book').textContent = `📅 ${p.name.replace(/[☕📚🏠🏫🎯📖💡🌙]/g,'').trim()}에서 수업 잡기`;
+  document.getElementById('bs-book').onclick = () => { showToast('수업 일정 잡기 준비 중 🍪'); closeBS(); };
+  document.getElementById('bsheet').classList.add('open');
+  map.flyTo([p.lat, p.lng], 15, {duration:0.8});
+}
+
+function closeBS() { document.getElementById('bsheet').classList.remove('open'); }
+map.on('click', closeBS);
+
+// =============================================
+// 목록
+// =============================================
+let listType = 'all';
+function renderList() {
+  const filtered = listType === 'all' ? PLACES : PLACES.filter(p => p.type === listType);
+  document.getElementById('place-list').innerHTML = filtered.map(p => {
+    const sd = dist(STUDENT.lat, STUDENT.lng, p.lat, p.lng);
+    const td = dist(37.5619, 126.9468, p.lat, p.lng);
+    const st = times(sd); const tt = times(td);
+    const bg = TYPE_BG[p.type]||'#FFF3E0';
+    return `<div class="pcard" onclick="jumpToPlace('${p.id}')">
+      <div class="pcard-top">
+        <div class="pcard-icon" style="background:${bg}">${p.icon}</div>
+        <div class="pcard-body">
+          <h4>${p.name}</h4>
+          <p>${p.addr}</p>
+        </div>
+      </div>
+      <div class="pcard-dists">
+        <div class="pcd"><div class="pcd-dot" style="background:var(--mint)"></div>학생 🚶${st.walk}분 (${fmtDist(sd)})</div>
+        <div class="pcd"><div class="pcd-dot" style="background:var(--sky)"></div>선생님 🚶${tt.walk}분 (${fmtDist(td)})</div>
+      </div>
+      <div class="pcard-tags">${(p.tags||[]).map(t=>`<span class="pt">${t}</span>`).join('')}</div>
+    </div>`;
+  }).join('');
+}
+
+function filterList(type, btn) {
+  listType = type;
+  document.querySelectorAll('.lf').forEach(b => b.classList.remove('on'));
+  btn.classList.add('on');
+  renderList();
+}
+
+function jumpToPlace(id) {
+  const p = PLACES.find(x => x.id === id);
+  if (!p) return;
+  goTab('map');
+  setTimeout(() => { map.flyTo([p.lat,p.lng],15,{duration:0.8}); openBS(p); }, 150);
+}
+
+// =============================================
+// 거리 계산기
+// =============================================
+let tMode = 'walk';
+let sCoord = [37.4912, 126.9910];
+let tCoord = [37.5619, 126.9468];
+let pCoord = [37.5590, 126.9443];
+
+function applyPreset(who) {
+  const sel = document.getElementById(who + '-preset');
+  const val = sel.value;
+  if (!val) return;
+  const parts = val.split(',');
+  const lat = parseFloat(parts[0]), lng = parseFloat(parts[1]), name = parts.slice(2).join(',');
+  if (who === 's') { sCoord = [lat, lng]; document.getElementById('s-addr').value = name; }
+  if (who === 't') { tCoord = [lat, lng]; document.getElementById('t-addr').value = name; }
+  if (who === 'p') { pCoord = [lat, lng]; document.getElementById('p-addr').value = name; }
+  sel.value = '';
+}
+
+function setMode(btn) {
+  tMode = btn.dataset.mode;
+  document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('on'));
+  btn.classList.add('on');
+}
+
+function doCalc() {
+  const sAddr = document.getElementById('s-addr').value.trim();
+  const tAddr = document.getElementById('t-addr').value.trim();
+  const pAddr = document.getElementById('p-addr').value.trim();
+  if (!sAddr || !tAddr || !pAddr) { showToast('출발지와 과외 장소를 입력해주세요 🍪'); return; }
+
+  const sd = dist(sCoord[0], sCoord[1], pCoord[0], pCoord[1]);
+  const td = dist(tCoord[0], tCoord[1], pCoord[0], pCoord[1]);
+  const st = times(sd); const tt = times(td);
+
+  const modeKey = tMode;
+  const mLabel  = { walk:'🚶 도보', transit:'🚇 대중교통', car:'🚗 자차' }[modeKey];
+  const sTime = st[modeKey];
+  const tTime = tt[modeKey];
+
+  const result = document.getElementById('result');
+  result.classList.add('show');
+
+  document.getElementById('result-cards').innerHTML = `
+    <div class="rc">
+      <div class="rc-label">🎒 학생 이동</div>
+      <div class="rc-val">${sTime}<span style="font-size:14px;font-weight:500;">분</span></div>
+      <div class="rc-sub">${fmtDist(sd)}</div>
+      <div class="rc-modes">
+        <div class="rc-mode">🚶 도보 ${st.walk}분</div>
+        <div class="rc-mode">🚇 대중교통 ${st.transit}분</div>
+        <div class="rc-mode">🚗 자차 ${st.car}분</div>
+      </div>
+    </div>
+    <div class="rc">
+      <div class="rc-label">🎓 선생님 이동</div>
+      <div class="rc-val">${tTime}<span style="font-size:14px;font-weight:500;">분</span></div>
+      <div class="rc-sub">${fmtDist(td)}</div>
+      <div class="rc-modes">
+        <div class="rc-mode">🚶 도보 ${tt.walk}분</div>
+        <div class="rc-mode">🚇 대중교통 ${tt.transit}분</div>
+        <div class="rc-mode">🚗 자차 ${tt.car}분</div>
+      </div>
+    </div>`;
+
+  document.getElementById('result-addr').innerHTML = `
+    <div>🎒 <b>${sAddr}</b> → 과외 장소 <b>${mLabel} ${sTime}분</b></div>
+    <div>🎓 <b>${tAddr}</b> → 과외 장소 <b>${mLabel} ${tTime}분</b></div>
+    <div>📍 과외 장소: <b>${pAddr}</b></div>`;
+
+  // 팁 (공정점수 없이 자연스럽게)
+  const maxT = Math.max(sTime, tTime);
+  const diff  = Math.abs(sTime - tTime);
+  let tip = '';
+  if (maxT <= 15)       tip = '✅ 두 분 모두 15분 이내! 최고의 장소예요 🍪';
+  else if (maxT <= 30)  tip = '👍 두 분 모두 30분 이내, 괜찮은 거리예요';
+  else if (diff <= 10)  tip = '⚖️ 이동 시간이 비슷해요. 좋은 중간 지점이에요';
+  else if (sTime > tTime) tip = `💡 선생님이 ${diff}분 더 가까워요. 학생이 조금 더 이동해요`;
+  else                  tip = `💡 학생이 ${diff}분 더 가까워요. 선생님이 조금 더 이동해요`;
+
+  document.getElementById('result-tip').textContent = tip;
+  result.scrollIntoView({ behavior:'smooth', block:'nearest' });
+}
+
+// =============================================
+// 거리 유틸
+// =============================================
+function dist(a, b, c, d) {
+  const R=6371, dLat=(c-a)*Math.PI/180, dLon=(d-b)*Math.PI/180;
+  const x=Math.sin(dLat/2)**2+Math.cos(a*Math.PI/180)*Math.cos(c*Math.PI/180)*Math.sin(dLon/2)**2;
+  return R*2*Math.atan2(Math.sqrt(x),Math.sqrt(1-x));
+}
+function fmtDist(km) { return km < 1 ? Math.round(km*1000)+'m' : km.toFixed(1)+'km'; }
+function times(km) {
+  return {
+    walk:    Math.max(2, Math.ceil(km/4.5*60)),
+    transit: Math.max(5, Math.ceil(km/22*60) + (km>0.5?5:0)),
+    car:     Math.max(3, Math.ceil(km/35*60) + (km>2?5:0))
+  };
+}
+
+// =============================================
+// 탭 전환
+// =============================================
+function goTab(name) {
+  ['map','list','calc'].forEach((n,i) => {
+    document.getElementById('panel-'+n).classList.toggle('active', n===name);
+    document.getElementById('tab-'+n).classList.toggle('on', n===name);
+  });
+  if (name==='list') renderList();
+  if (name==='map')  setTimeout(()=>map.invalidateSize(),100);
+}
+
+// =============================================
+// 토스트
+// =============================================
+function showToast(msg) {
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2500);
+}
+
+// 초기화
+renderList();
+</script>
+</body>
+</html>
