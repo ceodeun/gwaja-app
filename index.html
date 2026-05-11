@@ -760,7 +760,11 @@ window.saveRole = async () => {
     showLoading(false);
     if (role === 'teacher') go('s-teacher-setup');
     else goMain({ role, name });
-  } catch(e) { showLoading(false); showToast('저장 중 오류: ' + e.message); }
+  } catch(e) { 
+    showLoading(false); 
+    console.error('saveRole error:', e);
+    showToast('저장 오류: ' + e.code + ' - ' + e.message); 
+  }
 };
 
 // ── 선생님 프로필 저장 ──
@@ -795,7 +799,11 @@ window.saveTeacherProfile = async () => {
     showLoading(false);
     showToast('프로필 저장 완료! 🎓');
     goMain({ role: 'teacher' });
-  } catch(e) { showLoading(false); showToast('저장 중 오류: ' + e.message); }
+  } catch(e) { 
+    showLoading(false); 
+    console.error('saveRole error:', e);
+    showToast('저장 오류: ' + e.code + ' - ' + e.message); 
+  }
 };
 
 // ── 선생님 검색 ──
@@ -966,6 +974,17 @@ document.addEventListener('keydown', e => {
     if (active?.id === 's-signup') window.doSignup && window.doSignup();
   }
 });
+
+// module 함수 래퍼 (onclick에서 바로 호출 가능하게)
+function doLogin() { window.doLogin && window.doLogin(); }
+function doSignup() { window.doSignup && window.doSignup(); }
+function doLogout() { window.doLogout && window.doLogout(); }
+function saveRole() { window.saveRole && window.saveRole(); }
+function saveTeacherProfile() { window.saveTeacherProfile && window.saveTeacherProfile(); }
+function doResetPw() { window.doResetPw && window.doResetPw(); }
+function searchTeachers() { window.searchTeachers && window.searchTeachers(); }
+function openChatReqModal(uid, name) { window.openChatReqModal && window.openChatReqModal(uid, name); }
+function sendChatReq() { window.sendChatReq && window.sendChatReq(); }
 </script>
 </body>
 </html>
