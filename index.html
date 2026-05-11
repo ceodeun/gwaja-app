@@ -1685,6 +1685,7 @@ function tcTab(n) {
   if (n==='manage') loadMyStudents();
   if (n==='tccalendar') initTcCalendar();
   if (n==='me') loadGradeCerts();
+  if (n==='home') loadEarnDashboard();
 }
 
 function subTab(n) {
@@ -1934,24 +1935,43 @@ function tcNextMonth(){tcCalMonth++;if(tcCalMonth>11){tcCalMonth=0;tcCalYear++;}
 function initTcCalendar(){tcCalYear=new Date().getFullYear();tcCalMonth=new Date().getMonth();renderTcCalendar();loadMyStudentsForSelect();}
 function loadMyStudentsForSelect(){
   if(!currentUser)return;
-  db.collection('matches').where('teacherUid','==',currentUser.uid).get().then(snap=>{
-    const matchDocs = [];
-    snap.forEach(d=>{ if(!d.data().status || d.data().status==='active') matchDocs.push(d.data()); });
-    // studentName 없으면 studentUid로 users에서 이름 가져오기
-    const promises = matchDocs.map(m => {
-      if(m.studentName && m.studentName!=='학생') return Promise.resolve(m.studentName);
-      if(!m.studentUid) return Promise.resolve(null);
-      return db.collection('users').doc(m.studentUid).get().then(u=> u.data()&&u.data().name ? u.data().name : null);
-    });
-    Promise.all(promises).then(names => {
-      const filtered = names.filter(Boolean);
-      // 수업 기록 모달 ll-student를 input→select로 동적 교체
-      const llWrap = document.getElementById('ll-student');
-      if(llWrap) {
-        llWrap.innerHTML = '<option value="">학생 선택</option>' + filtered.map(n=>`<option value="${n}">${n}</option>`).join('');
+  const monthStr = tcCalYear+'-'+String(tcCalMonth+1).padStart(2,'0');
+  // matches + lessonLogs 둘 다에서 학생 이름 수집
+  Promise.all([
+    db.collection('matches').where('teacherUid','==',currentUser.uid).get(),
+    db.collection('lessonLogs').where('teacherUid','==',currentUser.uid).get()
+  ]).then(([matchSnap, logSnap]) => {
+    const nameSet = new Set();
+    const promises = [];
+
+    // matches에서 이름 수집
+    matchSnap.forEach(d => {
+      const m = d.data();
+      if (!m.status || m.status === 'active') {
+        if (m.studentName && m.studentName !== '학생') {
+          nameSet.add(m.studentName);
+        } else if (m.studentUid) {
+          promises.push(
+            db.collection('users').doc(m.studentUid).get()
+              .then(u => { if(u.data()&&u.data().name) nameSet.add(u.data().name); })
+          );
+        }
       }
+    });
+
+    // lessonLogs에서 직접 입력한 이름도 수집
+    logSnap.forEach(d => {
+      const s = d.data().student;
+      if (s && s !== '학생') nameSet.add(s);
+    });
+
+    Promise.all(promises).then(() => {
+      const filtered = [...nameSet];
+      const opts = '<option value="">학생 선택</option>' + filtered.map(n=>`<option value="${n}">${n}</option>`).join('');
+      const llSel = document.getElementById('ll-student');
+      if(llSel) llSel.innerHTML = opts;
       const fbSel = document.getElementById('feedback-student');
-      if(fbSel) fbSel.innerHTML = '<option value="">학생 선택</option>' + filtered.map(n=>`<option value="${n}">${n}</option>`).join('');
+      if(fbSel) fbSel.innerHTML = opts;
     });
   });
 }
@@ -2076,18 +2096,40 @@ function loadTcLessons(){
 }
 function loadFeedbackStudents(){
   if(!currentUser)return;
-  db.collection('matches').where('teacherUid','==',currentUser.uid).get().then(snap=>{
-    const matchDocs = [];
-    snap.forEach(d=>{ if(!d.data().status || d.data().status==='active') matchDocs.push(d.data()); });
-    const promises = matchDocs.map(m => {
-      if(m.studentName && m.studentName!=='학생') return Promise.resolve(m.studentName);
-      if(!m.studentUid) return Promise.resolve(null);
-      return db.collection('users').doc(m.studentUid).get().then(u=> u.data()&&u.data().name ? u.data().name : null);
+  // matches + lessonLogs 둘 다에서 학생 이름 수집
+  Promise.all([
+    db.collection('matches').where('teacherUid','==',currentUser.uid).get(),
+    db.collection('lessonLogs').where('teacherUid','==',currentUser.uid).get()
+  ]).then(([matchSnap, logSnap]) => {
+    const nameSet = new Set();
+    const promises = [];
+
+    // matches에서 이름 수집
+    matchSnap.forEach(d => {
+      const m = d.data();
+      if (!m.status || m.status === 'active') {
+        if (m.studentName && m.studentName !== '학생') {
+          nameSet.add(m.studentName);
+        } else if (m.studentUid) {
+          promises.push(
+            db.collection('users').doc(m.studentUid).get()
+              .then(u => { if(u.data()&&u.data().name) nameSet.add(u.data().name); })
+          );
+        }
+      }
     });
-    Promise.all(promises).then(names => {
-      const filtered = names.filter(Boolean);
+
+    // lessonLogs에서 직접 입력한 이름도 수집
+    logSnap.forEach(d => {
+      const s = d.data().student;
+      if (s && s !== '학생') nameSet.add(s);
+    });
+
+    Promise.all(promises).then(() => {
+      const filtered = [...nameSet];
+      const opts = '<option value="">학생 선택</option>' + filtered.map(n=>`<option value="${n}">${n}</option>`).join('');
       const sel = document.getElementById('tc-feedback-student') || document.getElementById('feedback-student');
-      if(sel) sel.innerHTML = '<option value="">학생 선택...</option>' + filtered.map(n=>`<option value="${n}">${n}</option>`).join('');
+      if(sel) sel.innerHTML = opts;
     });
   });
 }
@@ -2137,7 +2179,12 @@ function loadEarnDashboard(){
   const monthStr=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0');
   db.collection('lessonLogs').where('teacherUid','==',currentUser.uid).where('month','==',monthStr).get().then(snap=>{
     let total=0,count=0;const students=new Set();
-    snap.forEach(d=>{total+=d.data().total||0;count++;students.add(d.data().student);});
+    snap.forEach(d=>{
+      const data=d.data();
+      total += data.total || data.fee || (data.price * data.duration) || 0;
+      count++;
+      students.add(data.student);
+    });
     const commission=Math.round(total*0.1);
     document.getElementById('earn-amount-main').textContent='₩'+total.toLocaleString();
     document.getElementById('earn-count-main').textContent=count;
