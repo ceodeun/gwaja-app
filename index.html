@@ -1453,15 +1453,17 @@ function loadRequests() {
   if (!currentUser) return;
   db.collection('chatRequests')
     .where('teacherUid', '==', currentUser.uid)
-    .where('status', '==', 'pending')
     .get()
     .then(snap => {
       const list = document.getElementById('req-list');
       if (!list) return;
-      if (snap.empty) {
+      const pendingDocs = snap.docs.filter(d => d.data().status === 'pending');
+      if (pendingDocs.length === 0) {
         list.innerHTML = '<div style="text-align:center;padding:30px;color:var(--muted);"><div style="font-size:32px;margin-bottom:8px;">💬</div><div style="font-size:13px;">아직 대화 요청이 없어요<br>학생이 요청을 보내면 여기 표시돼요</div></div>';
         return;
       }
+      // snap을 pendingDocs로 대체
+      snap = { docs: pendingDocs, forEach: (fn) => pendingDocs.forEach(fn), empty: pendingDocs.length === 0 };
       // 학생 정보 가져오기
       const promises = [];
       snap.forEach(doc => {
@@ -1498,12 +1500,12 @@ function loadStudentProposals() {
   if (!currentUser) return;
   db.collection('chatRequests')
     .where('studentUid', '==', currentUser.uid)
-    .where('type', '==', 'teacherPropose')
-    .where('status', '==', 'pending')
     .get()
-    .then(snap => {
+    .then(rawSnap => {
       const list = document.getElementById('proposal-list');
       if (!list) return;
+      const pendingDocs = rawSnap.docs.filter(d => d.data().type === 'teacherPropose' && d.data().status === 'pending');
+      const snap = { docs: pendingDocs, forEach: (fn) => pendingDocs.forEach(fn), empty: pendingDocs.length === 0 };
       if (snap.empty) {
         list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--muted);font-size:13px;">아직 수업 제안이 없어요</div>';
         return;
@@ -1882,9 +1884,11 @@ function loadChatList(role) {
   
   db.collection('chatRequests')
     .where(field, '==', currentUser.uid)
-    .where('status', '==', 'accepted')
     .get()
-    .then(snap => {
+    .then(rawSnap => {
+      // 클라이언트에서 accepted 필터
+      const acceptedDocs = rawSnap.docs.filter(d => d.data().status === 'accepted');
+      const snap = { docs: acceptedDocs, forEach: (fn) => acceptedDocs.forEach(fn), empty: acceptedDocs.length === 0 };
       if (snap.empty) return;
       const promises = [];
       snap.forEach(doc => {
@@ -1923,9 +1927,11 @@ function loadNotifications(role) {
   const field = role === 'teacher' ? 'teacherUid' : 'studentUid';
   db.collection('chatRequests')
     .where(field, '==', currentUser.uid)
-    .where('status', '==', 'accepted')
     .get()
-    .then(snap => {
+    .then(rawSnap => {
+      // 클라이언트에서 accepted 필터
+      const acceptedDocs = rawSnap.docs.filter(d => d.data().status === 'accepted');
+      const snap = { docs: acceptedDocs, forEach: (fn) => acceptedDocs.forEach(fn), empty: acceptedDocs.length === 0 };
       if (!snap.empty) {
         // 알림 도트 표시
         document.querySelectorAll('.notif-btn').forEach(b => {
@@ -2433,7 +2439,7 @@ function sendFeedback() {
 
   showLoad(true);
   // 이달 총 수업료 계산
-  db.collection('lessonLogs').where('teacherUid','==',currentUser.uid).where('month','==',monthStr).where('student','==',student).get().then(snap => {
+  db.collection('lessonLogs').where('teacherUid','==',currentUser.uid).where('month','==',monthStr).get().then(snap => {
     let totalCount = 0, totalFee = 0;
     snap.forEach(d => { totalCount++; totalFee += d.data().total||0; });
 
