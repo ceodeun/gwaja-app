@@ -882,7 +882,18 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:var(--c
         </select>
       </div>
       <label class="label">시급 (원)</label>
-      <input class="inp" id="ll-price" type="number" placeholder="예) 40000" oninput="calcLessonFee()">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+        <button type="button" onclick="stepPrice(-5000)" style="width:44px;height:44px;border-radius:50%;background:var(--cream);border:1.5px solid var(--border);font-size:22px;cursor:pointer;font-weight:700;color:var(--choco);flex-shrink:0;line-height:1;">−</button>
+        <div style="flex:1;text-align:center;background:white;border:2px solid var(--cookie);border-radius:14px;padding:10px 8px;cursor:pointer;position:relative;" onclick="togglePriceDirect()">
+          <div style="font-size:10px;color:var(--muted);margin-bottom:2px;">탭해서 직접 입력 ✏️</div>
+          <div id="ll-price-view" style="font-size:20px;font-weight:900;color:var(--choco);">10,000원</div>
+        </div>
+        <button type="button" onclick="stepPrice(5000)" style="width:44px;height:44px;border-radius:50%;background:var(--cookie);border:none;font-size:22px;cursor:pointer;font-weight:700;color:white;flex-shrink:0;line-height:1;">+</button>
+      </div>
+      <input id="ll-price" type="hidden" value="10000">
+      <div id="ll-price-direct-wrap" style="display:none;margin-top:6px;">
+        <input id="ll-price-direct-inp" type="number" placeholder="예) 37000" style="width:100%;padding:11px 16px;background:white;border:2px solid var(--cookie);border-radius:14px;font-size:16px;font-family:inherit;outline:none;font-weight:700;color:var(--choco);text-align:center;" oninput="syncDirectInput(this.value)">
+      </div>
       <div id="ll-calc" style="background:var(--cream);border-radius:10px;padding:10px;margin-top:4px;font-size:13px;color:var(--choco);font-weight:700;text-align:center;display:none;"></div>
     </div>
     <button class="btn btn-cookie" onclick="saveLessonLog()" style="margin-top:14px;margin-bottom:10px;">기록하기 📅</button>
@@ -2000,7 +2011,13 @@ function clickTcDate(dateStr,d){
   const months=['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
   document.getElementById('lesson-log-date').textContent=months[tcCalMonth]+' '+d+'일 수업 기록';
   document.getElementById('ll-student').value='';
-  document.getElementById('ll-price').value='';
+  document.getElementById('ll-price').value='10000';
+  const view = document.getElementById('ll-price-view');
+  if(view) view.textContent = '10,000원';
+  const direct = document.getElementById('ll-price-direct-inp');
+  if(direct) direct.value = '';
+  const wrap = document.getElementById('ll-price-direct-wrap');
+  if(wrap) wrap.style.display = 'none';
   document.getElementById('ll-calc').style.display='none';
   document.getElementById('modal-lesson-log').classList.add('on');
   if(currentUser){
@@ -2012,6 +2029,37 @@ function clickTcDate(dateStr,d){
     });
   }
 }
+function stepPrice(delta){
+  const inp = document.getElementById('ll-price');
+  let val = parseInt(inp.value||10000) + delta;
+  if(val < 10000) val = 10000;
+  inp.value = val;
+  document.getElementById('ll-price-view').textContent = val.toLocaleString() + '원';
+  const direct = document.getElementById('ll-price-direct-inp');
+  if(direct) direct.value = val;
+  calcLessonFee();
+}
+function syncDirectInput(val){
+  const v = parseInt(val||0);
+  if(v >= 1000){
+    document.getElementById('ll-price').value = v;
+    document.getElementById('ll-price-view').textContent = v.toLocaleString() + '원';
+    calcLessonFee();
+  }
+}
+function togglePriceDirect(){
+  const wrap = document.getElementById('ll-price-direct-wrap');
+  const isOpen = wrap.style.display === 'block';
+  wrap.style.display = isOpen ? 'none' : 'block';
+  if(!isOpen){
+    const inp = document.getElementById('ll-price-direct-inp');
+    inp.value = document.getElementById('ll-price').value || '';
+    setTimeout(()=>inp.focus(), 100);
+  }
+}
+function setPrice(val){ document.getElementById('ll-price').value=val; document.getElementById('ll-price-view').textContent=val.toLocaleString()+'원'; calcLessonFee(); }
+function highlightPriceBtn(){}
+function toggleDirectInput(){}
 function calcLessonFee(){
   const price=parseInt(document.getElementById('ll-price')?.value||0);
   const dur=parseFloat(document.getElementById('ll-duration')?.value||1);
