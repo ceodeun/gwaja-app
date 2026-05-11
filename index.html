@@ -161,6 +161,13 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:var(--c
 .diary-card .dh h4{font-size:13px;font-weight:700;color:var(--choco);}
 .diary-card .dh span{font-size:11px;color:var(--muted);}
 .diary-card p{font-size:12px;color:var(--muted);line-height:1.7;}
+.student-manage-card{background:white;border-radius:16px;padding:16px;margin-bottom:12px;display:flex;align-items:center;gap:14px;box-shadow:var(--shadow);border:1.5px solid var(--border);cursor:pointer;transition:all .2s;}
+.student-manage-card:hover{border-color:var(--cookie);transform:translateY(-2px);}
+.student-manage-card .sav{width:52px;height:52px;border-radius:50%;background:var(--cream);display:flex;align-items:center;justify-content:center;font-size:28px;border:2px solid var(--border);flex-shrink:0;}
+.student-manage-card .sinfo{flex:1;}
+.student-manage-card .sinfo h4{font-size:15px;font-weight:700;color:var(--choco);margin-bottom:3px;}
+.student-manage-card .sinfo p{font-size:12px;color:var(--muted);}
+.student-manage-card .sarrow{font-size:18px;color:var(--border);}
 .notif-badge{position:absolute;top:0;right:0;background:var(--peach);color:white;border-radius:50%;width:16px;height:16px;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;}
 .chat-list-item{background:white;padding:14px 18px;display:flex;gap:12px;align-items:center;border-bottom:1px solid var(--border);cursor:pointer;}
 .chat-list-item:hover{background:#FFF8EE;}
@@ -538,52 +545,63 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:var(--c
     </div>
     <!-- 수업 관리 탭 -->
     <div id="tc-manage" class="tab-panel" style="padding:0;">
-      <!-- 서브탭 -->
-      <div style="display:flex;background:white;border-bottom:1.5px solid var(--border);position:sticky;top:0;z-index:40;">
-        <button class="subtab-btn on" id="sb-schedule" onclick="subTab('schedule')">📅 스케줄</button>
-        <button class="subtab-btn" id="sb-homework" onclick="subTab('homework')">✅ 숙제</button>
-        <button class="subtab-btn" id="sb-diary" onclick="subTab('diary')">📝 수업일지</button>
-      </div>
 
-      <!-- 스케줄 -->
-      <div id="sp-schedule" class="subpanel active" style="padding:16px;">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
-          <h3 style="font-size:15px;font-weight:700;color:var(--choco);">📅 수업 스케줄</h3>
-          <button onclick="openAddSchedule()" style="background:var(--cookie);color:white;border:none;border-radius:100px;padding:6px 14px;font-size:12px;font-weight:700;cursor:pointer;">+ 추가</button>
-        </div>
-        <div id="schedule-list">
-          <div style="text-align:center;padding:30px;color:var(--muted);">
-            <div style="font-size:32px;margin-bottom:8px;">📅</div>
-            <div style="font-size:13px;">아직 스케줄이 없어요<br>+ 추가 버튼으로 등록해요!</div>
+      <!-- 학생 목록 화면 -->
+      <div id="manage-students" style="padding:16px;">
+        <div style="font-size:15px;font-weight:700;color:var(--choco);margin-bottom:14px;">👥 과외 중인 학생</div>
+        <div id="my-student-list">
+          <div style="text-align:center;padding:40px;color:var(--muted);">
+            <div style="font-size:40px;margin-bottom:10px;">🎒</div>
+            <div style="font-size:14px;font-weight:700;margin-bottom:6px;">아직 학생이 없어요</div>
+            <div style="font-size:13px;">수업 성사 등록 후 여기 표시돼요</div>
           </div>
         </div>
       </div>
 
-      <!-- 숙제 -->
-      <div id="sp-homework" class="subpanel" style="padding:16px;display:none;">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
-          <h3 style="font-size:15px;font-weight:700;color:var(--choco);">✅ 숙제 체크리스트</h3>
-          <button onclick="openAddHomework()" style="background:var(--cookie);color:white;border:none;border-radius:100px;padding:6px 14px;font-size:12px;font-weight:700;cursor:pointer;">+ 추가</button>
-        </div>
-        <div id="homework-list">
-          <div style="text-align:center;padding:30px;color:var(--muted);">
-            <div style="font-size:32px;margin-bottom:8px;">✅</div>
-            <div style="font-size:13px;">숙제를 등록해보세요!</div>
+      <!-- 학생별 상세 화면 -->
+      <div id="manage-detail" style="display:none;">
+        <!-- 헤더 -->
+        <div style="background:white;padding:14px 16px;display:flex;align-items:center;gap:10px;border-bottom:1.5px solid var(--border);position:sticky;top:0;z-index:40;">
+          <button onclick="backToStudents()" style="background:none;border:none;cursor:pointer;font-size:22px;color:var(--muted);">←</button>
+          <div style="font-size:20px;" id="detail-emoji">🎒</div>
+          <div>
+            <div style="font-size:15px;font-weight:700;color:var(--choco);" id="detail-name">학생</div>
+            <div style="font-size:11px;color:var(--muted);" id="detail-subject">과목</div>
           </div>
         </div>
-      </div>
 
-      <!-- 수업일지 -->
-      <div id="sp-diary" class="subpanel" style="padding:16px;display:none;">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
-          <h3 style="font-size:15px;font-weight:700;color:var(--choco);">📝 수업일지</h3>
-          <button onclick="openAddDiary()" style="background:var(--cookie);color:white;border:none;border-radius:100px;padding:6px 14px;font-size:12px;font-weight:700;cursor:pointer;">+ 작성</button>
+        <!-- 서브탭 -->
+        <div style="display:flex;background:white;border-bottom:1.5px solid var(--border);">
+          <button class="subtab-btn on" id="sb-schedule" onclick="subTab('schedule')">📅 스케줄</button>
+          <button class="subtab-btn" id="sb-homework" onclick="subTab('homework')">✅ 숙제</button>
+          <button class="subtab-btn" id="sb-diary" onclick="subTab('diary')">📝 수업일지</button>
         </div>
-        <div id="diary-list">
-          <div style="text-align:center;padding:30px;color:var(--muted);">
-            <div style="font-size:32px;margin-bottom:8px;">📝</div>
-            <div style="font-size:13px;">수업 후 일지를 작성해보세요!</div>
+
+        <!-- 스케줄 -->
+        <div id="sp-schedule" class="subpanel active" style="padding:16px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+            <h3 style="font-size:14px;font-weight:700;color:var(--choco);">📅 수업 스케줄</h3>
+            <button onclick="openAddSchedule()" style="background:var(--cookie);color:white;border:none;border-radius:100px;padding:6px 14px;font-size:12px;font-weight:700;cursor:pointer;">+ 추가</button>
           </div>
+          <div id="schedule-list"></div>
+        </div>
+
+        <!-- 숙제 -->
+        <div id="sp-homework" class="subpanel" style="padding:16px;display:none;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+            <h3 style="font-size:14px;font-weight:700;color:var(--choco);">✅ 숙제 체크리스트</h3>
+            <button onclick="openAddHomework()" style="background:var(--cookie);color:white;border:none;border-radius:100px;padding:6px 14px;font-size:12px;font-weight:700;cursor:pointer;">+ 추가</button>
+          </div>
+          <div id="homework-list"></div>
+        </div>
+
+        <!-- 수업일지 -->
+        <div id="sp-diary" class="subpanel" style="padding:16px;display:none;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+            <h3 style="font-size:14px;font-weight:700;color:var(--choco);">📝 수업일지</h3>
+            <button onclick="openAddDiary()" style="background:var(--cookie);color:white;border:none;border-radius:100px;padding:6px 14px;font-size:12px;font-weight:700;cursor:pointer;">+ 작성</button>
+          </div>
+          <div id="diary-list"></div>
         </div>
       </div>
     </div>
@@ -1255,7 +1273,7 @@ function tcTab(n) {
   });
   if (n === 'students') loadStudents();
   if (n === 'chat') loadChatList('teacher');
-  if (n === 'manage') { loadSchedules(); loadHomeworks(); loadDiaries(); }
+  if (n === 'manage') { loadMyStudents(); }
 }
 
 // ── 서브탭 ──
@@ -1264,6 +1282,9 @@ function subTab(n) {
     document.getElementById('sb-'+t).classList.toggle('on', t===n);
     document.getElementById('sp-'+t).style.display = t===n ? 'block' : 'none';
   });
+  if (n === 'schedule') loadSchedules();
+  if (n === 'homework') loadHomeworks();
+  if (n === 'diary') loadDiaries();
 }
 
 // ── 이동거리 선택 ──
@@ -1725,10 +1746,56 @@ function renderPlaceList() {
     </div>`).join('');
 }
 
+// ── 학생 목록 로드 ──
+let currentStudentName = '';
+let currentStudentSubject = '';
+
+function loadMyStudents() {
+  if (!currentUser) return;
+  backToStudents(); // 항상 목록 화면부터
+  db.collection('matches').where('teacherUid', '==', currentUser.uid).where('status','==','active').get().then(snap => {
+    const list = document.getElementById('my-student-list');
+    if (!list) return;
+    if (snap.empty) {
+      list.innerHTML = '<div style="text-align:center;padding:40px;color:var(--muted);"><div style="font-size:40px;margin-bottom:10px;">🎒</div><div style="font-size:14px;font-weight:700;margin-bottom:6px;">아직 학생이 없어요</div><div style="font-size:13px;">수업 성사 등록 후 여기 표시돼요</div></div>';
+      return;
+    }
+    const students = [];
+    snap.forEach(d => students.push({id: d.id, ...d.data()}));
+    list.innerHTML = students.map(s => `
+      <div class="student-manage-card" onclick="openStudentDetail('${s.studentName||'학생'}','${s.subject||'과목 미정'}')">
+        <div class="sav">🎒</div>
+        <div class="sinfo">
+          <h4>${s.studentName||'학생'}</h4>
+          <p>📚 ${s.subject||'과목 미정'} · 시작일: ${s.startDate||'미정'}</p>
+        </div>
+        <div class="sarrow">›</div>
+      </div>`).join('');
+  });
+}
+
+function openStudentDetail(name, subject) {
+  currentStudentName = name;
+  currentStudentSubject = subject;
+  document.getElementById('detail-name').textContent = name;
+  document.getElementById('detail-subject').textContent = '📚 ' + subject;
+  document.getElementById('manage-students').style.display = 'none';
+  document.getElementById('manage-detail').style.display = 'block';
+  // 서브탭 초기화
+  subTab('schedule');
+  loadSchedules();
+}
+
+function backToStudents() {
+  document.getElementById('manage-students').style.display = 'block';
+  document.getElementById('manage-detail').style.display = 'none';
+  currentStudentName = '';
+}
+
 // ── 스케줄 ──
 function openAddSchedule() {
-  document.getElementById('sch-student').value = '';
-  document.getElementById('sch-subject').value = '';
+  document.getElementById('sch-student').value = currentStudentName || '';
+  document.getElementById('sch-subject').value = currentStudentSubject || '';
   document.getElementById('sch-place').value = '';
   document.getElementById('modal-schedule').classList.add('on');
 }
@@ -1754,7 +1821,9 @@ function saveSchedule() {
 
 function loadSchedules() {
   if (!currentUser) return;
-  db.collection('schedules').where('teacherUid', '==', currentUser.uid).get().then(snap => {
+  let q = db.collection('schedules').where('teacherUid', '==', currentUser.uid);
+  if (currentStudentName) q = q.where('student', '==', currentStudentName);
+  q.get().then(snap => {
     const list = document.getElementById('schedule-list');
     if (!list) return;
     if (snap.empty) {
@@ -1779,7 +1848,7 @@ function loadSchedules() {
 
 // ── 숙제 ──
 function openAddHomework() {
-  document.getElementById('hw-student').value = '';
+  document.getElementById('hw-student').value = currentStudentName || '';
   document.getElementById('hw-content').value = '';
   document.getElementById('hw-due').value = '';
   document.getElementById('modal-homework').classList.add('on');
@@ -1808,7 +1877,9 @@ function toggleHomework(id, current) {
 
 function loadHomeworks() {
   if (!currentUser) return;
-  db.collection('homeworks').where('teacherUid', '==', currentUser.uid).get().then(snap => {
+  let q = db.collection('homeworks').where('teacherUid', '==', currentUser.uid);
+  if (currentStudentName) q = q.where('student', '==', currentStudentName);
+  q.get().then(snap => {
     const list = document.getElementById('homework-list');
     if (!list) return;
     if (snap.empty) {
@@ -1832,7 +1903,7 @@ function loadHomeworks() {
 
 // ── 수업일지 ──
 function openAddDiary() {
-  document.getElementById('di-student').value = '';
+  document.getElementById('di-student').value = currentStudentName || '';
   document.getElementById('di-date').value = new Date().toISOString().slice(0,10);
   document.getElementById('di-content').value = '';
   document.getElementById('di-next').value = '';
@@ -1861,7 +1932,9 @@ function saveDiary() {
 
 function loadDiaries() {
   if (!currentUser) return;
-  db.collection('diaries').where('teacherUid', '==', currentUser.uid).get().then(snap => {
+  let q = db.collection('diaries').where('teacherUid', '==', currentUser.uid);
+  if (currentStudentName) q = q.where('student', '==', currentStudentName);
+  q.get().then(snap => {
     const list = document.getElementById('diary-list');
     if (!list) return;
     if (snap.empty) {
