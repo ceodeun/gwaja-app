@@ -2175,12 +2175,22 @@ function loadMyStudents(){
       list.innerHTML='<div style="text-align:center;padding:40px;color:var(--muted);"><div style="font-size:40px;margin-bottom:10px;">🎒</div><div style="font-size:14px;font-weight:700;margin-bottom:6px;">아직 학생이 없어요</div><div style="font-size:13px;">수업 성사 등록 후 여기 표시돼요</div></div>';
       return;
     }
-    list.innerHTML=students.map(s=>`
-      <div class="student-manage-card" onclick="openStudentDetail('${(s.studentName||'학생').replace(/'/g,"\\'")}','${(s.subject||'과목 미정').replace(/'/g,"\\'")}')">
-        <div class="sav">🎒</div>
-        <div class="sinfo"><h4>${s.studentName||'학생'}</h4><p>📚 ${s.subject||'과목 미정'} · 시작일: ${s.startDate||'미정'}</p></div>
-        <div class="sarrow">›</div>
-      </div>`).join('');
+    // studentName 없으면 studentUid로 users에서 이름 가져오기
+    const namePromises = students.map(s => {
+      if (s.studentName && s.studentName !== '학생') return Promise.resolve(s);
+      if (!s.studentUid) return Promise.resolve(s);
+      return db.collection('users').doc(s.studentUid).get().then(uSnap => ({
+        ...s, studentName: uSnap.data()&&uSnap.data().name ? uSnap.data().name : '학생'
+      }));
+    });
+    Promise.all(namePromises).then(resolved => {
+      list.innerHTML=resolved.map(s=>`
+        <div class="student-manage-card" onclick="openStudentDetail('${(s.studentName||'학생').replace(/'/g,"\\'")}','${(s.subject||'과목 미정').replace(/'/g,"\\'")}')">
+          <div class="sav">🎒</div>
+          <div class="sinfo"><h4>${s.studentName||'학생'}</h4><p>📚 ${s.subject||'과목 미정'} · 시작일: ${s.startDate||'미정'}</p></div>
+          <div class="sarrow">›</div>
+        </div>`).join('');
+    });
   }).catch(e=>toast('불러오기 실패: '+e.message));
 }
 function openStudentDetail(name,subject){
