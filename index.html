@@ -868,7 +868,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:var(--c
     <h3 id="lesson-log-date">수업 기록</h3>
     <div style="text-align:left;">
       <label class="label" style="margin-top:0;">학생 이름</label>
-      <input class="inp" id="ll-student" placeholder="예) 홍길동">
+      <select class="inp" id="ll-student"><option value="">학생 선택</option></select>
       <label class="label">수업 시간</label>
       <div style="display:flex;gap:8px;align-items:center;">
         <input class="inp" id="ll-time" type="time" value="15:00" style="flex:1;margin-bottom:0;">
@@ -1935,12 +1935,24 @@ function initTcCalendar(){tcCalYear=new Date().getFullYear();tcCalMonth=new Date
 function loadMyStudentsForSelect(){
   if(!currentUser)return;
   db.collection('matches').where('teacherUid','==',currentUser.uid).get().then(snap=>{
-    const students=[];
-    snap.forEach(d=>{if(d.data().studentName)students.push(d.data().studentName);});
-    const llSel=document.getElementById('ll-student');
-    if(llSel)llSel.value='';
-    const fbSel=document.getElementById('feedback-student');
-    if(fbSel)fbSel.innerHTML='<option value="">학생 선택</option>'+students.map(s=>`<option>${s}</option>`).join('');
+    const matchDocs = [];
+    snap.forEach(d=>{ if(!d.data().status || d.data().status==='active') matchDocs.push(d.data()); });
+    // studentName 없으면 studentUid로 users에서 이름 가져오기
+    const promises = matchDocs.map(m => {
+      if(m.studentName && m.studentName!=='학생') return Promise.resolve(m.studentName);
+      if(!m.studentUid) return Promise.resolve(null);
+      return db.collection('users').doc(m.studentUid).get().then(u=> u.data()&&u.data().name ? u.data().name : null);
+    });
+    Promise.all(promises).then(names => {
+      const filtered = names.filter(Boolean);
+      // 수업 기록 모달 ll-student를 input→select로 동적 교체
+      const llWrap = document.getElementById('ll-student');
+      if(llWrap) {
+        llWrap.innerHTML = '<option value="">학생 선택</option>' + filtered.map(n=>`<option value="${n}">${n}</option>`).join('');
+      }
+      const fbSel = document.getElementById('feedback-student');
+      if(fbSel) fbSel.innerHTML = '<option value="">학생 선택</option>' + filtered.map(n=>`<option value="${n}">${n}</option>`).join('');
+    });
   });
 }
 function renderTcCalendar(){
@@ -1990,7 +2002,7 @@ function calcLessonFee(){
   }
 }
 function saveLessonLog(){
-  const student=document.getElementById('ll-student').value.trim();
+  const student=document.getElementById('ll-student').value;
   const time=document.getElementById('ll-time').value;
   const duration=parseFloat(document.getElementById('ll-duration').value);
   const price=parseInt(document.getElementById('ll-price').value||0);
@@ -2065,11 +2077,18 @@ function loadTcLessons(){
 function loadFeedbackStudents(){
   if(!currentUser)return;
   db.collection('matches').where('teacherUid','==',currentUser.uid).get().then(snap=>{
-    const sel=document.getElementById('tc-feedback-student')||document.getElementById('feedback-student');
-    if(!sel)return;
-    let opts='<option value="">학생 선택...</option>';
-    snap.forEach(d=>{const m=d.data();if(m.studentName)opts+=`<option>${m.studentName}</option>`;});
-    sel.innerHTML=opts;
+    const matchDocs = [];
+    snap.forEach(d=>{ if(!d.data().status || d.data().status==='active') matchDocs.push(d.data()); });
+    const promises = matchDocs.map(m => {
+      if(m.studentName && m.studentName!=='학생') return Promise.resolve(m.studentName);
+      if(!m.studentUid) return Promise.resolve(null);
+      return db.collection('users').doc(m.studentUid).get().then(u=> u.data()&&u.data().name ? u.data().name : null);
+    });
+    Promise.all(promises).then(names => {
+      const filtered = names.filter(Boolean);
+      const sel = document.getElementById('tc-feedback-student') || document.getElementById('feedback-student');
+      if(sel) sel.innerHTML = '<option value="">학생 선택...</option>' + filtered.map(n=>`<option value="${n}">${n}</option>`).join('');
+    });
   });
 }
 function saveFeedback(){
