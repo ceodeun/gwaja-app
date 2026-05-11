@@ -1503,7 +1503,11 @@ function loadStudentProposals() {
     .get()
     .then(snap => {
       const list = document.getElementById('proposal-list');
-      if (!list || snap.empty) return;
+      if (!list) return;
+      if (snap.empty) {
+        list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--muted);font-size:13px;">아직 수업 제안이 없어요</div>';
+        return;
+      }
       const promises = [];
       snap.forEach(doc => {
         const req = doc.data();
@@ -1524,7 +1528,7 @@ function loadStudentProposals() {
               </div>
             </div>
             <div class="req-actions">
-              <button class="accept-btn" onclick="acceptProposal('${reqId}')">수락 🍪</button>
+              <button class="accept-btn" onclick="acceptProposal('${reqId}','${req.teacherUid}')">수락 🍪</button>
               <button class="reject-btn" onclick="rejectReq('${reqId}')">거절</button>
             </div>
           </div>
@@ -1533,10 +1537,19 @@ function loadStudentProposals() {
     }).catch(e => console.error('loadProposals:', e));
 }
 
-function acceptProposal(reqId) {
+function acceptProposal(reqId, teacherUid) {
+  showLoad(true);
   db.collection('chatRequests').doc(reqId).update({ status: 'accepted' })
-    .then(() => { toast('선생님과 연결됐어요! 🍪'); loadStudentProposals(); })
-    .catch(e => toast('수락 실패: ' + e.message));
+    .then(() => {
+      showLoad(false);
+      toast('선생님과 연결됐어요! 🍪');
+      // proposal-list 비우기
+      const list = document.getElementById('proposal-list');
+      if (list) list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--muted);font-size:13px;">수락 완료! 채팅 탭에서 대화해요 💬</div>';
+      // 채팅 목록 리로드
+      loadChatList('student');
+    })
+    .catch(e => { showLoad(false); toast('수락 실패: ' + e.message); });
 }
 
 // ── 요청 수락 ──
@@ -1954,7 +1967,7 @@ function renderCalendar() {
 
   // 성사된 수업 목록 로드
   if (!currentUser) return;
-  db.collection('matches').where('studentUid', '==', currentUser.uid).where('status','==','active').get().then(snap => {
+  db.collection('matches').where('studentUid', '==', currentUser.uid).get().then(snap => {
     const lessons = document.getElementById('cal-lessons');
     if (snap.empty) {
       lessons.innerHTML = '<div style="text-align:center;padding:20px;color:var(--muted);font-size:13px;">수업 성사 등록 후 일정이 여기 표시돼요</div>';
@@ -2082,7 +2095,7 @@ function initTcCalendar() {
 
 function loadMyStudentsForSelect() {
   if (!currentUser) return;
-  db.collection('matches').where('teacherUid','==',currentUser.uid).where('status','==','active').get().then(snap => {
+  db.collection('matches').where('teacherUid','==',currentUser.uid).get().then(snap => {
     const students = [];
     snap.forEach(d => { if(d.data().studentName) students.push(d.data().studentName); });
     // 수업 기록 모달 셀렉트
@@ -2290,7 +2303,7 @@ function clickDay(dateStr, d) {
 
   // 시급 자동 입력 (성사된 수업에서)
   if (currentUser) {
-    db.collection('matches').where('teacherUid','==',currentUser.uid).where('status','==','active').get().then(snap => {
+    db.collection('matches').where('teacherUid','==',currentUser.uid).get().then(snap => {
       if (!snap.empty) {
         const m = snap.docs[0].data();
         if (m.price) {
@@ -2397,7 +2410,7 @@ function loadTcLessons() {
 // ── 피드백 전송 ──
 function loadFeedbackStudents() {
   if (!currentUser) return;
-  db.collection('matches').where('teacherUid','==',currentUser.uid).where('status','==','active').get().then(snap => {
+  db.collection('matches').where('teacherUid','==',currentUser.uid).get().then(snap => {
     const sel = document.getElementById('tc-feedback-student');
     if (!sel) return;
     let opts = '<option value="">학생 선택...</option>';
@@ -2443,16 +2456,23 @@ let currentStudentSubject = '';
 
 function loadMyStudents() {
   if (!currentUser) return;
-  backToStudents(); // 항상 목록 화면부터
-  db.collection('matches').where('teacherUid', '==', currentUser.uid).where('status','==','active').get().then(snap => {
+  backToStudents();
+  // status 없이 teacherUid만으로 조회 (인덱스 불필요)
+  db.collection('matches').where('teacherUid', '==', currentUser.uid).get().then(snap => {
     const list = document.getElementById('my-student-list');
     if (!list) return;
-    if (snap.empty) {
+    const students = [];
+    snap.forEach(d => {
+      const data = d.data();
+      // 클라이언트에서 active 필터링
+      if (!data.status || data.status === 'active') {
+        students.push({id: d.id, ...data});
+      }
+    });
+    if (students.length === 0) {
       list.innerHTML = '<div style="text-align:center;padding:40px;color:var(--muted);"><div style="font-size:40px;margin-bottom:10px;">🎒</div><div style="font-size:14px;font-weight:700;margin-bottom:6px;">아직 학생이 없어요</div><div style="font-size:13px;">수업 성사 등록 후 여기 표시돼요</div></div>';
       return;
     }
-    const students = [];
-    snap.forEach(d => students.push({id: d.id, ...d.data()}));
     list.innerHTML = students.map(s => `
       <div class="student-manage-card" onclick="openStudentDetail('${s.studentName||'학생'}','${s.subject||'과목 미정'}')">
         <div class="sav">🎒</div>
@@ -2462,7 +2482,7 @@ function loadMyStudents() {
         </div>
         <div class="sarrow">›</div>
       </div>`).join('');
-  });
+  }).catch(e => { console.error('loadMyStudents:', e); toast('불러오기 실패: ' + e.message); });
 }
 
 function openStudentDetail(name, subject) {
