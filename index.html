@@ -5,325 +5,219 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>과자 🍪 과외하자</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
+
+<!-- Firebase SDK (compat 버전 - 가장 안정적) -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
 <style>
 :root{
-  --cream:#F5EFE0;--cookie:#C8873A;--choco:#5C3317;--dark:#2C1A0E;
+  --cream:#F5EFE0;--cookie:#C8873A;--choco:#5C3317;
   --mint:#5AC8A0;--peach:#FF8A70;--lavender:#A89BE8;--green:#3AAA82;
   --white:#FFFDF8;--muted:#9A7E65;--border:#E8DABC;
   --shadow:0 4px 20px rgba(90,50,20,.10);
 }
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
-body{font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:var(--dark);max-width:430px;margin:0 auto;min-height:100dvh;overflow-x:hidden;}
+body{font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:var(--choco);max-width:430px;margin:0 auto;min-height:100dvh;}
 .screen{display:none;flex-direction:column;min-height:100dvh;}
 .screen.active{display:flex;}
-.btn{padding:14px;border:none;border-radius:100px;font-size:15px;font-weight:700;cursor:pointer;transition:all .15s;font-family:inherit;width:100%;}
-.btn-cookie{background:var(--cookie);color:var(--white);}
-.btn-cookie:hover{background:var(--choco);}
+.btn{padding:14px;border:none;border-radius:100px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;width:100%;transition:all .15s;}
+.btn-cookie{background:var(--cookie);color:white;}
 .btn-outline{background:transparent;color:var(--choco);border:2px solid var(--choco);}
-.btn-green{background:var(--green);color:var(--white);}
-.btn-lav{background:var(--lavender);color:var(--white);}
-.inp{width:100%;padding:13px 16px;background:var(--white);border:2px solid var(--border);border-radius:14px;font-size:14px;font-family:inherit;color:var(--dark);outline:none;transition:border-color .2s;margin-bottom:10px;}
+.btn-green{background:var(--green);color:white;}
+.inp{width:100%;padding:13px 16px;background:white;border:2px solid var(--border);border-radius:14px;font-size:14px;font-family:inherit;color:var(--choco);outline:none;margin-bottom:10px;}
 .inp:focus{border-color:var(--cookie);}
 .inp::placeholder{color:var(--muted);}
-.inp-label{font-size:12px;font-weight:700;color:var(--muted);margin-bottom:5px;display:block;margin-top:12px;}
+.label{font-size:12px;font-weight:700;color:var(--muted);margin-bottom:5px;margin-top:12px;display:block;}
 
-/* TOPBAR */
-.topbar{background:var(--white);padding:13px 18px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:60;border-bottom:1.5px solid var(--border);}
-.topbar-logo{font-size:20px;font-weight:900;color:var(--choco);}
-.topbar-logo em{color:var(--cookie);font-style:normal;}
-.icon-btn{background:none;border:none;cursor:pointer;font-size:20px;position:relative;padding:4px;}
-.notif-dot{position:absolute;top:0;right:0;width:8px;height:8px;background:var(--peach);border-radius:50%;}
+.topbar{background:white;padding:13px 18px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:60;border-bottom:1.5px solid var(--border);}
+.logo{font-size:20px;font-weight:900;color:var(--choco);}
+.logo em{color:var(--cookie);font-style:normal;}
 
-/* BOTTOM BAR */
-.bottom-bar{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;background:var(--white);border-top:1.5px solid var(--border);display:flex;z-index:100;padding-bottom:env(safe-area-inset-bottom);}
-.tab-btn{flex:1;background:none;border:none;padding:9px 0 11px;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;color:var(--border);transition:color .15s;font-family:inherit;}
+.bottom-bar{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;background:white;border-top:1.5px solid var(--border);display:flex;z-index:100;padding-bottom:env(safe-area-inset-bottom);}
+.tab-btn{flex:1;background:none;border:none;padding:9px 0 11px;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;color:var(--border);font-family:inherit;}
 .tab-btn.on{color:var(--cookie);}
 .tab-btn .ti{font-size:20px;}
 .tab-btn .tl{font-size:10px;font-weight:700;}
 
-/* PANELS */
 .tab-panels{padding-bottom:76px;overflow-y:auto;flex:1;}
 .tab-panel{display:none;padding:18px;}
 .tab-panel.active{display:block;}
 
 /* SPLASH */
-#s-splash{background:linear-gradient(170deg,#F0E2C0,#E8C98A 60%,#D4A96A);align-items:center;justify-content:center;padding:40px 28px;text-align:center;position:relative;overflow:hidden;}
-.splash-emoji{font-size:72px;margin-bottom:12px;animation:bounce 2.5s ease-in-out infinite;}
-@keyframes bounce{0%,100%{transform:translateY(0);}50%{transform:translateY(-14px);}}
-.splash-logo{font-size:52px;font-weight:900;color:var(--choco);letter-spacing:-.04em;line-height:1;margin-bottom:6px;}
+#s-splash{background:linear-gradient(170deg,#F0E2C0,#D4A96A);align-items:center;justify-content:center;padding:40px 28px;text-align:center;}
+.splash-emoji{font-size:80px;margin-bottom:16px;display:block;animation:bounce 2s infinite;}
+@keyframes bounce{0%,100%{transform:translateY(0);}50%{transform:translateY(-16px);}}
+.splash-logo{font-size:52px;font-weight:900;color:var(--choco);margin-bottom:6px;}
 .splash-logo em{color:var(--peach);font-style:normal;}
-.splash-tag{font-size:14px;color:var(--choco);opacity:.7;margin-bottom:4px;}
-.splash-sub{font-size:12px;color:var(--choco);opacity:.55;margin-bottom:40px;}
-.splash-btns{width:100%;max-width:280px;display:flex;flex-direction:column;gap:10px;}
-
-/* CARD */
-.card{background:var(--white);border-radius:18px;padding:20px;margin-bottom:14px;box-shadow:var(--shadow);border:1.5px solid var(--border);}
-.card h3{font-size:16px;font-weight:700;margin-bottom:14px;display:flex;align-items:center;gap:6px;}
-
-/* ROLE CARD */
-.role-card{background:var(--white);border-radius:16px;padding:18px;margin-bottom:12px;border:2px solid var(--border);cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:14px;}
-.role-card:hover{border-color:var(--cookie);background:#FFF8EE;}
-.role-card.selected{border-color:var(--cookie);background:#FFF8EE;}
-.role-icon{font-size:44px;flex-shrink:0;}
-.role-card h3{font-size:16px;font-weight:700;margin-bottom:3px;}
-.role-card p{font-size:12px;color:var(--muted);}
+.splash-sub{font-size:13px;color:var(--choco);opacity:.7;margin-bottom:40px;line-height:1.6;}
+.splash-btns{width:100%;max-width:260px;display:flex;flex-direction:column;gap:10px;}
 
 /* HERO */
-.hero{border-radius:22px;padding:22px;color:var(--white);margin-bottom:18px;display:flex;align-items:center;justify-content:space-between;overflow:hidden;}
-.hero-emoji{font-size:64px;animation:bounce 2.5s ease-in-out infinite;}
+.hero{border-radius:22px;padding:22px;color:white;margin-bottom:18px;display:flex;align-items:center;justify-content:space-between;}
+.hero-emoji{font-size:60px;}
 .hero-text .hi{font-size:12px;opacity:.8;margin-bottom:3px;}
 .hero-text h2{font-size:20px;font-weight:900;line-height:1.3;margin-bottom:3px;}
 .hero-text p{font-size:11px;opacity:.7;}
 
-/* TEACHER CARD */
-.tcard{background:var(--white);border-radius:16px;padding:14px;margin-bottom:12px;border:1.5px solid var(--border);cursor:pointer;transition:all .2s;box-shadow:var(--shadow);}
-.tcard:hover{transform:translateY(-2px);border-color:var(--cookie);}
-.tcard-top{display:flex;gap:12px;align-items:flex-start;}
-.tcard-av{width:52px;height:52px;border-radius:50%;background:var(--cream);display:flex;align-items:center;justify-content:center;flex-shrink:0;border:2px solid var(--border);font-size:28px;}
-.tcard-body h4{font-size:14px;font-weight:700;margin-bottom:3px;}
+/* CARDS */
+.role-card{background:white;border-radius:16px;padding:18px;margin-bottom:12px;border:2px solid var(--border);cursor:pointer;display:flex;align-items:center;gap:14px;transition:all .2s;}
+.role-card:hover,.role-card.selected{border-color:var(--cookie);background:#FFF8EE;}
+.role-icon{font-size:44px;}
+.role-card h3{font-size:16px;font-weight:700;margin-bottom:3px;color:var(--choco);}
+.role-card p{font-size:12px;color:var(--muted);}
+
+.tcard{background:white;border-radius:16px;padding:14px;margin-bottom:12px;border:1.5px solid var(--border);box-shadow:var(--shadow);}
+.tcard-top{display:flex;gap:12px;}
+.tcard-av{width:50px;height:50px;border-radius:50%;background:var(--cream);display:flex;align-items:center;justify-content:center;font-size:26px;flex-shrink:0;}
+.tcard-body h4{font-size:14px;font-weight:700;margin-bottom:3px;color:var(--choco);}
 .school-badge{display:inline-block;font-size:10px;font-weight:700;padding:2px 9px;border-radius:20px;background:#FFF3E0;color:var(--cookie);margin-bottom:5px;}
-.tcard-body .desc{font-size:12px;color:var(--muted);line-height:1.5;}
-.tag-row{display:flex;gap:5px;flex-wrap:wrap;margin-top:5px;}
+.desc{font-size:12px;color:var(--muted);line-height:1.5;}
+.tags{display:flex;gap:5px;flex-wrap:wrap;margin-top:5px;}
 .tag{font-size:10px;background:#F5F0E8;color:var(--muted);padding:2px 9px;border-radius:20px;}
-.verified{display:inline-flex;align-items:center;gap:3px;background:#E8F7EF;color:#1B7A4B;font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;}
-.tcard-bottom{margin-top:10px;display:flex;gap:8px;}
-.chat-btn{flex:1;padding:10px;background:var(--cookie);color:var(--white);border:none;border-radius:100px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;}
+.price{font-size:12px;font-weight:700;color:var(--choco);text-align:right;flex-shrink:0;}
+.chat-btn{width:100%;padding:10px;background:var(--cookie);color:white;border:none;border-radius:100px;font-size:13px;font-weight:700;cursor:pointer;margin-top:10px;font-family:inherit;}
 
-/* QUICK GRID */
-.quick-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:18px;}
-.quick-cell{background:var(--white);border-radius:14px;padding:12px 4px;text-align:center;cursor:pointer;border:1.5px solid var(--border);transition:all .2s;box-shadow:var(--shadow);}
-.quick-cell:hover{transform:translateY(-2px);border-color:var(--cookie);}
-.quick-cell .qi{font-size:22px;margin-bottom:4px;}
-.quick-cell .ql{font-size:10px;font-weight:600;color:var(--muted);}
-
-/* SECTION HEAD */
 .section-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;margin-top:20px;}
-.section-head h3{font-size:15px;font-weight:700;}
-.section-head a{font-size:12px;color:var(--cookie);font-weight:600;cursor:pointer;}
+.section-head h3{font-size:15px;font-weight:700;color:var(--choco);}
 
-/* CHIPS */
-.chips{display:flex;gap:7px;overflow-x:auto;padding-bottom:10px;}
-.chips::-webkit-scrollbar{display:none;}
-.chip{background:var(--white);border:1.5px solid var(--border);border-radius:100px;padding:6px 13px;font-size:12px;font-weight:600;color:var(--muted);white-space:nowrap;cursor:pointer;transition:all .15s;flex-shrink:0;}
-.chip.on{background:var(--cookie);border-color:var(--cookie);color:var(--white);}
+.quick-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:18px;}
+.quick-cell{background:white;border-radius:14px;padding:12px 4px;text-align:center;cursor:pointer;border:1.5px solid var(--border);box-shadow:var(--shadow);}
+.quick-cell:hover{border-color:var(--cookie);}
+.qi{font-size:22px;margin-bottom:4px;}
+.ql{font-size:10px;font-weight:600;color:var(--muted);}
 
-/* SEARCH */
-.search-bar{display:flex;gap:8px;position:sticky;top:58px;z-index:40;background:var(--cream);padding-bottom:12px;}
-.search-wrap{flex:1;position:relative;}
-.search-wrap .si{position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:16px;}
-.search-inp{width:100%;padding:11px 12px 11px 38px;background:var(--white);border:2px solid var(--border);border-radius:100px;font-size:14px;font-family:inherit;outline:none;transition:border-color .2s;}
+.search-bar{display:flex;gap:8px;margin-bottom:12px;}
+.search-inp{flex:1;padding:11px 16px;background:white;border:2px solid var(--border);border-radius:100px;font-size:14px;font-family:inherit;outline:none;}
 .search-inp:focus{border-color:var(--cookie);}
 
-/* CALENDAR */
-.cal-nav-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
-.cal-nav-row h3{font-size:17px;font-weight:700;}
-.cal-nav-btn{background:none;border:none;cursor:pointer;font-size:18px;color:var(--muted);padding:4px 8px;}
-.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-bottom:16px;}
-.cal-dn{text-align:center;font-size:10px;font-weight:700;color:var(--muted);padding:5px 0;}
-.cal-d{aspect-ratio:1;display:flex;align-items:center;justify-content:center;border-radius:10px;font-size:13px;cursor:pointer;transition:all .15s;position:relative;}
-.cal-d:hover{background:#F0E8D8;}
-.cal-d.today{background:var(--cookie);color:var(--white);font-weight:700;}
-.cal-d.has-dot::after{content:'';width:4px;height:4px;border-radius:50%;background:var(--mint);position:absolute;bottom:3px;}
-.cal-d.today.has-dot::after{background:var(--white);}
-.cal-d.dim{color:var(--border);}
-.lesson-card{background:var(--white);border-radius:14px;padding:14px;margin-bottom:10px;display:flex;gap:12px;border-left:4px solid var(--cookie);box-shadow:var(--shadow);}
-.lesson-time{font-size:12px;font-weight:700;color:var(--cookie);min-width:44px;padding-top:2px;}
-.lesson-info h4{font-size:13px;font-weight:700;margin-bottom:2px;}
-.lesson-info p{font-size:11px;color:var(--muted);}
+.earn-card{background:linear-gradient(135deg,var(--mint),#3AAA82);border-radius:16px;padding:18px;color:white;margin-bottom:14px;}
+.earn-card h4{font-size:12px;opacity:.85;margin-bottom:5px;}
+.earn-amount{font-size:30px;font-weight:900;}
 
-/* CHAT */
-.chat-item{background:var(--white);padding:14px 18px;display:flex;gap:12px;align-items:center;border-bottom:1px solid var(--border);cursor:pointer;transition:background .15s;}
-.chat-item:hover{background:#FFF8EE;}
-.chat-av{width:48px;height:48px;border-radius:50%;background:var(--cream);display:flex;align-items:center;justify-content:center;flex-shrink:0;border:2px solid var(--border);font-size:26px;}
-.chat-info{flex:1;min-width:0;}
-.chat-info h4{font-size:14px;font-weight:700;margin-bottom:2px;}
-.chat-info p{font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.chat-meta{display:flex;flex-direction:column;align-items:flex-end;gap:5px;}
-.chat-time{font-size:10px;color:var(--border);}
-.unread{background:var(--peach);color:var(--white);width:18px;height:18px;border-radius:50%;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;}
-
-/* PROFILE */
-.profile-hero{padding:32px 20px 48px;text-align:center;color:var(--white);margin:-18px -18px 0;}
+.profile-hero{padding:32px 20px 48px;text-align:center;color:white;margin:-18px -18px 0;}
 .profile-emoji{font-size:68px;margin-bottom:10px;display:block;}
 .profile-name{font-size:20px;font-weight:900;margin-bottom:5px;}
-.profile-role-badge{display:inline-block;background:rgba(255,255,255,.2);padding:4px 14px;border-radius:20px;font-size:12px;font-weight:600;}
-.stats-card{background:var(--white);border-radius:16px;margin:-24px 0 14px;padding:18px;box-shadow:var(--shadow);}
+.profile-badge{display:inline-block;background:rgba(255,255,255,.2);padding:4px 14px;border-radius:20px;font-size:12px;}
+.stats-card{background:white;border-radius:16px;margin:-24px 0 14px;padding:18px;box-shadow:var(--shadow);}
 .stat-row{display:grid;grid-template-columns:repeat(3,1fr);}
 .stat-item{text-align:center;}
 .stat-val{font-size:20px;font-weight:900;color:var(--choco);}
 .stat-lbl{font-size:10px;color:var(--muted);margin-top:2px;}
 .stat-div{width:1px;background:var(--border);}
-.menu-card{background:var(--white);border-radius:16px;overflow:hidden;margin-bottom:10px;}
-.menu-item{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .15s;font-size:14px;}
+.menu-card{background:white;border-radius:16px;overflow:hidden;margin-bottom:10px;}
+.menu-item{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--border);cursor:pointer;font-size:14px;color:var(--choco);}
 .menu-item:last-child{border-bottom:none;}
 .menu-item:hover{background:var(--cream);}
-.menu-item .mi-l{display:flex;align-items:center;gap:10px;}
 
-/* CHATROOM */
-#s-chat{background:var(--cream);}
-.chatroom-top{background:var(--white);padding:14px 18px;display:flex;align-items:center;gap:12px;border-bottom:1.5px solid var(--border);position:sticky;top:0;z-index:50;}
-.chatroom-back{background:none;border:none;cursor:pointer;font-size:20px;color:var(--muted);}
-.chatroom-av{width:36px;height:36px;border-radius:50%;background:var(--cream);display:flex;align-items:center;justify-content:center;font-size:20px;}
-.chatroom-info h4{font-size:15px;font-weight:700;}
-.chatroom-info p{font-size:11px;color:var(--mint);font-weight:600;}
-.msgs{flex:1;padding:16px 14px;display:flex;flex-direction:column;gap:12px;overflow-y:auto;}
-.msg-row{display:flex;gap:8px;align-items:flex-end;}
-.msg-row.me{flex-direction:row-reverse;}
-.msg-av{width:30px;height:30px;border-radius:50%;background:var(--cream);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:16px;}
-.bubble{max-width:70%;padding:11px 15px;border-radius:16px;font-size:14px;line-height:1.6;box-shadow:0 2px 8px rgba(0,0,0,.07);}
-.bubble.them{background:var(--white);border-bottom-left-radius:4px;}
-.bubble.me{background:var(--cookie);color:var(--white);border-bottom-right-radius:4px;}
-.msg-t{font-size:10px;color:var(--border);padding-bottom:2px;}
-.chat-input-row{background:var(--white);padding:10px 14px;display:flex;gap:8px;align-items:center;border-top:1.5px solid var(--border);}
-.chat-inp{flex:1;padding:11px 14px;background:var(--cream);border:1.5px solid var(--border);border-radius:100px;font-size:14px;font-family:inherit;outline:none;}
-.chat-inp:focus{border-color:var(--cookie);}
-.chat-send-btn{width:40px;height:40px;border-radius:50%;background:var(--cookie);color:var(--white);border:none;cursor:pointer;font-size:16px;flex-shrink:0;}
+.profile-section{background:white;border-radius:16px;padding:16px;margin-bottom:12px;box-shadow:var(--shadow);}
+.profile-section h3{font-size:14px;font-weight:700;margin-bottom:12px;color:var(--choco);}
+.mode-btns{display:flex;gap:6px;margin-bottom:12px;}
+.mode-btn{flex:1;padding:9px 4px;border:1.5px solid var(--border);border-radius:10px;background:var(--cream);color:var(--muted);font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;text-align:center;}
+.mode-btn.on{background:var(--cookie);border-color:var(--cookie);color:white;}
+.pref-btns{display:flex;gap:6px;flex-wrap:wrap;}
+.pref-btn{padding:7px 12px;border:1.5px solid var(--border);border-radius:100px;background:var(--cream);color:var(--muted);font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;}
+.pref-btn.on{background:var(--cookie);border-color:var(--cookie);color:white;}
 
-/* SETTLE */
-.settle-card{background:var(--white);border-radius:16px;overflow:hidden;margin-bottom:10px;box-shadow:var(--shadow);}
-.settle-header{padding:16px 18px;color:var(--white);display:flex;align-items:center;justify-content:space-between;}
-.settle-header h4{font-size:14px;font-weight:700;}
-.settle-header span{font-size:20px;font-weight:900;}
-.settle-row{display:flex;align-items:center;justify-content:space-between;padding:12px 18px;border-bottom:1px solid var(--border);font-size:13px;}
-.settle-row:last-child{border-bottom:none;}
-.settle-row .sl{color:var(--muted);}
-.settle-row .sv{font-weight:700;color:var(--choco);}
-.sv.green{color:var(--green);}
-.sv.red{color:var(--peach);}
+.error{background:#FFE8E4;color:#C0392B;border-radius:10px;padding:10px 14px;font-size:13px;margin-bottom:10px;display:none;}
+.error.show{display:block;}
 
-/* EARN CARD */
-.earn-card{background:linear-gradient(135deg,var(--mint),#3AAA82);border-radius:16px;padding:18px;color:var(--white);margin-bottom:14px;}
-.earn-card h4{font-size:12px;opacity:.85;margin-bottom:5px;}
-.earn-card .amount{font-size:30px;font-weight:900;letter-spacing:-.02em;}
+.loading{position:fixed;inset:0;background:rgba(255,253,248,.92);z-index:9999;display:none;align-items:center;justify-content:center;flex-direction:column;gap:14px;}
+.loading.show{display:flex;}
+.loading-icon{font-size:48px;animation:bounce 1s infinite;}
+.loading p{font-size:15px;font-weight:700;color:var(--choco);}
 
-/* MATCH */
-.match-card{background:var(--white);border-radius:16px;padding:16px;margin-bottom:12px;border:1.5px solid var(--border);box-shadow:var(--shadow);}
-.match-card .mh{display:flex;align-items:center;gap:12px;margin-bottom:12px;}
-.match-card .mav{width:46px;height:46px;border-radius:50%;background:var(--cream);display:flex;align-items:center;justify-content:center;font-size:26px;border:2px solid var(--border);}
-.match-card h4{font-size:14px;font-weight:700;}
-.match-card p{font-size:12px;color:var(--muted);}
-.new-tag{background:var(--peach);color:var(--white);font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;margin-left:6px;}
-.match-actions{display:flex;gap:8px;}
-.accept-btn{flex:1;padding:10px;background:var(--cookie);color:var(--white);border:none;border-radius:100px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;}
-.reject-btn{padding:10px 14px;background:transparent;color:var(--muted);border:1.5px solid var(--border);border-radius:100px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;}
+.toast{position:fixed;top:20px;left:50%;transform:translateX(-50%);background:var(--choco);color:white;padding:12px 22px;border-radius:100px;font-size:13px;font-weight:600;opacity:0;transition:all .3s;z-index:9999;white-space:nowrap;}
+.toast.show{opacity:1;}
 
-/* OVERLAY & MODAL */
 .overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:200;display:none;align-items:center;justify-content:center;padding:24px;}
 .overlay.on{display:flex;}
-.modal{background:var(--white);border-radius:24px;padding:28px 22px;text-align:center;width:100%;max-width:300px;animation:modalIn .4s cubic-bezier(.34,1.56,.64,1);}
-@keyframes modalIn{from{transform:scale(.6);opacity:0;}to{transform:scale(1);opacity:1;}}
-.modal .m-emoji{font-size:64px;margin-bottom:12px;display:block;}
-.modal h3{font-size:19px;font-weight:900;margin-bottom:6px;}
-.modal p{font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:22px;}
-
-/* TOAST */
-.toast{position:fixed;top:68px;left:50%;transform:translateX(-50%) translateY(-14px);background:var(--choco);color:var(--white);padding:10px 20px;border-radius:100px;font-size:13px;font-weight:600;opacity:0;transition:all .3s;z-index:9999;white-space:nowrap;pointer-events:none;}
-.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
-
-/* ERROR */
-.error-msg{background:#FFE8E4;color:#C0392B;border-radius:10px;padding:10px 14px;font-size:13px;margin-bottom:10px;display:none;}
-.error-msg.show{display:block;}
-
-/* LOADING */
-.loading{position:fixed;inset:0;background:rgba(255,253,248,.9);z-index:9999;display:none;align-items:center;justify-content:center;flex-direction:column;gap:14px;}
-.loading.show{display:flex;}
-.loading-emoji{font-size:48px;animation:bounce 1s ease-in-out infinite;}
-.loading p{font-size:14px;font-weight:700;color:var(--choco);}
-
-/* TEACHER PROFILE INPUT */
-.profile-section{background:var(--white);border-radius:16px;padding:16px;margin-bottom:12px;box-shadow:var(--shadow);}
-.profile-section h3{font-size:14px;font-weight:700;margin-bottom:12px;}
-select.inp{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%239A7E65' d='M6 8L1 3h10z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;}
-.mode-btn{flex:1;padding:9px 4px;border:1.5px solid var(--border);border-radius:10px;background:var(--cream);color:var(--muted);font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;text-align:center;transition:all .15s;}
-.mode-btn.on{background:var(--cookie);border-color:var(--cookie);color:var(--white);}
-.pref-btn{padding:7px 12px;border:1.5px solid var(--border);border-radius:100px;background:var(--cream);color:var(--muted);font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .15s;}
-.pref-btn.on{background:var(--cookie);border-color:var(--cookie);color:var(--white);}
+.modal{background:white;border-radius:24px;padding:28px 22px;text-align:center;width:100%;max-width:300px;}
+.modal-icon{font-size:56px;margin-bottom:12px;display:block;}
+.modal h3{font-size:19px;font-weight:900;margin-bottom:6px;color:var(--choco);}
+.modal p{font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:20px;}
 </style>
 </head>
 <body>
 
 <div class="toast" id="toast"></div>
 <div class="loading" id="loading">
-  <div class="loading-emoji">🍪</div>
+  <div class="loading-icon">🍪</div>
   <p>잠깐만요...</p>
 </div>
 
-<!-- ════ SPLASH ════ -->
+<!-- SPLASH -->
 <div id="s-splash" class="screen active">
-  <div style="position:absolute;width:260px;height:260px;border-radius:50%;background:rgba(255,255,255,.15);top:-80px;right:-60px;"></div>
-  <div style="position:absolute;width:160px;height:160px;border-radius:50%;background:rgba(255,255,255,.15);bottom:80px;left:-50px;"></div>
-  <div style="position:relative;z-index:1;width:100%;display:flex;flex-direction:column;align-items:center;">
-    <div class="splash-emoji">🍪</div>
-    <div class="splash-logo">과<em>자</em></div>
-    <div class="splash-tag">과외하자 · 줄여서 과자 🍪</div>
-    <div class="splash-sub">크래커처럼 바삭한 선생님<br>찹쌀떡처럼 찰떡인 매칭</div>
-    <div class="splash-btns">
-      <button class="btn btn-cookie" onclick="go('s-signup')">회원가입 🍪</button>
-      <button class="btn btn-outline" onclick="go('s-login')">로그인</button>
-    </div>
+  <span class="splash-emoji">🍪</span>
+  <div class="splash-logo">과<em>자</em></div>
+  <div class="splash-sub">크래커처럼 바삭한 선생님<br>찹쌀떡처럼 찰떡인 과외 매칭</div>
+  <div class="splash-btns">
+    <button class="btn btn-cookie" onclick="go('s-signup')">회원가입 🍪</button>
+    <button class="btn btn-outline" onclick="go('s-login')" style="background:rgba(255,255,255,.5);">로그인</button>
   </div>
 </div>
 
-<!-- ════ 회원가입 ════ -->
+<!-- 회원가입 -->
 <div id="s-signup" class="screen">
-  <div style="background:linear-gradient(160deg,#D4A96A,var(--choco));padding:40px 24px 28px;color:var(--white);">
-    <button style="background:none;border:none;cursor:pointer;color:rgba(255,255,255,.8);font-size:22px;margin-bottom:12px;" onclick="go('s-splash')">←</button>
+  <div style="background:linear-gradient(160deg,#D4A96A,var(--choco));padding:40px 24px 28px;color:white;">
+    <button onclick="go('s-splash')" style="background:none;border:none;cursor:pointer;color:rgba(255,255,255,.8);font-size:22px;margin-bottom:12px;">←</button>
     <div style="font-size:36px;margin-bottom:8px;">🍪</div>
     <h2 style="font-size:24px;font-weight:900;margin-bottom:4px;">과자 시작하기</h2>
     <p style="font-size:13px;opacity:.8;">무료로 가입하고 과외를 시작해요</p>
   </div>
   <div style="padding:20px 18px;flex:1;overflow-y:auto;">
-    <div class="error-msg" id="signup-error"></div>
-    <label class="inp-label" style="margin-top:0;">이름</label>
-    <input class="inp" id="signup-name" type="text" placeholder="홍길동">
-    <label class="inp-label">이메일</label>
-    <input class="inp" id="signup-email" type="email" placeholder="example@email.com">
-    <label class="inp-label">비밀번호</label>
-    <input class="inp" id="signup-pw" type="password" placeholder="6자 이상">
-    <label class="inp-label">비밀번호 확인</label>
-    <input class="inp" id="signup-pw2" type="password" placeholder="비밀번호 재입력" style="margin-bottom:20px;">
+    <div class="error" id="err-signup"></div>
+    <label class="label" style="margin-top:0;">이름</label>
+    <input class="inp" id="su-name" type="text" placeholder="홍길동">
+    <label class="label">이메일</label>
+    <input class="inp" id="su-email" type="email" placeholder="example@email.com">
+    <label class="label">비밀번호 (6자 이상)</label>
+    <input class="inp" id="su-pw" type="password" placeholder="••••••">
+    <label class="label">비밀번호 확인</label>
+    <input class="inp" id="su-pw2" type="password" placeholder="••••••" style="margin-bottom:20px;">
     <button class="btn btn-cookie" onclick="doSignup()">가입하기 🍪</button>
-    <div style="text-align:center;margin-top:14px;font-size:13px;color:var(--muted);">이미 계정이 있으신가요? <a style="color:var(--cookie);font-weight:700;cursor:pointer;" onclick="go('s-login')">로그인</a></div>
+    <p style="text-align:center;margin-top:14px;font-size:13px;color:var(--muted);">이미 계정이 있으신가요? <a onclick="go('s-login')" style="color:var(--cookie);font-weight:700;cursor:pointer;">로그인</a></p>
   </div>
 </div>
 
-<!-- ════ 로그인 ════ -->
+<!-- 로그인 -->
 <div id="s-login" class="screen">
-  <div style="background:linear-gradient(160deg,#D4A96A,var(--choco));padding:40px 24px 28px;color:var(--white);">
-    <button style="background:none;border:none;cursor:pointer;color:rgba(255,255,255,.8);font-size:22px;margin-bottom:12px;" onclick="go('s-splash')">←</button>
+  <div style="background:linear-gradient(160deg,#D4A96A,var(--choco));padding:40px 24px 28px;color:white;">
+    <button onclick="go('s-splash')" style="background:none;border:none;cursor:pointer;color:rgba(255,255,255,.8);font-size:22px;margin-bottom:12px;">←</button>
     <div style="font-size:36px;margin-bottom:8px;">🍪</div>
     <h2 style="font-size:24px;font-weight:900;margin-bottom:4px;">다시 만났네요!</h2>
     <p style="font-size:13px;opacity:.8;">로그인하고 과자 시작해요</p>
   </div>
   <div style="padding:20px 18px;flex:1;overflow-y:auto;">
-    <div class="error-msg" id="login-error"></div>
-    <label class="inp-label" style="margin-top:0;">이메일</label>
-    <input class="inp" id="login-email" type="email" placeholder="example@email.com">
-    <label class="inp-label">비밀번호</label>
-    <input class="inp" id="login-pw" type="password" placeholder="비밀번호" style="margin-bottom:20px;">
+    <div class="error" id="err-login"></div>
+    <label class="label" style="margin-top:0;">이메일</label>
+    <input class="inp" id="li-email" type="email" placeholder="example@email.com">
+    <label class="label">비밀번호</label>
+    <input class="inp" id="li-pw" type="password" placeholder="••••••" style="margin-bottom:20px;">
     <button class="btn btn-cookie" onclick="doLogin()">로그인 🍪</button>
-    <div style="text-align:center;margin-top:14px;font-size:13px;color:var(--muted);">계정이 없으신가요? <a style="color:var(--cookie);font-weight:700;cursor:pointer;" onclick="go('s-signup')">회원가입</a></div>
-    <div style="text-align:center;margin-top:10px;"><a style="color:var(--muted);font-size:12px;cursor:pointer;" onclick="doResetPw()">비밀번호를 잊으셨나요?</a></div>
+    <p style="text-align:center;margin-top:12px;font-size:13px;"><a onclick="doResetPw()" style="color:var(--muted);cursor:pointer;">비밀번호를 잊으셨나요?</a></p>
+    <p style="text-align:center;margin-top:10px;font-size:13px;color:var(--muted);">계정이 없으신가요? <a onclick="go('s-signup')" style="color:var(--cookie);font-weight:700;cursor:pointer;">회원가입</a></p>
   </div>
 </div>
 
-<!-- ════ 역할 선택 ════ -->
+<!-- 역할 선택 -->
 <div id="s-role" class="screen">
-  <div style="background:linear-gradient(160deg,#D4A96A,var(--cookie));padding:44px 24px 28px;color:var(--white);">
+  <div style="background:linear-gradient(160deg,#D4A96A,var(--cookie));padding:44px 24px 28px;color:white;">
     <div style="font-size:13px;opacity:.8;margin-bottom:4px;">환영해요! 🎉</div>
     <h2 style="font-size:24px;font-weight:900;margin-bottom:6px;">어떤 과자세요? 🍪</h2>
     <p style="font-size:13px;opacity:.8;">역할을 선택해주세요</p>
   </div>
-  <div style="padding:18px;display:flex;flex-direction:column;gap:12px;flex:1;">
-    <div class="role-card" onclick="pickRole(this,'student')" id="role-student">
+  <div style="padding:18px;flex:1;">
+    <div class="role-card" id="rc-student" onclick="pickRole('student')">
       <div class="role-icon">🎒</div>
       <div><h3>학생이에요</h3><p>딱 맞는 선생님 찾고 싶어요</p></div>
     </div>
-    <div class="role-card" onclick="pickRole(this,'teacher')" id="role-teacher">
+    <div class="role-card" id="rc-teacher" onclick="pickRole('teacher')">
       <div class="role-icon">🎓</div>
       <div><h3>선생님이에요</h3><p>학생들을 가르치고 싶어요</p></div>
     </div>
-    <div class="role-card" onclick="pickRole(this,'parent')" id="role-parent">
+    <div class="role-card" id="rc-parent" onclick="pickRole('parent')">
       <div class="role-icon">🥐</div>
       <div><h3>학부모예요</h3><p>자녀 수업 확인하고 싶어요</p></div>
     </div>
@@ -333,72 +227,65 @@ select.inp{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns
   </div>
 </div>
 
-<!-- ════ 선생님 프로필 등록 ════ -->
-<div id="s-teacher-setup" class="screen">
-  <div style="background:linear-gradient(160deg,#3AAA82,#1B6B50);padding:40px 24px 24px;color:var(--white);">
+<!-- 선생님 프로필 등록 -->
+<div id="s-tsetup" class="screen">
+  <div style="background:linear-gradient(160deg,#3AAA82,#1B6B50);padding:40px 24px 24px;color:white;">
     <h2 style="font-size:22px;font-weight:900;margin-bottom:4px;">🎓 프로필 설정</h2>
     <p style="font-size:13px;opacity:.8;">선생님 정보를 입력해주세요</p>
   </div>
   <div style="padding:18px;flex:1;overflow-y:auto;padding-bottom:40px;">
     <div class="profile-section">
       <h3>📚 기본 정보</h3>
-      <label class="inp-label" style="margin-top:0;">대학교</label>
-      <input class="inp" id="t-univ" type="text" placeholder="예) 이화여자대학교">
-      <label class="inp-label">학과</label>
-      <input class="inp" id="t-dept" type="text" placeholder="예) 수학교육과">
-      <label class="inp-label">학년</label>
-      <select class="inp" id="t-year">
-        <option>1학년</option><option>2학년</option><option>3학년</option><option selected>4학년</option>
-      </select>
-    </div>
-    <div class="profile-section">
-      <h3>📖 과외 정보</h3>
-      <label class="inp-label" style="margin-top:0;">담당 과목 (쉼표로 구분)</label>
-      <input class="inp" id="t-subjects" type="text" placeholder="예) 수학, 과학">
-      <label class="inp-label">시급 (원)</label>
+      <label class="label" style="margin-top:0;">대학교</label>
+      <input class="inp" id="t-univ" placeholder="예) 이화여자대학교">
+      <label class="label">학과</label>
+      <input class="inp" id="t-dept" placeholder="예) 수학교육과">
+      <label class="label">담당 과목 (쉼표로 구분)</label>
+      <input class="inp" id="t-subjects" placeholder="예) 수학, 과학">
+      <label class="label">시급 (원)</label>
       <input class="inp" id="t-price" type="number" placeholder="40000">
-      <label class="inp-label">한 줄 소개</label>
-      <input class="inp" id="t-intro" type="text" placeholder="예) 수학 1등급 달성 비결 알려드려요!">
+      <label class="label">한 줄 소개</label>
+      <input class="inp" id="t-intro" placeholder="예) 수학 1등급 비결 알려드려요!">
     </div>
     <div class="profile-section">
       <h3>🗺️ 선호 이동거리</h3>
-      <label class="inp-label" style="margin-top:0;">이동 수단</label>
-      <div style="display:flex;gap:6px;margin-bottom:12px;">
-        <button class="mode-btn on" onclick="selectMode(this)">🚶 도보</button>
-        <button class="mode-btn" onclick="selectMode(this)">🚇 대중교통</button>
-        <button class="mode-btn" onclick="selectMode(this)">🚗 자차</button>
+      <label class="label" style="margin-top:0;">이동 수단</label>
+      <div class="mode-btns">
+        <button class="mode-btn on" id="m-walk" onclick="selMode('walk')">🚶 도보</button>
+        <button class="mode-btn" id="m-transit" onclick="selMode('transit')">🚇 대중교통</button>
+        <button class="mode-btn" id="m-car" onclick="selMode('car')">🚗 자차</button>
       </div>
-      <label class="inp-label">최대 이동 거리</label>
-      <div style="display:flex;gap:6px;margin-bottom:12px;">
-        <button class="mode-btn" onclick="selectDist(this)">3km</button>
-        <button class="mode-btn on" onclick="selectDist(this)">5km</button>
-        <button class="mode-btn" onclick="selectDist(this)">10km</button>
-        <button class="mode-btn" onclick="selectDist(this)">무제한</button>
+      <label class="label">최대 거리</label>
+      <div class="mode-btns">
+        <button class="mode-btn" id="d-3" onclick="selDist('3')">3km</button>
+        <button class="mode-btn on" id="d-5" onclick="selDist('5')">5km</button>
+        <button class="mode-btn" id="d-10" onclick="selDist('10')">10km</button>
+        <button class="mode-btn" id="d-0" onclick="selDist('0')">무제한</button>
       </div>
-      <label class="inp-label">선호 장소</label>
-      <div style="display:flex;gap:6px;flex-wrap:wrap;">
+      <label class="label">선호 장소</label>
+      <div class="pref-btns">
         <button class="pref-btn on" onclick="this.classList.toggle('on')">☕ 카페</button>
         <button class="pref-btn on" onclick="this.classList.toggle('on')">📚 스터디룸</button>
         <button class="pref-btn" onclick="this.classList.toggle('on')">🏠 학생 집</button>
         <button class="pref-btn" onclick="this.classList.toggle('on')">🏫 학교 근처</button>
       </div>
     </div>
-    <button class="btn btn-green" onclick="saveTeacherProfile()" style="margin-top:8px;">프로필 저장하기 🎓</button>
+    <button class="btn btn-green" onclick="saveTeacher()" style="margin-top:8px;">프로필 저장하기 🎓</button>
   </div>
 </div>
 
-<!-- ════ 학생 메인 ════ -->
+<!-- 학생 메인 -->
 <div id="s-student" class="screen">
   <div class="topbar">
-    <div class="topbar-logo">과<em>자</em> 🍪</div>
-    <button class="icon-btn" onclick="showToast('알림 준비 중 🍪')">🔔<span class="notif-dot"></span></button>
+    <div class="logo">과<em>자</em> 🍪</div>
+    <button style="background:none;border:none;cursor:pointer;font-size:20px;" onclick="toast('알림 준비 중 🍪')">🔔</button>
   </div>
   <div class="tab-panels">
     <div id="st-home" class="tab-panel active">
       <div class="hero" style="background:linear-gradient(135deg,var(--cookie),var(--choco));">
         <div class="hero-text">
           <div class="hi">안녕하세요 👋</div>
-          <h2 id="st-welcome">찰떡 선생님을<br>찾아봐요!</h2>
+          <h2 id="st-hi">찰떡 선생님을<br>찾아봐요!</h2>
           <p>학교 인증 선생님만 매칭</p>
         </div>
         <div class="hero-emoji">🎒</div>
@@ -406,58 +293,36 @@ select.inp{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns
       <div class="section-head"><h3>🧭 빠른 메뉴</h3></div>
       <div class="quick-grid">
         <div class="quick-cell" onclick="stTab('search')"><div class="qi">🔍</div><div class="ql">선생님 찾기</div></div>
-        <div class="quick-cell" onclick="stTab('calendar')"><div class="qi">📅</div><div class="ql">수업 일정</div></div>
-        <div class="quick-cell" onclick="stTab('chat')"><div class="qi">💬</div><div class="ql">채팅</div></div>
-        <div class="quick-cell" onclick="showToast('준비 중 🍩')"><div class="qi">🎯</div><div class="ql">목표</div></div>
+        <div class="quick-cell" onclick="toast('준비 중 🍪')"><div class="qi">📅</div><div class="ql">수업 일정</div></div>
+        <div class="quick-cell" onclick="toast('준비 중 🍪')"><div class="qi">💬</div><div class="ql">채팅</div></div>
+        <div class="quick-cell" onclick="toast('준비 중 🍪')"><div class="qi">🎯</div><div class="ql">목표</div></div>
       </div>
-      <div class="section-head"><h3>🎓 추천 선생님</h3><a onclick="stTab('search')">전체보기</a></div>
-      <div style="display:flex;gap:10px;overflow-x:auto;margin:0 -18px;padding:0 18px 12px;" id="featured-teachers">
-        <div style="background:var(--white);border-radius:16px;padding:14px;min-width:140px;flex-shrink:0;border:1.5px solid var(--border);text-align:center;box-shadow:var(--shadow);">
-          <div style="font-size:40px;margin-bottom:7px;">🎓</div>
-          <div style="font-size:13px;font-weight:700;margin-bottom:3px;">가입 선생님</div>
-          <div style="font-size:11px;color:var(--muted);">검색에서 찾아보세요!</div>
-        </div>
-      </div>
+      <div class="section-head"><h3>🎓 선생님 찾기</h3><a onclick="stTab('search')" style="font-size:12px;color:var(--cookie);cursor:pointer;">전체보기</a></div>
+      <p style="font-size:13px;color:var(--muted);text-align:center;padding:20px;">검색 탭에서 선생님을 찾아보세요! 🔍</p>
     </div>
     <div id="st-search" class="tab-panel">
-      <div class="search-bar"><div class="search-wrap"><span class="si">🔍</span><input class="search-inp" id="search-inp" placeholder="선생님, 과목, 학교 검색..." oninput="searchTeachers()"></div></div>
-      <div class="chips" style="margin-bottom:14px;" id="subject-chips">
-        <div class="chip on" onclick="chipOn(this,'')">전체</div>
-        <div class="chip" onclick="chipOn(this,'수학')">수학</div>
-        <div class="chip" onclick="chipOn(this,'영어')">영어</div>
-        <div class="chip" onclick="chipOn(this,'국어')">국어</div>
-        <div class="chip" onclick="chipOn(this,'과학')">과학</div>
-        <div class="chip" onclick="chipOn(this,'사회')">사회</div>
+      <div class="search-bar">
+        <input class="search-inp" id="s-inp" placeholder="🔍 선생님, 과목, 학교 검색..." oninput="loadTeachers()">
       </div>
-      <div id="teacher-list">
+      <div id="t-list">
         <div style="text-align:center;padding:40px;color:var(--muted);">
           <div style="font-size:36px;margin-bottom:10px;">🔍</div>
-          <div style="font-size:14px;">선생님을 검색해보세요!</div>
+          <div>선생님을 검색해보세요!</div>
         </div>
       </div>
     </div>
-    <div id="st-calendar" class="tab-panel">
-      <div class="cal-nav-row"><button class="cal-nav-btn">‹</button><h3>2026년 5월</h3><button class="cal-nav-btn">›</button></div>
-      <div class="cal-grid">
-        <div class="cal-dn">일</div><div class="cal-dn">월</div><div class="cal-dn">화</div><div class="cal-dn">수</div><div class="cal-dn">목</div><div class="cal-dn">금</div><div class="cal-dn">토</div>
-        <div class="cal-d dim">27</div><div class="cal-d dim">28</div><div class="cal-d dim">29</div><div class="cal-d dim">30</div><div class="cal-d">1</div><div class="cal-d has-dot">2</div><div class="cal-d">3</div>
-        <div class="cal-d">4</div><div class="cal-d has-dot">5</div><div class="cal-d">6</div><div class="cal-d has-dot">7</div><div class="cal-d today has-dot">11</div><div class="cal-d">12</div><div class="cal-d">13</div>
-        <div class="cal-d">14</div><div class="cal-d has-dot">15</div><div class="cal-d">16</div><div class="cal-d">17</div><div class="cal-d">18</div><div class="cal-d">19</div><div class="cal-d">20</div>
-      </div>
-      <div style="text-align:center;padding:30px;color:var(--muted);"><div style="font-size:32px;margin-bottom:8px;">📅</div><div>선생님과 연결되면<br>수업 일정이 여기 표시돼요</div></div>
-    </div>
-    <div id="st-chat" class="tab-panel" style="padding:0;">
+    <div id="st-chat" class="tab-panel">
       <div style="text-align:center;padding:50px 20px;color:var(--muted);">
         <div style="font-size:40px;margin-bottom:12px;">💬</div>
         <div style="font-size:15px;font-weight:700;margin-bottom:6px;">아직 채팅이 없어요</div>
         <div style="font-size:13px;">선생님에게 대화를 요청해보세요!</div>
       </div>
     </div>
-    <div id="st-profile" class="tab-panel">
+    <div id="st-me" class="tab-panel">
       <div class="profile-hero" style="background:linear-gradient(160deg,#D4A96A,var(--choco));">
         <span class="profile-emoji">🎒</span>
-        <div class="profile-name" id="st-profile-name">학생</div>
-        <span class="profile-role-badge">🎒 학생 · 과자 멤버</span>
+        <div class="profile-name" id="st-name">학생</div>
+        <span class="profile-badge">🎒 학생 · 과자 멤버</span>
       </div>
       <div class="stats-card">
         <div class="stat-row">
@@ -469,76 +334,61 @@ select.inp{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns
         </div>
       </div>
       <div class="menu-card">
-        <div class="menu-item" onclick="showToast('준비 중 🍪')"><span class="mi-l">✏️ 내 정보 수정</span><span>›</span></div>
-        <div class="menu-item" onclick="showToast('준비 중 🍪')"><span class="mi-l">💳 결제 내역</span><span>›</span></div>
+        <div class="menu-item"><span>✏️ 내 정보 수정</span><span>›</span></div>
+        <div class="menu-item"><span>💳 결제 내역</span><span>›</span></div>
       </div>
-      <div class="menu-card"><div class="menu-item" onclick="doLogout()"><span class="mi-l" style="color:#E55;">🚪 로그아웃</span><span>›</span></div></div>
+      <div class="menu-card">
+        <div class="menu-item" onclick="doLogout()" style="color:var(--peach);">🚪 로그아웃</div>
+      </div>
     </div>
   </div>
   <div class="bottom-bar">
-    <button class="tab-btn on" id="st-btn-home" onclick="stTab('home')"><span class="ti">🏠</span><span class="tl">홈</span></button>
-    <button class="tab-btn" id="st-btn-search" onclick="stTab('search')"><span class="ti">🔍</span><span class="tl">검색</span></button>
-    <button class="tab-btn" id="st-btn-calendar" onclick="stTab('calendar')"><span class="ti">📅</span><span class="tl">캘린더</span></button>
-    <button class="tab-btn" id="st-btn-chat" onclick="stTab('chat')"><span class="ti">💬</span><span class="tl">채팅</span></button>
-    <button class="tab-btn" id="st-btn-profile" onclick="stTab('profile')"><span class="ti">🧑</span><span class="tl">나</span></button>
+    <button class="tab-btn on" id="st-b-home" onclick="stTab('home')"><span class="ti">🏠</span><span class="tl">홈</span></button>
+    <button class="tab-btn" id="st-b-search" onclick="stTab('search')"><span class="ti">🔍</span><span class="tl">검색</span></button>
+    <button class="tab-btn" id="st-b-chat" onclick="stTab('chat')"><span class="ti">💬</span><span class="tl">채팅</span></button>
+    <button class="tab-btn" id="st-b-me" onclick="stTab('me')"><span class="ti">🧑</span><span class="tl">나</span></button>
   </div>
 </div>
 
-<!-- ════ 선생님 메인 ════ -->
+<!-- 선생님 메인 -->
 <div id="s-teacher" class="screen">
   <div class="topbar">
-    <div class="topbar-logo">과<em>자</em> 🍪</div>
-    <button class="icon-btn" onclick="showToast('새 요청 확인하기 🍪')">🔔<span class="notif-dot"></span></button>
+    <div class="logo">과<em>자</em> 🍪</div>
+    <button style="background:none;border:none;cursor:pointer;font-size:20px;" onclick="toast('알림 준비 중 🍪')">🔔</button>
   </div>
   <div class="tab-panels">
     <div id="tc-home" class="tab-panel active">
       <div class="hero" style="background:linear-gradient(135deg,var(--green),#1B6B50);">
         <div class="hero-text">
           <div class="hi">선생님 안녕하세요 🎓</div>
-          <h2 id="tc-welcome">오늘도 달콤한<br>수업 준비됐나요?</h2>
+          <h2 id="tc-hi">오늘도 달콤한<br>수업 준비됐나요?</h2>
           <p>학생들이 기다리고 있어요</p>
         </div>
         <div class="hero-emoji">🎓</div>
       </div>
       <div class="earn-card">
         <h4>이번 달 예상 수익</h4>
-        <div class="amount">₩ 0</div>
+        <div class="earn-amount">₩ 0</div>
         <div style="font-size:11px;opacity:.75;margin-top:4px;">학생 연결 후 수익이 표시돼요</div>
       </div>
       <div class="section-head"><h3>🔔 대화 요청</h3></div>
-      <div id="tc-requests-home">
-        <div style="text-align:center;padding:30px;color:var(--muted);">
-          <div style="font-size:32px;margin-bottom:8px;">💬</div>
-          <div style="font-size:13px;">아직 대화 요청이 없어요</div>
-        </div>
+      <div style="text-align:center;padding:30px;color:var(--muted);">
+        <div style="font-size:32px;margin-bottom:8px;">💬</div>
+        <div style="font-size:13px;">아직 대화 요청이 없어요</div>
       </div>
     </div>
-    <div id="tc-chat" class="tab-panel" style="padding:0;">
+    <div id="tc-chat" class="tab-panel">
       <div style="text-align:center;padding:50px 20px;color:var(--muted);">
         <div style="font-size:40px;margin-bottom:12px;">💬</div>
         <div style="font-size:15px;font-weight:700;margin-bottom:6px;">아직 채팅이 없어요</div>
         <div style="font-size:13px;">학생이 대화를 요청하면 여기 표시돼요</div>
       </div>
     </div>
-    <div id="tc-settle" class="tab-panel">
-      <div class="section-head"><h3>💰 정산 내역</h3></div>
-      <div class="settle-card">
-        <div class="settle-header" style="background:linear-gradient(135deg,var(--mint),#3AAA82);">
-          <h4>이번 달 예상</h4><span>₩0</span>
-        </div>
-        <div class="settle-row"><span class="sl">총 수업료</span><span class="sv">₩ 0</span></div>
-        <div class="settle-row"><span class="sl">수수료 (첫달 15%)</span><span class="sv red">₩ 0</span></div>
-        <div class="settle-row"><span class="sl">최종 정산액</span><span class="sv green">₩ 0</span></div>
-      </div>
-      <div style="background:linear-gradient(120deg,#FFF3E0,#FFE8CC);border-radius:14px;padding:14px;font-size:12px;color:var(--choco);line-height:1.6;">
-        💡 <strong>2달째부터 수수료 0%!</strong><br>첫 달에만 15% 수수료, 이후 전액 수령 🍪
-      </div>
-    </div>
-    <div id="tc-profile" class="tab-panel">
+    <div id="tc-me" class="tab-panel">
       <div class="profile-hero" style="background:linear-gradient(160deg,var(--green),#1B6B50);">
         <span class="profile-emoji">🎓</span>
-        <div class="profile-name" id="tc-profile-name">선생님</div>
-        <span class="profile-role-badge">🎓 선생님 · 과자 멤버</span>
+        <div class="profile-name" id="tc-name">선생님</div>
+        <span class="profile-badge">🎓 선생님 · 과자 멤버</span>
       </div>
       <div class="stats-card">
         <div class="stat-row">
@@ -550,441 +400,340 @@ select.inp{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns
         </div>
       </div>
       <div class="menu-card">
-        <div class="menu-item" onclick="go('s-teacher-setup')"><span class="mi-l">✏️ 프로필 수정</span><span>›</span></div>
-        <div class="menu-item" onclick="tcTab('settle')"><span class="mi-l">💰 정산 내역</span><span>›</span></div>
+        <div class="menu-item" onclick="go('s-tsetup')"><span>✏️ 프로필 수정</span><span>›</span></div>
+        <div class="menu-item"><span>💰 정산 내역</span><span>›</span></div>
       </div>
-      <div class="menu-card"><div class="menu-item" onclick="doLogout()"><span class="mi-l" style="color:#E55;">🚪 로그아웃</span><span>›</span></div></div>
+      <div class="menu-card">
+        <div class="menu-item" onclick="doLogout()" style="color:var(--peach);">🚪 로그아웃</div>
+      </div>
     </div>
   </div>
   <div class="bottom-bar">
-    <button class="tab-btn on" id="tc-btn-home" onclick="tcTab('home')"><span class="ti">🏠</span><span class="tl">홈</span></button>
-    <button class="tab-btn" id="tc-btn-chat" onclick="tcTab('chat')"><span class="ti">💬</span><span class="tl">채팅</span></button>
-    <button class="tab-btn" id="tc-btn-settle" onclick="tcTab('settle')"><span class="ti">💰</span><span class="tl">정산</span></button>
-    <button class="tab-btn" id="tc-btn-profile" onclick="tcTab('profile')"><span class="ti">🧑</span><span class="tl">나</span></button>
+    <button class="tab-btn on" id="tc-b-home" onclick="tcTab('home')"><span class="ti">🏠</span><span class="tl">홈</span></button>
+    <button class="tab-btn" id="tc-b-chat" onclick="tcTab('chat')"><span class="ti">💬</span><span class="tl">채팅</span></button>
+    <button class="tab-btn" id="tc-b-me" onclick="tcTab('me')"><span class="ti">🧑</span><span class="tl">나</span></button>
   </div>
 </div>
 
-<!-- ════ 학부모 메인 ════ -->
+<!-- 학부모 메인 -->
 <div id="s-parent" class="screen">
   <div class="topbar">
-    <div class="topbar-logo">과<em>자</em> 🍪</div>
-    <button class="icon-btn" onclick="showToast('알림 준비 중 🍪')">🔔</button>
+    <div class="logo">과<em>자</em> 🍪</div>
   </div>
   <div class="tab-panels">
-    <div id="pr-home" class="tab-panel active">
+    <div class="tab-panel active" style="display:block;">
       <div class="hero" style="background:linear-gradient(135deg,var(--lavender),#6B5FC8);">
         <div class="hero-text">
           <div class="hi">학부모님 안녕하세요 👨‍👩‍👧</div>
-          <h2>자녀 수업을<br>확인해요</h2>
+          <h2 id="pr-hi">자녀 수업을<br>확인해요</h2>
           <p>월 ₩4,900 구독</p>
         </div>
         <div class="hero-emoji">🥐</div>
       </div>
       <div style="text-align:center;padding:40px 20px;color:var(--muted);">
         <div style="font-size:36px;margin-bottom:10px;">👧</div>
-        <div style="font-size:15px;font-weight:700;margin-bottom:6px;">자녀를 연결해주세요</div>
-        <div style="font-size:13px;margin-bottom:20px;">자녀 계정과 연결하면 수업 현황을 확인할 수 있어요</div>
-        <button class="btn btn-lav" style="max-width:200px;margin:0 auto;" onclick="showToast('자녀 연결 준비 중 🍪')">자녀 연결하기</button>
+        <div style="font-size:14px;margin-bottom:16px;">자녀 계정과 연결하면<br>수업 현황을 확인할 수 있어요</div>
+        <button class="btn" style="background:var(--lavender);color:white;max-width:200px;" onclick="toast('자녀 연결 준비 중 🍪')">자녀 연결하기</button>
+      </div>
+      <div class="menu-card" style="margin:0 0 10px;">
+        <div class="menu-item" onclick="doLogout()" style="color:var(--peach);">🚪 로그아웃</div>
       </div>
     </div>
-    <div id="pr-profile" class="tab-panel">
-      <div class="profile-hero" style="background:linear-gradient(160deg,var(--lavender),#6B5FC8);">
-        <span class="profile-emoji">🥐</span>
-        <div class="profile-name" id="pr-profile-name">학부모님</div>
-        <span class="profile-role-badge">👨‍👩‍👧 학부모 · 과자 멤버</span>
-      </div>
-      <div class="stats-card">
-        <div class="stat-row">
-          <div class="stat-item"><div class="stat-val">0</div><div class="stat-lbl">자녀</div></div>
-          <div class="stat-div"></div>
-          <div class="stat-item"><div class="stat-val">0</div><div class="stat-lbl">연결 선생님</div></div>
-          <div class="stat-div"></div>
-          <div class="stat-item"><div class="stat-val">0</div><div class="stat-lbl">이달 수업</div></div>
-        </div>
-      </div>
-      <div class="menu-card">
-        <div class="menu-item" onclick="showToast('구독 준비 중 💜')"><span class="mi-l">💜 구독 관리</span><span>›</span></div>
-      </div>
-      <div class="menu-card"><div class="menu-item" onclick="doLogout()"><span class="mi-l" style="color:#E55;">🚪 로그아웃</span><span>›</span></div></div>
-    </div>
-  </div>
-  <div class="bottom-bar">
-    <button class="tab-btn on" id="pr-btn-home" onclick="prTab('home')"><span class="ti">🏠</span><span class="tl">홈</span></button>
-    <button class="tab-btn" id="pr-btn-profile" onclick="prTab('profile')"><span class="ti">🧑</span><span class="tl">나</span></button>
   </div>
 </div>
 
-<!-- ════ MODALS ════ -->
-<div class="overlay" id="modal-chat-req" onclick="if(event.target===this)closeModal('modal-chat-req')">
+<!-- 대화 요청 모달 -->
+<div class="overlay" id="modal-req" onclick="if(event.target===this)closeModal()">
   <div class="modal">
-    <span class="m-emoji">💬</span>
-    <h3 id="modal-teacher-name">선생님에게</h3>
+    <span class="modal-icon">💬</span>
+    <h3 id="modal-title">선생님에게</h3>
     <p>대화를 요청할까요?<br>선생님이 수락하면 채팅이 시작돼요 🍪</p>
-    <button class="btn btn-cookie" onclick="sendChatReq()" style="margin-bottom:10px;">대화 요청 보내기</button>
-    <button class="btn btn-outline" onclick="closeModal('modal-chat-req')">취소</button>
+    <button class="btn btn-cookie" onclick="sendReq()" style="margin-bottom:10px;">대화 요청 보내기</button>
+    <button class="btn btn-outline" onclick="closeModal()">취소</button>
   </div>
 </div>
 
-<!-- Firebase SDK -->
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js";
-import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-auth.js";
-import { getFirestore, doc, setDoc, getDoc, collection, getDocs, query, where, orderBy } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js";
-
+<script>
+// ── Firebase 초기화 ──
 const firebaseConfig = {
   apiKey: "AIzaSyCsnpoTlfINam5PLfA0-XKJ-gkYDcRtw2A",
   authDomain: "gwaja-app.firebaseapp.com",
   projectId: "gwaja-app",
   storageBucket: "gwaja-app.firebasestorage.app",
   messagingSenderId: "779948307676",
-  appId: "1:779948307676:web:5c9050b08df0c86ecff019",
-  measurementId: "G-H6SE6D0GMZ"
+  appId: "1:779948307676:web:5c9050b08df0c86ecff019"
 };
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
 
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
-
-// 전역으로 노출
-window._auth = auth;
-window._db = db;
-window._firebase = { createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, sendPasswordResetEmail, doc, setDoc, getDoc, collection, getDocs, query, where, orderBy };
-
+// ── 전역 변수 ──
 let currentUser = null;
-let currentRole = null;
+let selectedRole = null;
 let selectedTeacherId = null;
+let selectedMode = 'walk';
+let selectedDist = '5';
 
 // ── 인증 상태 감지 ──
-onAuthStateChanged(auth, async (user) => {
+auth.onAuthStateChanged(async (user) => {
   if (user) {
     currentUser = user;
-    window._currentUser = user;
-    // Firestore에서 역할 조회
     try {
-      const snap = await getDoc(doc(db, 'users', user.uid));
-      if (snap.exists()) {
-        const data = snap.data();
-        currentRole = data.role;
-        window._currentRole = currentRole;
-        goMain(data);
+      const snap = await db.collection('users').doc(user.uid).get();
+      if (snap.exists && snap.data().role) {
+        goMain(snap.data());
       } else {
-        // 역할 미설정 → 역할 선택 화면
         go('s-role');
       }
     } catch(e) {
+      console.error('onAuth error:', e);
       go('s-role');
     }
   } else {
     currentUser = null;
-    window._currentUser = null;
     go('s-splash');
   }
 });
 
 // ── 회원가입 ──
-window.doSignup = async () => {
-  const name = document.getElementById('signup-name').value.trim();
-  const email = document.getElementById('signup-email').value.trim();
-  const pw = document.getElementById('signup-pw').value;
-  const pw2 = document.getElementById('signup-pw2').value;
-  const errEl = document.getElementById('signup-error');
+function doSignup() {
+  const name = document.getElementById('su-name').value.trim();
+  const email = document.getElementById('su-email').value.trim();
+  const pw = document.getElementById('su-pw').value;
+  const pw2 = document.getElementById('su-pw2').value;
+  const err = document.getElementById('err-signup');
 
-  if (!name || !email || !pw) { showErr(errEl, '모든 항목을 입력해주세요'); return; }
-  if (pw !== pw2) { showErr(errEl, '비밀번호가 일치하지 않아요'); return; }
-  if (pw.length < 6) { showErr(errEl, '비밀번호는 6자 이상이어야 해요'); return; }
+  err.classList.remove('show');
+  if (!name) { showErr(err, '이름을 입력해주세요'); return; }
+  if (!email) { showErr(err, '이메일을 입력해주세요'); return; }
+  if (pw.length < 6) { showErr(err, '비밀번호는 6자 이상이에요'); return; }
+  if (pw !== pw2) { showErr(err, '비밀번호가 일치하지 않아요'); return; }
 
-  showLoading(true);
-  try {
-    const cred = await createUserWithEmailAndPassword(auth, email, pw);
-    // users 컬렉션에 기본 정보 저장
-    await setDoc(doc(db, 'users', cred.user.uid), {
-      name, email, uid: cred.user.uid, createdAt: new Date().toISOString()
+  showLoad(true);
+  auth.createUserWithEmailAndPassword(email, pw)
+    .then(cred => {
+      return db.collection('users').doc(cred.user.uid).set({
+        name, email, uid: cred.user.uid, createdAt: new Date().toISOString()
+      });
+    })
+    .then(() => {
+      showLoad(false);
+      go('s-role');
+    })
+    .catch(e => {
+      showLoad(false);
+      const msg = e.code === 'auth/email-already-in-use' ? '이미 사용 중인 이메일이에요' :
+                  e.code === 'auth/invalid-email' ? '이메일 형식이 올바르지 않아요' : e.message;
+      showErr(err, msg);
     });
-    window._userName = name;
-    showLoading(false);
-    go('s-role');
-  } catch(e) {
-    showLoading(false);
-    const msg = e.code === 'auth/email-already-in-use' ? '이미 사용 중인 이메일이에요' :
-                e.code === 'auth/invalid-email' ? '이메일 형식이 올바르지 않아요' : '가입 중 오류가 발생했어요';
-    showErr(errEl, msg);
-  }
-};
+}
 
 // ── 로그인 ──
-window.doLogin = async () => {
-  const email = document.getElementById('login-email').value.trim();
-  const pw = document.getElementById('login-pw').value;
-  const errEl = document.getElementById('login-error');
+function doLogin() {
+  const email = document.getElementById('li-email').value.trim();
+  const pw = document.getElementById('li-pw').value;
+  const err = document.getElementById('err-login');
 
-  if (!email || !pw) { showErr(errEl, '이메일과 비밀번호를 입력해주세요'); return; }
+  err.classList.remove('show');
+  if (!email || !pw) { showErr(err, '이메일과 비밀번호를 입력해주세요'); return; }
 
-  showLoading(true);
-  try {
-    await signInWithEmailAndPassword(auth, email, pw);
-    showLoading(false);
-  } catch(e) {
-    showLoading(false);
-    const msg = e.code === 'auth/user-not-found' ? '등록되지 않은 이메일이에요' :
-                e.code === 'auth/wrong-password' || e.code === 'auth/invalid-credential' ? '비밀번호가 틀렸어요' : '로그인 중 오류가 발생했어요';
-    showErr(errEl, msg);
-  }
-};
+  showLoad(true);
+  auth.signInWithEmailAndPassword(email, pw)
+    .then(() => { showLoad(false); })
+    .catch(e => {
+      showLoad(false);
+      const msg = e.code === 'auth/user-not-found' ? '등록되지 않은 이메일이에요' :
+                  e.code === 'auth/wrong-password' || e.code === 'auth/invalid-credential' ? '비밀번호가 틀렸어요' : e.message;
+      showErr(err, msg);
+    });
+}
 
 // ── 비밀번호 재설정 ──
-window.doResetPw = async () => {
-  const email = document.getElementById('login-email').value.trim();
-  if (!email) { showToast('이메일을 먼저 입력해주세요'); return; }
-  try {
-    await sendPasswordResetEmail(auth, email);
-    showToast('비밀번호 재설정 메일을 보냈어요 📧');
-  } catch(e) { showToast('메일 전송 실패. 이메일을 확인해주세요'); }
-};
+function doResetPw() {
+  const email = document.getElementById('li-email').value.trim();
+  if (!email) { toast('이메일을 먼저 입력해주세요'); return; }
+  auth.sendPasswordResetEmail(email)
+    .then(() => toast('비밀번호 재설정 메일을 보냈어요 📧'))
+    .catch(() => toast('메일 전송 실패'));
+}
 
 // ── 로그아웃 ──
-window.doLogout = async () => {
-  await signOut(auth);
-  showToast('로그아웃 됐어요 🍪');
-};
+function doLogout() {
+  auth.signOut().then(() => toast('로그아웃 됐어요 🍪'));
+}
 
-// ── 역할 선택 저장 ──
-window.saveRole = async () => {
-  const role = window._selectedRole;
-  if (!role) { showToast('역할을 선택해주세요 🍪'); return; }
-  currentRole = role;
-  showLoading(true);
-  try {
-    const snap = await getDoc(doc(db, 'users', currentUser.uid));
-    const name = snap.data()?.name || '사용자';
-    await setDoc(doc(db, 'users', currentUser.uid), { role, name }, { merge: true });
-    showLoading(false);
-    if (role === 'teacher') go('s-teacher-setup');
-    else goMain({ role, name });
-  } catch(e) { 
-    showLoading(false); 
-    console.error('saveRole error:', e);
-    showToast('저장 오류: ' + e.code + ' - ' + e.message); 
-  }
-};
+// ── 역할 선택 ──
+function pickRole(role) {
+  selectedRole = role;
+  ['student','teacher','parent'].forEach(r => {
+    document.getElementById('rc-'+r).classList.toggle('selected', r === role);
+  });
+}
+
+function saveRole() {
+  if (!selectedRole) { toast('역할을 선택해주세요 🍪'); return; }
+  if (!currentUser) { toast('로그인이 필요해요'); return; }
+  showLoad(true);
+  db.collection('users').doc(currentUser.uid).update({ role: selectedRole })
+    .then(() => {
+      showLoad(false);
+      if (selectedRole === 'teacher') go('s-tsetup');
+      else {
+        db.collection('users').doc(currentUser.uid).get().then(snap => {
+          goMain(snap.data());
+        });
+      }
+    })
+    .catch(e => { showLoad(false); toast('저장 실패: ' + e.message); });
+}
 
 // ── 선생님 프로필 저장 ──
-window.saveTeacherProfile = async () => {
+function saveTeacher() {
   const univ = document.getElementById('t-univ').value.trim();
   const dept = document.getElementById('t-dept').value.trim();
-  const year = document.getElementById('t-year').value;
   const subjects = document.getElementById('t-subjects').value.trim();
   const price = document.getElementById('t-price').value;
   const intro = document.getElementById('t-intro').value.trim();
+  if (!univ || !subjects || !price) { toast('대학교, 과목, 시급은 필수예요 🍪'); return; }
 
-  if (!univ || !subjects || !price) { showToast('대학교, 과목, 시급은 필수예요 🍪'); return; }
-
-  const mode = [...document.querySelectorAll('#s-teacher-setup .mode-btn.on')].map(b=>b.textContent)[0] || '도보';
-  const dist = [...document.querySelectorAll('#s-teacher-setup .mode-btn.on')].slice(-1).map(b=>b.textContent)[0] || '5km';
-  const prefs = [...document.querySelectorAll('#s-teacher-setup .pref-btn.on')].map(b=>b.textContent);
-
-  showLoading(true);
-  try {
-    const snap = await getDoc(doc(db, 'users', currentUser.uid));
+  const prefs = [...document.querySelectorAll('#s-tsetup .pref-btn.on')].map(b => b.textContent);
+  showLoad(true);
+  db.collection('users').doc(currentUser.uid).get().then(snap => {
     const userData = snap.data() || {};
-    await setDoc(doc(db, 'teachers', currentUser.uid), {
-      uid: currentUser.uid,
-      name: userData.name || '선생님',
-      email: userData.email || '',
-      univ, dept, year, subjects, price: parseInt(price), intro,
-      travelMode: mode, travelDist: dist, travelPrefs: prefs,
-      rating: 0, ratingCount: 0,
-      createdAt: new Date().toISOString()
+    return db.collection('teachers').doc(currentUser.uid).set({
+      uid: currentUser.uid, name: userData.name || '선생님',
+      email: userData.email || '', univ, dept, subjects,
+      price: parseInt(price), intro,
+      travelMode: selectedMode, travelDist: selectedDist, travelPrefs: prefs,
+      rating: 0, ratingCount: 0, createdAt: new Date().toISOString()
     });
-    await setDoc(doc(db, 'users', currentUser.uid), { profileComplete: true }, { merge: true });
-    showLoading(false);
-    showToast('프로필 저장 완료! 🎓');
-    goMain({ role: 'teacher' });
-  } catch(e) { 
-    showLoading(false); 
-    console.error('saveRole error:', e);
-    showToast('저장 오류: ' + e.code + ' - ' + e.message); 
-  }
-};
+  }).then(() => {
+    return db.collection('users').doc(currentUser.uid).update({ profileComplete: true });
+  }).then(() => {
+    showLoad(false);
+    toast('프로필 저장 완료! 🎓');
+    db.collection('users').doc(currentUser.uid).get().then(snap => goMain(snap.data()));
+  }).catch(e => { showLoad(false); toast('저장 실패: ' + e.message); });
+}
 
-// ── 선생님 검색 ──
-window.searchTeachers = async () => {
-  const q = document.getElementById('search-inp').value.trim().toLowerCase();
-  const list = document.getElementById('teacher-list');
-
-  try {
-    const snap = await getDocs(collection(db, 'teachers'));
+// ── 선생님 목록 로드 ──
+function loadTeachers() {
+  const q = document.getElementById('s-inp').value.trim().toLowerCase();
+  db.collection('teachers').get().then(snap => {
+    const list = document.getElementById('t-list');
     const teachers = [];
     snap.forEach(d => {
       const t = d.data();
-      if (!q || t.name?.includes(q) || t.univ?.includes(q) || t.subjects?.includes(q) || t.intro?.includes(q)) {
+      if (!q || (t.name||'').includes(q) || (t.univ||'').includes(q) || (t.subjects||'').includes(q)) {
         teachers.push(t);
       }
     });
-
-    if (teachers.length === 0) {
-      list.innerHTML = `<div style="text-align:center;padding:40px;color:var(--muted);"><div style="font-size:36px;margin-bottom:10px;">🔍</div><div>검색 결과가 없어요</div></div>`;
+    if (!teachers.length) {
+      list.innerHTML = '<div style="text-align:center;padding:40px;color:var(--muted);"><div style="font-size:36px;margin-bottom:10px;">🔍</div><div>검색 결과가 없어요</div></div>';
       return;
     }
-
     list.innerHTML = teachers.map(t => `
       <div class="tcard">
         <div class="tcard-top">
           <div class="tcard-av">🎓</div>
-          <div class="tcard-body">
-            <h4>${t.name} <span class="verified">✓ 가입</span></h4>
-            <span class="school-badge">${t.univ || ''} ${t.dept || ''}</span>
-            <div class="desc">${t.intro || ''}</div>
-            <div class="tag-row">
+          <div class="tcard-body" style="flex:1;">
+            <h4>${t.name}</h4>
+            <span class="school-badge">${t.univ||''} ${t.dept||''}</span>
+            <div class="desc">${t.intro||''}</div>
+            <div class="tags">
               ${(t.subjects||'').split(',').map(s=>`<span class="tag">${s.trim()}</span>`).join('')}
-              ${t.travelMode ? `<span class="tag">🗺️ ${t.travelMode} ${t.travelDist||''}</span>` : ''}
+              ${t.travelMode?`<span class="tag">🗺️ ${t.travelMode} ${t.travelDist||''}km</span>`:''}
             </div>
           </div>
-          <div style="flex-shrink:0;font-size:11px;font-weight:700;color:var(--choco);text-align:right;">${(t.price||0).toLocaleString()}원<br>/시간</div>
+          <div class="price">${(t.price||0).toLocaleString()}원<br>/시간</div>
         </div>
-        <div class="tcard-bottom">
-          <button class="chat-btn" onclick="openChatReqModal('${t.uid}','${t.name}')">💬 대화 요청하기</button>
-        </div>
+        <button class="chat-btn" onclick="openReq('${t.uid}','${t.name}')">💬 대화 요청하기</button>
       </div>
     `).join('');
-  } catch(e) {
-    list.innerHTML = `<div style="text-align:center;padding:40px;color:var(--muted);">불러오기 실패: ${e.message}</div>`;
-  }
-};
+  });
+}
 
 // ── 대화 요청 ──
-window.openChatReqModal = (uid, name) => {
+function openReq(uid, name) {
   selectedTeacherId = uid;
-  document.getElementById('modal-teacher-name').textContent = name + ' 선생님에게';
-  showModal('modal-chat-req');
-};
-
-window.sendChatReq = async () => {
+  document.getElementById('modal-title').textContent = name + ' 선생님에게';
+  document.getElementById('modal-req').classList.add('on');
+}
+function closeModal() { document.getElementById('modal-req').classList.remove('on'); }
+function sendReq() {
   if (!currentUser || !selectedTeacherId) return;
-  try {
-    await setDoc(doc(db, 'chatRequests', `${currentUser.uid}_${selectedTeacherId}`), {
-      studentUid: currentUser.uid,
-      teacherUid: selectedTeacherId,
-      status: 'pending',
-      createdAt: new Date().toISOString()
-    });
-    closeModal('modal-chat-req');
-    showToast('대화 요청을 보냈어요! 🍪');
-  } catch(e) { showToast('요청 실패: ' + e.message); }
-};
+  db.collection('chatRequests').doc(currentUser.uid + '_' + selectedTeacherId).set({
+    studentUid: currentUser.uid, teacherUid: selectedTeacherId,
+    status: 'pending', createdAt: new Date().toISOString()
+  }).then(() => { closeModal(); toast('대화 요청을 보냈어요! 🍪'); })
+    .catch(e => toast('요청 실패: ' + e.message));
+}
 
 // ── 메인 화면 이동 ──
 function goMain(data) {
-  const role = data?.role || currentRole;
-  const name = data?.name || '사용자';
+  const role = data && data.role;
+  const name = (data && data.name) || '사용자';
   if (role === 'student') {
-    document.getElementById('st-welcome').innerHTML = `${name}님,<br>찰떡 선생님을 찾아봐요!`;
-    document.getElementById('st-profile-name').textContent = name;
+    document.getElementById('st-hi').innerHTML = name + '님,<br>찰떡 선생님을 찾아봐요!';
+    document.getElementById('st-name').textContent = name;
     go('s-student');
-    searchTeachers();
+    loadTeachers();
   } else if (role === 'teacher') {
-    document.getElementById('tc-welcome').innerHTML = `${name}님,<br>오늘도 달콤한 수업!`;
-    document.getElementById('tc-profile-name').textContent = name;
+    document.getElementById('tc-hi').innerHTML = name + '님,<br>오늘도 달콤한 수업!';
+    document.getElementById('tc-name').textContent = name;
     go('s-teacher');
   } else if (role === 'parent') {
-    document.getElementById('pr-profile-name').textContent = name;
+    document.getElementById('pr-hi').innerHTML = name + '님,<br>자녀 수업을 확인해요';
     go('s-parent');
   }
 }
 
-// ── 유틸 ──
-function showErr(el, msg) { el.textContent = msg; el.classList.add('show'); }
-function showLoading(v) { document.getElementById('loading').classList.toggle('show', v); }
-</script>
-
-<script>
-// ── 화면 전환 ──
+// ── 탭 전환 ──
 function go(id) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
-  window.scrollTo(0, 0);
+  window.scrollTo(0,0);
 }
-
-// ── 역할 선택 ──
-function pickRole(el, role) {
-  document.querySelectorAll('.role-card').forEach(c => c.classList.remove('selected'));
-  el.classList.add('selected');
-  window._selectedRole = role;
-}
-
-// ── 탭 전환 ──
 function stTab(n) {
-  document.querySelectorAll('[id^="st-"]').forEach(el => {
-    if (el.classList.contains('tab-panel')) el.classList.remove('active');
-    if (el.classList.contains('tab-btn')) el.classList.remove('on');
+  ['home','search','chat','me'].forEach(t => {
+    document.getElementById('st-'+t).classList.toggle('active', t===n);
+    document.getElementById('st-b-'+t).classList.toggle('on', t===n);
   });
-  document.getElementById('st-' + n).classList.add('active');
-  const btn = document.getElementById('st-btn-' + n);
-  if (btn) btn.classList.add('on');
-  if (n === 'search') { setTimeout(() => window.searchTeachers && window.searchTeachers(), 100); }
+  if (n === 'search') loadTeachers();
 }
 function tcTab(n) {
-  document.querySelectorAll('[id^="tc-"]').forEach(el => {
-    if (el.classList.contains('tab-panel')) el.classList.remove('active');
-    if (el.classList.contains('tab-btn')) el.classList.remove('on');
+  ['home','chat','me'].forEach(t => {
+    document.getElementById('tc-'+t).classList.toggle('active', t===n);
+    document.getElementById('tc-b-'+t).classList.toggle('on', t===n);
   });
-  document.getElementById('tc-' + n).classList.add('active');
-  const btn = document.getElementById('tc-btn-' + n);
-  if (btn) btn.classList.add('on');
-}
-function prTab(n) {
-  document.querySelectorAll('[id^="pr-"]').forEach(el => {
-    if (el.classList.contains('tab-panel')) el.classList.remove('active');
-    if (el.classList.contains('tab-btn')) el.classList.remove('on');
-  });
-  document.getElementById('pr-' + n).classList.add('active');
-  const btn = document.getElementById('pr-btn-' + n);
-  if (btn) btn.classList.add('on');
 }
 
-function chipOn(el, subject) {
-  el.closest('.chips').querySelectorAll('.chip').forEach(c => c.classList.remove('on'));
-  el.classList.add('on');
-  document.getElementById('search-inp').value = subject;
-  window.searchTeachers && window.searchTeachers();
+// ── 이동거리 선택 ──
+function selMode(m) {
+  selectedMode = m;
+  ['walk','transit','car'].forEach(x => document.getElementById('m-'+x).classList.toggle('on', x===m));
+}
+function selDist(d) {
+  selectedDist = d;
+  ['3','5','10','0'].forEach(x => document.getElementById('d-'+x).classList.toggle('on', x===d));
 }
 
-function selectMode(btn) {
-  btn.closest('div').querySelectorAll('.mode-btn').forEach(b => b.classList.remove('on'));
-  btn.classList.add('on');
-}
-function selectDist(btn) {
-  btn.closest('div').querySelectorAll('.mode-btn').forEach(b => b.classList.remove('on'));
-  btn.classList.add('on');
-}
-
-function showModal(id) { document.getElementById(id).classList.add('on'); }
-function closeModal(id) { document.getElementById(id).classList.remove('on'); }
-
-function showToast(msg) {
+// ── 유틸 ──
+function showErr(el, msg) { el.textContent = msg; el.classList.add('show'); }
+function showLoad(v) { document.getElementById('loading').classList.toggle('show', v); }
+function toast(msg) {
   const t = document.getElementById('toast');
   t.textContent = msg; t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 2400);
+  setTimeout(() => t.classList.remove('show'), 2500);
 }
 
-// Enter 키 지원
+// Enter 키
 document.addEventListener('keydown', e => {
-  if (e.key === 'Enter') {
-    const active = document.querySelector('.screen.active');
-    if (active?.id === 's-login') window.doLogin && window.doLogin();
-    if (active?.id === 's-signup') window.doSignup && window.doSignup();
-  }
+  if (e.key !== 'Enter') return;
+  const id = document.querySelector('.screen.active')?.id;
+  if (id === 's-login') doLogin();
+  if (id === 's-signup') doSignup();
 });
-
-// module 함수 래퍼 (onclick에서 바로 호출 가능하게)
-function doLogin() { window.doLogin && window.doLogin(); }
-function doSignup() { window.doSignup && window.doSignup(); }
-function doLogout() { window.doLogout && window.doLogout(); }
-function saveRole() { window.saveRole && window.saveRole(); }
-function saveTeacherProfile() { window.saveTeacherProfile && window.saveTeacherProfile(); }
-function doResetPw() { window.doResetPw && window.doResetPw(); }
-function searchTeachers() { window.searchTeachers && window.searchTeachers(); }
-function openChatReqModal(uid, name) { window.openChatReqModal && window.openChatReqModal(uid, name); }
-function sendChatReq() { window.sendChatReq && window.sendChatReq(); }
 </script>
 </body>
 </html>
