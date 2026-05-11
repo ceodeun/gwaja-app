@@ -401,7 +401,7 @@ textarea.inp{resize:none;line-height:1.7;}
 <div id="s-login" class="screen">
   <button style="background:none;border:none;cursor:pointer;font-size:22px;color:var(--muted);padding:44px 18px 0;align-self:flex-start;" onclick="go('s-role')">←</button>
   <div style="display:flex;align-items:center;gap:14px;padding:16px 18px 24px;">
-    <span style="font-size:64px;display:block;text-align:center;line-height:1.2;">🎓</span>
+    <span id="login-img" style="font-size:64px;display:block;text-align:center;line-height:1.2;">🎓</span>
     <div>
       <div id="login-badge" style="display:inline-block;background:var(--cookie);color:var(--white);font-size:12px;font-weight:700;padding:3px 12px;border-radius:20px;margin-bottom:6px;">🎒 학생</div>
       <h2 style="font-size:22px;font-weight:900;">반가워요!</h2>
@@ -1054,11 +1054,7 @@ textarea.inp{resize:none;line-height:1.7;}
 let currentRole = 'student';
 let lessonDur = 60;
 
-const roleImgs = {
-  student: '🎒',
-  teacher: '🎓',
-  parent:  '🥐'
-};
+const roleImgs = { student: '🎒', teacher: '🎓', parent: '🥐' };
 const roleBadges = { student:'🎒 학생', teacher:'🎓 선생님', parent:'👨‍👩‍👧 학부모' };
 
 function go(id){
@@ -1068,14 +1064,18 @@ function go(id){
 }
 
 function pickRole(el,role){
-  document.querySelectorAll('#s-role .tcard').forEach(c=>c.style.borderColor='');
+  document.querySelectorAll('#s-role .tcard').forEach(c=>{c.style.borderColor='';c.style.background='';});
   el.style.borderColor='var(--cookie)';
+  el.style.background='#FFF8EE';
   currentRole=role;
 }
 
 function goLogin(){
-  document.getElementById('login-img').textContent=roleImgs[currentRole]; document.getElementById('login-img').style.fontSize='72px';
-  document.getElementById('login-badge').textContent=roleBadges[currentRole];
+  if(!currentRole) currentRole = 'student';
+  const el = document.getElementById('login-img');
+  if(el){ el.textContent = roleImgs[currentRole]; el.style.fontSize='64px'; }
+  const badge = document.getElementById('login-badge');
+  if(badge) badge.textContent = roleBadges[currentRole];
   go('s-login');
 }
 
