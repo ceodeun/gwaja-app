@@ -543,6 +543,68 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:var(--c
         </div>
       </div>
     </div>
+    <!-- 선생님 캘린더 탭 -->
+    <div id="tc-tccalendar" class="tab-panel" style="padding:16px;overflow-y:auto;">
+
+      <!-- 캘린더 헤더 -->
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+        <button onclick="tcPrevMonth()" style="background:none;border:none;cursor:pointer;font-size:20px;color:var(--muted);">‹</button>
+        <h3 id="tc-cal-title" style="font-size:17px;font-weight:700;color:var(--choco);"></h3>
+        <button onclick="tcNextMonth()" style="background:none;border:none;cursor:pointer;font-size:20px;color:var(--muted);">›</button>
+      </div>
+
+      <!-- 달력 -->
+      <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-bottom:6px;">
+        <div style="text-align:center;font-size:10px;font-weight:700;color:var(--peach);padding:4px 0;">일</div>
+        <div style="text-align:center;font-size:10px;font-weight:700;color:var(--muted);padding:4px 0;">월</div>
+        <div style="text-align:center;font-size:10px;font-weight:700;color:var(--muted);padding:4px 0;">화</div>
+        <div style="text-align:center;font-size:10px;font-weight:700;color:var(--muted);padding:4px 0;">수</div>
+        <div style="text-align:center;font-size:10px;font-weight:700;color:var(--muted);padding:4px 0;">목</div>
+        <div style="text-align:center;font-size:10px;font-weight:700;color:var(--muted);padding:4px 0;">금</div>
+        <div style="text-align:center;font-size:10px;font-weight:700;color:var(--muted);padding:4px 0;">토</div>
+      </div>
+      <div id="tc-cal-grid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-bottom:16px;"></div>
+
+      <!-- 이달 수업 목록 -->
+      <div style="background:white;border-radius:16px;padding:14px;margin-bottom:14px;box-shadow:var(--shadow);">
+        <div style="font-size:14px;font-weight:700;color:var(--choco);margin-bottom:10px;">📚 이달 수업 기록</div>
+        <div id="tc-lesson-list">
+          <div style="font-size:13px;color:var(--muted);text-align:center;padding:16px;">날짜를 클릭해서 수업을 기록해요</div>
+        </div>
+        <!-- 이달 합계 -->
+        <div style="border-top:1px solid var(--border);margin-top:12px;padding-top:12px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+            <span style="font-size:13px;color:var(--muted);">이달 총 수업</span>
+            <span id="tc-total-count" style="font-size:14px;font-weight:700;color:var(--choco);">0회</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+            <span style="font-size:13px;color:var(--muted);">예상 수업료</span>
+            <span id="tc-total-fee" style="font-size:16px;font-weight:900;color:var(--green);">₩0</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <span style="font-size:12px;color:var(--muted);">수수료 (10%, 첫달만)</span>
+            <span id="tc-commission" style="font-size:13px;color:var(--peach);">-₩0</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 월간 피드백 -->
+      <div style="background:white;border-radius:16px;padding:14px;margin-bottom:14px;box-shadow:var(--shadow);">
+        <div style="font-size:14px;font-weight:700;color:var(--choco);margin-bottom:10px;">📝 이달 학생 피드백</div>
+        <div style="margin-bottom:10px;">
+          <select id="feedback-student" class="inp" style="margin-bottom:10px;" onchange="loadFeedback()">
+            <option value="">학생 선택</option>
+          </select>
+          <textarea id="feedback-text" class="inp" rows="4" placeholder="이번 달 학생 학습 현황을 작성해주세요&#10;예) 이차함수 개념 완료. 계산 실수가 줄었어요. 다음 달은 고난도 문제 도전 예정입니다." style="resize:none;line-height:1.7;"></textarea>
+        </div>
+        <div style="display:flex;gap:8px;">
+          <button onclick="saveFeedback()" style="flex:1;padding:12px;background:var(--cookie);color:white;border:none;border-radius:100px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">💾 저장</button>
+          <button onclick="sendToParent()" style="flex:1;padding:12px;background:var(--lavender);color:white;border:none;border-radius:100px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">📨 학부모님께 전송</button>
+        </div>
+      </div>
+
+    </div>
+
     <!-- 수업 관리 탭 -->
     <div id="tc-manage" class="tab-panel" style="padding:0;">
 
@@ -642,8 +704,8 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:var(--c
   <div class="bottom-bar">
     <button class="tab-btn on" id="tc-b-home" onclick="tcTab('home')"><span class="ti">🏠</span><span class="tl">홈</span></button>
     <button class="tab-btn" id="tc-b-students" onclick="tcTab('students')"><span class="ti">🔍</span><span class="tl">학생 찾기</span></button>
+    <button class="tab-btn" id="tc-b-tccalendar" onclick="tcTab('tccalendar')"><span class="ti">📅</span><span class="tl">캘린더</span></button>
     <button class="tab-btn" id="tc-b-manage" onclick="tcTab('manage')"><span class="ti">📋</span><span class="tl">수업관리</span></button>
-    <button class="tab-btn" id="tc-b-chat" onclick="tcTab('chat')"><span class="ti">💬</span><span class="tl">채팅</span></button>
     <button class="tab-btn" id="tc-b-me" onclick="tcTab('me')"><span class="ti">🧑</span><span class="tl">나</span></button>
   </div>
 </div>
@@ -768,6 +830,41 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:var(--c
     <h3 style="margin-bottom:14px;">⭐ 후기 목록</h3>
     <div id="review-list"></div>
     <button class="btn btn-outline" onclick="document.getElementById('modal-reviews').classList.remove('on')" style="margin-top:14px;">닫기</button>
+  </div>
+</div>
+
+<!-- 수업 기록 모달 (캘린더 날짜 클릭) -->
+<div class="overlay" id="modal-lesson-log" onclick="if(event.target===this)this.classList.remove('on')">
+  <div class="modal">
+    <span class="modal-icon">📅</span>
+    <h3 id="lesson-log-date">수업 기록</h3>
+    <div style="text-align:left;">
+      <label class="label" style="margin-top:0;">학생 이름</label>
+      <select class="inp" id="ll-student"></select>
+      <label class="label">수업 시간</label>
+      <input class="inp" id="ll-time" type="time" value="15:00">
+      <label class="label">수업 시간 (분)</label>
+      <select class="inp" id="ll-duration">
+        <option value="60">60분</option>
+        <option value="90">90분</option>
+        <option value="120">120분</option>
+      </select>
+      <label class="label">시급 (원)</label>
+      <input class="inp" id="ll-price" type="number" placeholder="40000">
+    </div>
+    <button class="btn btn-cookie" onclick="saveLessonLog()" style="margin-bottom:10px;margin-top:8px;">✅ 기록하기</button>
+    <button class="btn btn-outline" onclick="document.getElementById('modal-lesson-log').classList.remove('on')">취소</button>
+  </div>
+</div>
+
+<!-- 학부모 전송 확인 모달 -->
+<div class="overlay" id="modal-send-parent" onclick="if(event.target===this)this.classList.remove('on')">
+  <div class="modal">
+    <span class="modal-icon">📨</span>
+    <h3>학부모님께 전송</h3>
+    <p id="send-parent-preview" style="background:var(--cream);border-radius:12px;padding:12px;font-size:12px;text-align:left;line-height:1.7;margin-bottom:16px;"></p>
+    <button class="btn btn-lav" onclick="confirmSendParent()" style="margin-bottom:10px;">📨 전송하기</button>
+    <button class="btn btn-outline" onclick="document.getElementById('modal-send-parent').classList.remove('on')">취소</button>
   </div>
 </div>
 
@@ -1271,13 +1368,14 @@ function stTab(n) {
   if (n === 'map') initMap();
 }
 function tcTab(n) {
-  ['home','students','manage','chat','me'].forEach(t => {
+  ['home','students','tccalendar','manage','chat','me'].forEach(t => {
     document.getElementById('tc-'+t).classList.toggle('active', t===n);
     document.getElementById('tc-b-'+t).classList.toggle('on', t===n);
   });
   if (n === 'students') loadStudents();
   if (n === 'chat') loadChatList('teacher');
-  if (n === 'manage') { loadMyStudents(); }
+  if (n === 'manage') loadMyStudents();
+  if (n === 'tccalendar') initTcCalendar();
 }
 
 // ── 서브탭 ──
@@ -1754,6 +1852,199 @@ function renderPlaceList() {
         <div style="font-size:11px;color:var(--muted);">${p.addr}</div>
       </div>
     </div>`).join('');
+}
+
+// ── 선생님 캘린더 ──
+let tcCalYear = new Date().getFullYear();
+let tcCalMonth = new Date().getMonth();
+let tcLessonLogs = [];
+let tcClickedDate = '';
+
+function tcPrevMonth() { tcCalMonth--; if(tcCalMonth<0){tcCalMonth=11;tcCalYear--;} renderTcCalendar(); }
+function tcNextMonth() { tcCalMonth++; if(tcCalMonth>11){tcCalMonth=0;tcCalYear++;} renderTcCalendar(); }
+
+function initTcCalendar() {
+  tcCalYear = new Date().getFullYear();
+  tcCalMonth = new Date().getMonth();
+  loadTcLessons();
+  loadMyStudentsForSelect();
+}
+
+function loadMyStudentsForSelect() {
+  if (!currentUser) return;
+  db.collection('matches').where('teacherUid','==',currentUser.uid).where('status','==','active').get().then(snap => {
+    const students = [];
+    snap.forEach(d => { if(d.data().studentName) students.push(d.data().studentName); });
+    // 수업 기록 모달 셀렉트
+    const llSel = document.getElementById('ll-student');
+    if (llSel) llSel.innerHTML = students.map(s => `<option>${s}</option>`).join('') || '<option>학생 없음</option>';
+    // 피드백 셀렉트
+    const fbSel = document.getElementById('feedback-student');
+    if (fbSel) fbSel.innerHTML = '<option value="">학생 선택</option>' + students.map(s => `<option>${s}</option>`).join('');
+    // 시급 자동 불러오기
+    if (students.length > 0) {
+      db.collection('matches').where('teacherUid','==',currentUser.uid).where('studentName','==',students[0]).get().then(s => {
+        if (!s.empty) document.getElementById('ll-price').value = s.docs[0].data().price || '';
+      });
+    }
+  });
+}
+
+function loadTcLessons() {
+  if (!currentUser) return;
+  const monthStr = tcCalYear + '-' + String(tcCalMonth+1).padStart(2,'0');
+  db.collection('lessonLogs').where('teacherUid','==',currentUser.uid).where('month','==',monthStr).get().then(snap => {
+    tcLessonLogs = [];
+    snap.forEach(d => tcLessonLogs.push({id:d.id, ...d.data()}));
+    renderTcCalendar();
+    renderTcLessonList();
+  });
+}
+
+function renderTcCalendar() {
+  const months = ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
+  document.getElementById('tc-cal-title').textContent = tcCalYear + '년 ' + months[tcCalMonth];
+  const grid = document.getElementById('tc-cal-grid');
+  const first = new Date(tcCalYear, tcCalMonth, 1).getDay();
+  const days = new Date(tcCalYear, tcCalMonth+1, 0).getDate();
+  const today = new Date();
+  // 수업 있는 날짜
+  const lessonDates = new Set(tcLessonLogs.map(l => l.date?.slice(8,10)));
+  let cells = '';
+  for(let i=0;i<first;i++) cells += '<div></div>';
+  for(let d=1;d<=days;d++) {
+    const ds = String(d).padStart(2,'0');
+    const isToday = d===today.getDate() && tcCalMonth===today.getMonth() && tcCalYear===today.getFullYear();
+    const hasLesson = lessonDates.has(ds);
+    cells += `<div onclick="clickTcDate(${d})" style="aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:10px;font-size:13px;cursor:pointer;position:relative;${isToday?'background:var(--cookie);color:white;font-weight:700;':''}">
+      ${d}
+      ${hasLesson?`<div style="width:5px;height:5px;border-radius:50%;background:${isToday?'white':'var(--mint)'};margin-top:2px;"></div>`:''}
+    </div>`;
+  }
+  grid.innerHTML = cells;
+}
+
+function clickTcDate(d) {
+  const dateStr = tcCalYear + '-' + String(tcCalMonth+1).padStart(2,'0') + '-' + String(d).padStart(2,'0');
+  tcClickedDate = dateStr;
+  document.getElementById('lesson-log-date').textContent = dateStr + ' 수업 기록';
+  document.getElementById('modal-lesson-log').classList.add('on');
+}
+
+function saveLessonLog() {
+  const student = document.getElementById('ll-student').value;
+  const time = document.getElementById('ll-time').value;
+  const duration = parseInt(document.getElementById('ll-duration').value);
+  const price = parseInt(document.getElementById('ll-price').value || 0);
+  if (!student || !price) { toast('학생과 시급을 입력해주세요'); return; }
+  const fee = Math.round(price * (duration/60));
+  const monthStr = tcCalYear + '-' + String(tcCalMonth+1).padStart(2,'0');
+  showLoad(true);
+  db.collection('lessonLogs').add({
+    teacherUid: currentUser.uid, student, date: tcClickedDate,
+    time, duration, price, fee, month: monthStr,
+    createdAt: new Date().toISOString()
+  }).then(() => {
+    showLoad(false);
+    document.getElementById('modal-lesson-log').classList.remove('on');
+    toast('수업 기록 완료! 📅');
+    loadTcLessons();
+  }).catch(e => { showLoad(false); toast('저장 실패: ' + e.message); });
+}
+
+function renderTcLessonList() {
+  const list = document.getElementById('tc-lesson-list');
+  if (!list) return;
+  if (!tcLessonLogs.length) {
+    list.innerHTML = '<div style="font-size:13px;color:var(--muted);text-align:center;padding:16px;">날짜를 클릭해서 수업을 기록해요</div>';
+    document.getElementById('tc-total-count').textContent = '0회';
+    document.getElementById('tc-total-fee').textContent = '₩0';
+    document.getElementById('tc-commission').textContent = '-₩0';
+    return;
+  }
+  const sorted = [...tcLessonLogs].sort((a,b) => a.date?.localeCompare(b.date));
+  const totalFee = tcLessonLogs.reduce((s,l) => s + (l.fee||0), 0);
+  const commission = Math.round(totalFee * 0.1);
+  document.getElementById('tc-total-count').textContent = tcLessonLogs.length + '회';
+  document.getElementById('tc-total-fee').textContent = '₩' + totalFee.toLocaleString();
+  document.getElementById('tc-commission').textContent = '-₩' + commission.toLocaleString();
+  list.innerHTML = sorted.map(l => `
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);">
+      <div>
+        <div style="font-size:13px;font-weight:700;color:var(--choco);">${l.date?.slice(5)} ${l.student}</div>
+        <div style="font-size:11px;color:var(--muted);">${l.time} · ${l.duration}분</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <div style="font-size:13px;font-weight:700;color:var(--green);">₩${(l.fee||0).toLocaleString()}</div>
+        <button onclick="deleteLessonLog('${l.id}')" style="background:none;border:none;cursor:pointer;font-size:14px;color:var(--muted);">🗑️</button>
+      </div>
+    </div>`).join('');
+}
+
+function deleteLessonLog(id) {
+  if (!confirm('삭제할까요?')) return;
+  db.collection('lessonLogs').doc(id).delete().then(() => { toast('삭제됐어요'); loadTcLessons(); });
+}
+
+// ── 피드백 ──
+function saveFeedback() {
+  const student = document.getElementById('feedback-student').value;
+  const text = document.getElementById('feedback-text').value.trim();
+  if (!student) { toast('학생을 선택해주세요'); return; }
+  if (!text) { toast('피드백을 작성해주세요'); return; }
+  const monthStr = tcCalYear + '-' + String(tcCalMonth+1).padStart(2,'0');
+  showLoad(true);
+  db.collection('feedbacks').doc(currentUser.uid + '_' + student + '_' + monthStr).set({
+    teacherUid: currentUser.uid, student, text, month: monthStr,
+    createdAt: new Date().toISOString()
+  }).then(() => { showLoad(false); toast('피드백 저장됐어요! 💾'); })
+    .catch(e => { showLoad(false); toast('저장 실패: ' + e.message); });
+}
+
+function loadFeedback() {
+  const student = document.getElementById('feedback-student').value;
+  if (!student) return;
+  const monthStr = tcCalYear + '-' + String(tcCalMonth+1).padStart(2,'0');
+  db.collection('feedbacks').doc(currentUser.uid + '_' + student + '_' + monthStr).get().then(snap => {
+    if (snap.exists) document.getElementById('feedback-text').value = snap.data().text || '';
+    else document.getElementById('feedback-text').value = '';
+  });
+}
+
+function sendToParent() {
+  const student = document.getElementById('feedback-student').value;
+  const text = document.getElementById('feedback-text').value.trim();
+  if (!student) { toast('학생을 선택해주세요'); return; }
+  if (!text) { toast('피드백을 먼저 작성해주세요'); return; }
+  const months = ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
+  const totalFee = tcLessonLogs.filter(l => l.student === student).reduce((s,l) => s+(l.fee||0), 0);
+  const preview = `📚 ${months[tcCalMonth]} 학습 리포트
+
+학생: ${student}
+총 수업: ${tcLessonLogs.filter(l=>l.student===student).length}회
+수업료: ₩${totalFee.toLocaleString()}
+
+📝 이달 피드백
+${text}`;
+  document.getElementById('send-parent-preview').textContent = preview;
+  document.getElementById('modal-send-parent').classList.add('on');
+}
+
+function confirmSendParent() {
+  const student = document.getElementById('feedback-student').value;
+  const text = document.getElementById('feedback-text').value.trim();
+  const monthStr = tcCalYear + '-' + String(tcCalMonth+1).padStart(2,'0');
+  showLoad(true);
+  db.collection('parentReports').add({
+    teacherUid: currentUser.uid, student, text, month: monthStr,
+    totalCount: tcLessonLogs.filter(l=>l.student===student).length,
+    totalFee: tcLessonLogs.filter(l=>l.student===student).reduce((s,l)=>s+(l.fee||0),0),
+    sentAt: new Date().toISOString()
+  }).then(() => {
+    showLoad(false);
+    document.getElementById('modal-send-parent').classList.remove('on');
+    toast('학부모님께 전송됐어요! 📨🍪');
+  }).catch(e => { showLoad(false); toast('전송 실패: ' + e.message); });
 }
 
 // ── 학생 목록 로드 ──
