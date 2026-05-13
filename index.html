@@ -1341,6 +1341,7 @@ function goMain(data) {
     loadChatList('student');
     calYear = new Date().getFullYear();
     calMonth = new Date().getMonth();
+    renderCalendar();
   } else if (role === 'teacher') {
     document.getElementById('tc-hi').innerHTML = name+'님,<br>오늘도 달콤한 수업!';
     document.getElementById('tc-name').textContent = name;
@@ -2054,28 +2055,92 @@ function renderCalendar(){
   const grid=document.getElementById('cal-grid');
   const first=new Date(calYear,calMonth,1).getDay();
   const days=new Date(calYear,calMonth+1,0).getDate();
-  const today=new Date();
+  const now=new Date();
+  const todayStr=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0');
+  const monthStr=calYear+'-'+String(calMonth+1).padStart(2,'0');
+
   let cells='';
   for(let i=0;i<first;i++) cells+='<div></div>';
   for(let d=1;d<=days;d++){
-    const isToday=d===today.getDate()&&calMonth===today.getMonth()&&calYear===today.getFullYear();
-    cells+=`<div style="aspect-ratio:1;display:flex;align-items:center;justify-content:center;border-radius:10px;font-size:13px;cursor:pointer;${isToday?'background:var(--cookie);color:white;font-weight:700;':''}">${d}</div>`;
+    const isToday=d===now.getDate()&&calMonth===now.getMonth()&&calYear===now.getFullYear();
+    const dateStr=calYear+'-'+String(calMonth+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
+    cells+=`<div id="st-cal-d-${dateStr}" style="aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:10px;font-size:13px;cursor:pointer;position:relative;${isToday?'background:var(--cookie);color:white;font-weight:700;':''}">${d}</div>`;
   }
   grid.innerHTML=cells;
   if(!currentUser)return;
-  db.collection('matches').where('studentUid','==',currentUser.uid).get().then(snap=>{
-    const lessons=document.getElementById('cal-lessons');
-    if(snap.empty){lessons.innerHTML='<div style="text-align:center;padding:20px;color:var(--muted);font-size:13px;">수업 성사 등록 후 일정이 여기 표시돼요</div>';return;}
-    let html='';
-    snap.forEach(d=>{
-      const m=d.data();
-      html+=`<div style="background:white;border-radius:14px;padding:14px;margin-bottom:10px;border-left:4px solid var(--cookie);box-shadow:var(--shadow);">
-        <div style="font-size:12px;font-weight:700;color:var(--cookie);margin-bottom:3px;">📚 ${m.subject||'과목 미정'}</div>
-        <div style="font-size:13px;font-weight:700;color:var(--choco);">${m.teacherName||'선생님'}</div>
-        <div style="font-size:11px;color:var(--muted);margin-top:2px;">시작일: ${m.startDate||'미정'}</div>
-      </div>`;
+
+  const lessons=document.getElementById('cal-lessons');
+  lessons.innerHTML='<div style="text-align:center;padding:16px;color:var(--muted);font-size:13px;">불러오는 중...</div>';
+
+  // 학생 이름 먼저 가져오기 (users 컬렉션)
+  db.collection('users').doc(currentUser.uid).get().then(uSnap=>{
+    const studentName = uSnap.data()?.name || '';
+
+    // lessonLogs에서 이 학생 이름으로 등록된 수업 가져오기
+    db.collection('lessonLogs').where('student','==',studentName).get().then(logSnap=>{
+      if(logSnap.empty){
+        lessons.innerHTML='<div style="text-align:center;padding:20px;color:var(--muted);font-size:13px;">선생님이 수업 계획을 등록하면 여기 표시돼요 📅</div>';
+        return;
+      }
+
+      // 이달 수업만 필터
+      const thisMonth=[];
+      logSnap.forEach(d=>{
+        const data=d.data();
+        if(data.month===monthStr || data.date?.startsWith(monthStr)) thisMonth.push(data);
+      });
+
+      // 달력에 점 표시
+      logSnap.forEach(d=>{
+        const data=d.data();
+        const dayEl=document.getElementById('st-cal-d-'+data.date);
+        if(dayEl&&!dayEl.querySelector('.st-cal-dot')){
+          const dot=document.createElement('div');
+          dot.className='st-cal-dot';
+          const isPast=data.date<todayStr;
+          const dotColor=data.noMakeup?'var(--peach)':data.makeup?'#A89BE8':data.done||(isPast&&!data.hasMakeup)?'var(--mint)':'var(--cookie)';
+          dot.style.cssText=`width:5px;height:5px;border-radius:50%;background:${dotColor};position:absolute;bottom:3px;`;
+          dayEl.appendChild(dot);
+        }
+      });
+
+      if(!thisMonth.length){
+        lessons.innerHTML='<div style="text-align:center;padding:20px;color:var(--muted);font-size:13px;">이번 달 수업이 없어요</div>';
+        return;
+      }
+
+      thisMonth.sort((a,b)=>a.date?.localeCompare(b.date));
+
+      // 선생님 이름 가져오기
+      const teacherUids=[...new Set(thisMonth.map(l=>l.teacherUid).filter(Boolean))];
+      const teacherMap={};
+      Promise.all(teacherUids.map(uid=>
+        db.collection('teachers').doc(uid).get().then(t=>{ teacherMap[uid]=t.data()?.name||'선생님'; })
+      )).then(()=>{
+        const dayNames=['일','월','화','수','목','금','토'];
+        lessons.innerHTML=thisMonth.map(item=>{
+          const isPast=item.date<todayStr;
+          const isToday2=item.date===todayStr;
+          const statusColor=item.noMakeup?'var(--peach)':item.makeup?'#A89BE8':item.done||(isPast&&!item.hasMakeup)?'var(--mint)':'var(--cookie)';
+          const statusLabel=item.noMakeup?'❌ 미완료':item.makeup?'🔄 보충':item.done||(isPast&&!item.hasMakeup)?'✓ 완료':isToday2?'📍 오늘':'📅 예정';
+          const dow=dayNames[new Date(item.date).getDay()];
+          const [hh,mm]=(item.time||'00:00').split(':');
+          const h=parseInt(hh);
+          const timeStr=`${h<12?'오전':'오후'} ${h%12||12}:${mm}`;
+          const tName=teacherMap[item.teacherUid]||'선생님';
+
+          return `
+            <div style="background:white;border-radius:14px;padding:14px;margin-bottom:10px;border-left:4px solid ${statusColor};box-shadow:var(--shadow);">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+                <div style="font-size:12px;font-weight:700;color:${statusColor};">${item.date} (${dow}) ${timeStr}</div>
+                <span style="font-size:11px;font-weight:700;color:${statusColor};">${statusLabel}</span>
+              </div>
+              <div style="font-size:14px;font-weight:700;color:var(--choco);">🎓 ${tName} 선생님</div>
+              <div style="font-size:12px;color:var(--muted);margin-top:3px;">${item.duration}시간${item.seq?' · '+item.seq+'회차':''}</div>
+            </div>`;
+        }).join('');
+      });
     });
-    lessons.innerHTML=html;
   });
 }
 
