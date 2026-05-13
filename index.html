@@ -2245,85 +2245,103 @@ function savePlan(){
   if(!window._planData) return toast('먼저 요일과 시급을 설정해주세요');
   if(!currentUser) return;
   const p = window._planData;
+  if(!p.student) return toast('학생을 먼저 선택해주세요 🍪');
 
   showLoad(true);
 
-  // 선택된 요일들
   const selectedDays = [...document.querySelectorAll('.plan-day-btn.day-on')].map(b=>b.dataset.day);
-  const subject = document.getElementById('plan-student')?.value || '';
-  // matches에서 과목 가져오기
-  const subjectPromise = subject
-    ? db.collection('matches').where('teacherUid','==',currentUser.uid).where('studentName','==',subject).get()
-        .then(s => s.empty ? '' : (s.docs[0].data().subject||''))
-        .catch(()=>'')
-    : Promise.resolve('');
 
-  subjectPromise.then(subjectName => {
-    // 1. 기존 계획 lessonLogs 삭제 - 클라이언트 필터링
-    return db.collection('lessonLogs')
-      .where('teacherUid','==',currentUser.uid)
-      .where('month','==',p.monthStr)
-      .get()
-      .then(snap => {
-        const toDelete = snap.docs.filter(d => d.data().fromPlan === true);
-        return Promise.all(toDelete.map(d => db.collection('lessonLogs').doc(d.id).delete()));
-      })
-      .then(() => {
-        // 2. 기존 계획 schedules 삭제 - 클라이언트 필터링
-        return db.collection('schedules')
-          .where('teacherUid','==',currentUser.uid)
-          .get()
-          .then(snap => {
-            const toDelete = snap.docs.filter(d => {
-              const data = d.data();
-              return data.fromPlan === true && (!p.student || data.student === p.student);
-            });
-            return Promise.all(toDelete.map(d => db.collection('schedules').doc(d.id).delete()));
-          });
-      })
-      .then(() => {
-        // 3. lessonLogs 새 일정 저장
-        const logSaves = p.lessonDates.map((item, i) => {
-          const dateStr = p.year+'-'+String(p.month+1).padStart(2,'0')+'-'+String(item.date).padStart(2,'0');
-          return db.collection('lessonLogs').add({
+  // matches에서 이 학생 과목 가져오기 (없으면 새로 등록)
+  db.collection('matches')
+    .where('teacherUid','==',currentUser.uid)
+    .get()
+    .then(snap => {
+      // 클라이언트 필터링으로 이 학생 찾기
+      const existing = snap.docs.find(d => d.data().studentName === p.student);
+      const subjectName = existing ? (existing.data().subject||'') : '';
+
+      // matches에 없으면 자동 등록
+      const matchPromise = existing
+        ? Promise.resolve()
+        : db.collection('matches').add({
             teacherUid: currentUser.uid,
-            student: p.student || '미지정',
-            date: dateStr,
-            time: p.timeVal,
-            duration: p.duration,
+            studentName: p.student,
+            studentUid: '',
+            subject: '',
             price: p.price,
-            total: p.feePerLesson,
-            month: p.monthStr,
-            fromPlan: true,
-            seq: i+1,
-            createdAt: new Date().toISOString()
-          });
-        });
-
-        // 4. schedules에 요일별로 저장 (수업관리 스케줄에 반영)
-        const scheduleSaves = selectedDays.map(day => {
-          return db.collection('schedules').add({
-            teacherUid: currentUser.uid,
-            student: p.student || '미지정',
-            day: day+'요일',
-            time: p.timeVal,
-            subject: subjectName || subject || '과목 미정',
-            place: '',
+            startDate: new Date().toISOString().slice(0,10),
+            status: 'active',
             fromPlan: true,
             createdAt: new Date().toISOString()
           });
-        });
 
-        return Promise.all([...logSaves, ...scheduleSaves]);
-      });
-  })
-  .then(() => {
-    showLoad(false);
-    toast(`${p.count}회 수업 일정 저장 완료! 📅🍪`);
-    renderTcCalendar();
-    loadTcLessons();
-  })
-  .catch(e => { showLoad(false); toast('저장 실패: '+e.message); });
+      return matchPromise.then(() => subjectName);
+    })
+    .then(subjectName => {
+      // 1. 기존 계획 lessonLogs 삭제
+      return db.collection('lessonLogs')
+        .where('teacherUid','==',currentUser.uid)
+        .where('month','==',p.monthStr)
+        .get()
+        .then(snap => {
+          const toDelete = snap.docs.filter(d => d.data().fromPlan === true && d.data().student === p.student);
+          return Promise.all(toDelete.map(d => db.collection('lessonLogs').doc(d.id).delete()));
+        })
+        .then(() => {
+          // 2. 기존 계획 schedules 삭제
+          return db.collection('schedules')
+            .where('teacherUid','==',currentUser.uid)
+            .get()
+            .then(snap => {
+              const toDelete = snap.docs.filter(d => d.data().fromPlan === true && d.data().student === p.student);
+              return Promise.all(toDelete.map(d => db.collection('schedules').doc(d.id).delete()));
+            });
+        })
+        .then(() => {
+          // 3. lessonLogs 저장
+          const logSaves = p.lessonDates.map((item, i) => {
+            const dateStr = p.year+'-'+String(p.month+1).padStart(2,'0')+'-'+String(item.date).padStart(2,'0');
+            return db.collection('lessonLogs').add({
+              teacherUid: currentUser.uid,
+              student: p.student,
+              date: dateStr,
+              time: p.timeVal,
+              duration: p.duration,
+              price: p.price,
+              total: p.feePerLesson,
+              month: p.monthStr,
+              fromPlan: true,
+              seq: i+1,
+              createdAt: new Date().toISOString()
+            });
+          });
+
+          // 4. schedules 저장 → 수업관리 스케줄에 반영
+          const scheduleSaves = selectedDays.map(day =>
+            db.collection('schedules').add({
+              teacherUid: currentUser.uid,
+              student: p.student,
+              day: day+'요일',
+              time: p.timeVal,
+              subject: subjectName || '과목 미정',
+              place: '',
+              fromPlan: true,
+              createdAt: new Date().toISOString()
+            })
+          );
+
+          return Promise.all([...logSaves, ...scheduleSaves]);
+        });
+    })
+    .then(() => {
+      showLoad(false);
+      toast(`${p.count}회 수업 일정 저장 완료! 📅🍪`);
+      renderTcCalendar();
+      loadTcLessons();
+      // 수업관리 학생 목록도 새로고침
+      loadMyStudents();
+    })
+    .catch(e => { showLoad(false); toast('저장 실패: '+e.message); });
 }
 function loadMyStudentsForSelect(){
   if(!currentUser)return;
