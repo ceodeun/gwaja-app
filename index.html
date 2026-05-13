@@ -274,10 +274,26 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:var(--c
 <!-- 선생님 프로필 등록 -->
 <div id="s-tsetup" class="screen">
   <div style="background:linear-gradient(160deg,#3AAA82,#1B6B50);padding:40px 24px 24px;color:white;">
+    <button onclick="go('s-teacher')" style="background:none;border:none;cursor:pointer;color:rgba(255,255,255,.8);font-size:22px;margin-bottom:12px;">←</button>
     <h2 style="font-size:22px;font-weight:900;margin-bottom:4px;">🎓 프로필 설정</h2>
     <p style="font-size:13px;opacity:.8;">선생님 정보를 입력해주세요</p>
   </div>
   <div style="padding:18px;flex:1;overflow-y:auto;padding-bottom:40px;">
+
+    <!-- 프로필 사진 -->
+    <div class="profile-section">
+      <h3>📷 프로필 사진</h3>
+      <div style="display:flex;align-items:center;gap:16px;">
+        <div id="t-photo-preview" style="width:80px;height:80px;border-radius:50%;background:var(--cream);border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:36px;overflow:hidden;flex-shrink:0;">🎓</div>
+        <div style="flex:1;">
+          <input type="file" id="t-photo-input" accept="image/*" style="display:none;" onchange="previewPhoto(this)">
+          <button type="button" onclick="document.getElementById('t-photo-input').click()" style="width:100%;padding:10px;background:var(--cream);border:1.5px dashed var(--border);border-radius:12px;font-size:13px;font-weight:700;color:var(--muted);cursor:pointer;font-family:inherit;">📷 사진 선택하기</button>
+          <p style="font-size:11px;color:var(--muted);margin-top:6px;">JPG, PNG 권장 · 얼굴이 잘 보이는 사진</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- 기본 정보 -->
     <div class="profile-section">
       <h3>📚 기본 정보</h3>
       <label class="label" style="margin-top:0;">대학교</label>
@@ -291,6 +307,40 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:var(--c
       <label class="label">한 줄 소개</label>
       <input class="inp" id="t-intro" placeholder="예) 수학 1등급 비결 알려드려요!">
     </div>
+
+    <!-- 입시 스토리 -->
+    <div class="profile-section">
+      <h3>🏆 입시 스토리</h3>
+      <p style="font-size:12px;color:var(--muted);margin-bottom:10px;">수능 점수, 입시 과정, 공부법 등을 자유롭게 써주세요. 학생들이 가장 관심 있어 하는 부분이에요!</p>
+      <label class="label" style="margin-top:0;">수능 / 내신 성적</label>
+      <input class="inp" id="t-score" placeholder="예) 수능 1등급, 수학 만점, 내신 1.2등급">
+      <label class="label">입시 과정</label>
+      <textarea class="inp" id="t-story" rows="4" placeholder="예) 고3 때 수학을 포기하려 했지만, 개념부터 다시 잡아 3→1등급으로 올렸어요. 수시로 이화여대 수학교육과에 합격했고, 제 경험을 바탕으로 학생들을 가르치고 싶어요." style="resize:none;line-height:1.7;"></textarea>
+      <label class="label">주요 과목 성적</label>
+      <input class="inp" id="t-grades" placeholder="예) 국어 2등급, 수학 1등급, 영어 1등급, 과탐 1/1등급">
+    </div>
+
+    <!-- 수업 방식 -->
+    <div class="profile-section">
+      <h3>💡 수업 방식</h3>
+      <p style="font-size:12px;color:var(--muted);margin-bottom:10px;">어떻게 가르치는지 학생이 알 수 있게 적어주세요!</p>
+      <label class="label" style="margin-top:0;">수업 스타일</label>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;" id="style-btns">
+        <button type="button" class="style-btn pref-btn" onclick="this.classList.toggle('on')">개념 위주</button>
+        <button type="button" class="style-btn pref-btn" onclick="this.classList.toggle('on')">문제풀이 위주</button>
+        <button type="button" class="style-btn pref-btn" onclick="this.classList.toggle('on')">질문 많이</button>
+        <button type="button" class="style-btn pref-btn" onclick="this.classList.toggle('on')">꼼꼼한 피드백</button>
+        <button type="button" class="style-btn pref-btn" onclick="this.classList.toggle('on')">숙제 있음</button>
+        <button type="button" class="style-btn pref-btn" onclick="this.classList.toggle('on')">친근한 분위기</button>
+        <button type="button" class="style-btn pref-btn" onclick="this.classList.toggle('on')">엄격한 관리</button>
+      </div>
+      <label class="label">수업 방식 상세 설명</label>
+      <textarea class="inp" id="t-method" rows="4" placeholder="예) 먼저 개념을 확실히 잡고, 유형별 문제를 풀면서 약점을 파악해요. 매 수업 후 복습 숙제를 드리고, 다음 수업 때 꼭 피드백해요. 학생 수준에 맞게 커리큘럼을 조정해드려요." style="resize:none;line-height:1.7;"></textarea>
+      <label class="label">이런 학생에게 추천해요</label>
+      <textarea class="inp" id="t-recommend" rows="2" placeholder="예) 개념이 부족하거나, 성적을 빠르게 올리고 싶은 학생" style="resize:none;line-height:1.7;"></textarea>
+    </div>
+
+    <!-- 이동거리 -->
     <div class="profile-section">
       <h3>🗺️ 선호 이동거리</h3>
       <label class="label" style="margin-top:0;">이동 수단</label>
@@ -314,6 +364,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:var(--c
         <button class="pref-btn" onclick="this.classList.toggle('on')">🏫 학교 근처</button>
       </div>
     </div>
+
     <button class="btn btn-green" onclick="saveTeacher()" style="margin-top:8px;">프로필 저장하기 🎓</button>
   </div>
 </div>
@@ -1200,20 +1251,43 @@ function saveRole() {
     .catch(e => { showLoad(false); toast('저장 실패: '+e.message); });
 }
 
+function previewPhoto(input){
+  if(!input.files||!input.files[0]) return;
+  const file = input.files[0];
+  if(file.size > 2*1024*1024){ toast('사진은 2MB 이하로 올려주세요'); return; }
+  const reader = new FileReader();
+  reader.onload = e => {
+    const preview = document.getElementById('t-photo-preview');
+    preview.innerHTML = `<img src="${e.target.result}" style="width:100%;height:100%;object-fit:cover;">`;
+    window._teacherPhotoBase64 = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
 function saveTeacher() {
   const univ = document.getElementById('t-univ').value.trim();
   const dept = document.getElementById('t-dept').value.trim();
   const subjects = document.getElementById('t-subjects').value.trim();
   const price = document.getElementById('t-price').value;
   const intro = document.getElementById('t-intro').value.trim();
+  const score = document.getElementById('t-score').value.trim();
+  const story = document.getElementById('t-story').value.trim();
+  const grades = document.getElementById('t-grades').value.trim();
+  const method = document.getElementById('t-method').value.trim();
+  const recommend = document.getElementById('t-recommend').value.trim();
   if (!univ||!subjects||!price) return toast('대학교, 과목, 시급은 필수예요 🍪');
   const prefs = [...document.querySelectorAll('#s-tsetup .pref-btn.on')].map(b=>b.textContent);
+  const styles = [...document.querySelectorAll('.style-btn.on')].map(b=>b.textContent);
+  const photo = window._teacherPhotoBase64 || '';
   showLoad(true);
   db.collection('users').doc(currentUser.uid).get().then(snap => {
     const ud = snap.data()||{};
     return db.collection('teachers').doc(currentUser.uid).set({
       uid:currentUser.uid, name:ud.name||'선생님', email:ud.email||'',
       univ, dept, subjects, price:parseInt(price), intro,
+      score, story, grades, method, recommend,
+      teachingStyles: styles,
+      photo,
       travelMode:selectedMode, travelDist:selectedDist, travelPrefs:prefs,
       rating:0, ratingCount:0, createdAt:new Date().toISOString()
     });
@@ -1321,7 +1395,9 @@ function loadTeachers() {
     list.innerHTML = teachers.map(t => `
       <div class="tcard">
         <div class="tcard-top">
-          <div class="tcard-av">🎓</div>
+          <div class="tcard-av" style="overflow:hidden;">
+            ${t.photo ? `<img src="${t.photo}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">` : '🎓'}
+          </div>
           <div class="tcard-body" style="flex:1;">
             <h4>${t.name}</h4>
             <span class="school-badge">${t.univ||''} ${t.dept||''}</span>
@@ -1339,6 +1415,9 @@ function loadTeachers() {
           <span style="font-size:11px;color:var(--muted);">(${t.ratingCount||0}개 후기)</span>
           ${t.ratingCount?`<a onclick="showReviews('${t.uid}')" style="font-size:11px;color:var(--cookie);cursor:pointer;margin-left:auto;">후기 보기 ›</a>`:''}
         </div>
+        ${t.score ? `<div style="background:#FFF8EE;border-radius:10px;padding:8px 12px;margin-bottom:8px;font-size:12px;color:var(--choco);">🏆 ${t.score}</div>` : ''}
+        ${t.story ? `<div style="font-size:12px;color:var(--muted);line-height:1.7;margin-bottom:8px;padding:0 2px;">${t.story.length>80?t.story.slice(0,80)+'...':t.story}</div>` : ''}
+        ${t.teachingStyles&&t.teachingStyles.length ? `<div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:8px;">${t.teachingStyles.map(s=>`<span style="background:#EDE7F6;color:#6B5FC8;font-size:10px;font-weight:700;padding:3px 8px;border-radius:20px;">${s}</span>`).join('')}</div>` : ''}
         <button class="chat-btn" onclick="openReq('${t.uid}','${t.name}')">💬 대화 요청하기</button>
       </div>`).join('');
   });
