@@ -2869,9 +2869,9 @@ function loadSchedules(){
   if(!list)return;
   list.innerHTML='<div style="text-align:center;padding:20px;color:var(--muted);font-size:13px;">불러오는 중...</div>';
 
-  const today = new Date();
-  today.setHours(0,0,0,0);
-  const todayStr = today.toISOString().slice(0,10);
+  const _now = new Date();
+  const todayStr = _now.getFullYear()+'-'+String(_now.getMonth()+1).padStart(2,'0')+'-'+String(_now.getDate()).padStart(2,'0');
+  const today = new Date(todayStr); // 로컬 기준
 
   // schedules + lessonLogs 둘 다 가져오기
   Promise.all([
@@ -2914,9 +2914,7 @@ function loadSchedules(){
 
     // 날짜별 수업 카드
     const logHtml = logItems.map(item => {
-      const itemDate = new Date(item.date);
-      itemDate.setHours(0,0,0,0);
-      const isPast = itemDate < today;
+      const isPast = item.date < todayStr;
       const isToday = item.date === todayStr;
       const done = item.done || isPast; // 지난 날짜는 자동 완료
 
@@ -3077,8 +3075,8 @@ function toggleHomework(id,current){db.collection('homeworks').doc(id).update({d
 function loadHomeworks(){
   if(!currentUser)return;
   const list=document.getElementById('homework-list');if(!list)return;
-  const today = new Date(); today.setHours(0,0,0,0);
-  const todayStr = today.toISOString().slice(0,10);
+  const _now2 = new Date();
+  const todayStr = _now2.getFullYear()+'-'+String(_now2.getMonth()+1).padStart(2,'0')+'-'+String(_now2.getDate()).padStart(2,'0');
 
   db.collection('lessonLogs').where('teacherUid','==',currentUser.uid).get().then(logSnap=>{
     // 유효 수업 날짜 수집:
@@ -3091,8 +3089,7 @@ function loadHomeworks(){
       const isStudent = !currentStudentName || data.student===currentStudentName;
       if(!isStudent) return;
       if(data.noMakeup) return; // 미완료 확정 → 제외
-      const lessonDate = new Date(data.date); lessonDate.setHours(0,0,0,0);
-      const isPast = lessonDate < today;
+      const isPast = data.date < todayStr;
       const isMakeup = data.makeup === true;
       // 완료됐거나, 지난날짜 중 미완료아닌것, 보충수업도 지났으면 포함
       if(data.done || (isPast && !data.hasMakeup) || (isMakeup && isPast) || (isMakeup && data.done)){
@@ -3113,8 +3110,7 @@ function loadHomeworks(){
         const data=d.data();
         const isStudent = !currentStudentName || data.student===currentStudentName;
         if(!isStudent||data.noMakeup) return;
-        const lessonDate = new Date(data.date); lessonDate.setHours(0,0,0,0);
-        const isPast = lessonDate < today;
+        const isPast = data.date < todayStr;
         const isMakeup = data.makeup===true;
         if(data.done||(isPast&&!data.hasMakeup)||(isMakeup&&isPast)||(isMakeup&&data.done)){
           logList.push({date:data.date, isMakeup});
@@ -3172,15 +3168,15 @@ function loadDiaries(){
 
   // 완료된 수업 날짜 가져오기 (미완료 제외, 보충날짜 포함)
   db.collection('lessonLogs').where('teacherUid','==',currentUser.uid).get().then(logSnap=>{
-    const today = new Date(); today.setHours(0,0,0,0);
+    const _now3 = new Date();
+    const todayStr2 = _now3.getFullYear()+'-'+String(_now3.getMonth()+1).padStart(2,'0')+'-'+String(_now3.getDate()).padStart(2,'0');
     const doneItems = [];
     logSnap.forEach(d=>{
       const data=d.data();
       const isStudent = !currentStudentName || data.student===currentStudentName;
       if(!isStudent) return;
       if(data.noMakeup) return; // 미완료 확정 제외
-      const lessonDate = new Date(data.date); lessonDate.setHours(0,0,0,0);
-      const isPast = lessonDate < today;
+      const isPast = data.date < todayStr2;
       const isMakeup = data.makeup === true;
       if(data.done || (isPast && !data.hasMakeup) || (isMakeup && isPast) || (isMakeup && data.done)){
         doneItems.push({
