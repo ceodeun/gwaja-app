@@ -1151,6 +1151,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:var(--c
     </div>
     <button class="btn btn-cookie" onclick="saveMakeup()" style="margin-bottom:10px;margin-top:6px;">📅 보충 일정 등록</button>
     <button class="btn btn-outline" onclick="markNoMakeup()" style="margin-bottom:10px;color:var(--peach);border-color:var(--peach);">❌ 보충 안 함 (미완료)</button>
+    <button class="btn btn-green" onclick="revertToComplete()" style="margin-bottom:10px;">✅ 아, 수업 했어요 (완료로)</button>
     <button class="btn btn-outline" onclick="document.getElementById('modal-makeup').classList.remove('on')">취소</button>
   </div>
 </div>
@@ -2978,15 +2979,21 @@ function markLessonDone(id, done){
 let _makeupTargetId = '';
 function openMakeupModal(id, date){
   _makeupTargetId = id;
-  // 완료 → 취소 (미완료 상태로)
-  db.collection('lessonLogs').doc(id).update({done: false}).then(()=>{
-    // 보충 모달 열기
-    const tomorrow = new Date();
-    tomorrow.setDate(tomorrow.getDate()+1);
-    document.getElementById('makeup-date').value = tomorrow.toISOString().slice(0,10);
-    document.getElementById('makeup-desc').textContent = `${date} 수업을 완료하지 못했어요.\n보충 수업을 잡을까요?`;
-    document.getElementById('modal-makeup').classList.add('on');
-    loadSchedules();
+  // noMakeup 상태에서 다시 누른 경우엔 done 업데이트 없이 모달만 열기
+  db.collection('lessonLogs').doc(id).get().then(snap=>{
+    const data = snap.data();
+    const needUpdate = !data.noMakeup; // 완료→취소 필요한 경우만 업데이트
+    const next = needUpdate
+      ? db.collection('lessonLogs').doc(id).update({done: false})
+      : Promise.resolve();
+    next.then(()=>{
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate()+1);
+      document.getElementById('makeup-date').value = tomorrow.toISOString().slice(0,10);
+      document.getElementById('makeup-desc').textContent = `${date} 수업을 완료하지 못했어요.\n보충 수업을 잡을까요?`;
+      document.getElementById('modal-makeup').classList.add('on');
+      if(needUpdate) loadSchedules();
+    });
   });
 }
 
@@ -3026,6 +3033,18 @@ function saveMakeup(){
     loadSchedules();
     loadTcLessons();
   }).catch(e=>{showLoad(false);toast('저장 실패: '+e.message);});
+}
+
+function revertToComplete(){
+  if(!_makeupTargetId) return;
+  db.collection('lessonLogs').doc(_makeupTargetId).update({
+    done: true, noMakeup: false, hasMakeup: false
+  }).then(()=>{
+    document.getElementById('modal-makeup').classList.remove('on');
+    toast('완료로 되돌렸어요 ✅');
+    loadSchedules();
+    loadTcLessons();
+  }).catch(e=>toast('실패: '+e.message));
 }
 
 function markNoMakeup(){
