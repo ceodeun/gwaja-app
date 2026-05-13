@@ -2259,22 +2259,25 @@ function savePlan(){
     : Promise.resolve('');
 
   subjectPromise.then(subjectName => {
-    // 1. 기존 계획 lessonLogs 삭제
+    // 1. 기존 계획 lessonLogs 삭제 - 클라이언트 필터링
     return db.collection('lessonLogs')
       .where('teacherUid','==',currentUser.uid)
       .where('month','==',p.monthStr)
-      .where('fromPlan','==',true)
       .get()
-      .then(snap => Promise.all(snap.docs.map(d => db.collection('lessonLogs').doc(d.id).delete())))
+      .then(snap => {
+        const toDelete = snap.docs.filter(d => d.data().fromPlan === true);
+        return Promise.all(toDelete.map(d => db.collection('lessonLogs').doc(d.id).delete()));
+      })
       .then(() => {
-        // 2. 기존 계획 schedules 삭제 (fromPlan 표시된 것만)
+        // 2. 기존 계획 schedules 삭제 - 클라이언트 필터링
         return db.collection('schedules')
           .where('teacherUid','==',currentUser.uid)
-          .where('fromPlan','==',true)
           .get()
           .then(snap => {
-            // 같은 학생 것만 삭제
-            const toDelete = snap.docs.filter(d => !p.student || d.data().student === p.student);
+            const toDelete = snap.docs.filter(d => {
+              const data = d.data();
+              return data.fromPlan === true && (!p.student || data.student === p.student);
+            });
             return Promise.all(toDelete.map(d => db.collection('schedules').doc(d.id).delete()));
           });
       })
