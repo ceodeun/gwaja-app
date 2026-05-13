@@ -2152,20 +2152,35 @@ function clickStudentDate(dateStr){
       const hwItems = [];
       hwSnap.forEach(doc=>{
         const data = doc.data();
-        if(data.lessonDate === dateStr || data.autoDate === dateStr) hwItems.push({id:doc.id,...data});
+        // lessonDate(수업날짜), autoDate, due 모두 체크
+        if(data.lessonDate === dateStr || data.autoDate === dateStr || data.due === dateStr) {
+          hwItems.push({id:doc.id,...data});
+        }
       });
 
       if(hwItems.length){
         html += `<div style="font-size:12px;font-weight:700;color:var(--muted);margin-bottom:8px;">✅ 숙제</div>`;
-        html += hwItems.map(h=>`
-          <div style="display:flex;align-items:center;gap:12px;padding:10px;background:${h.done?'#F0FBF6':'var(--cream)'};border-radius:12px;margin-bottom:6px;">
-            <div style="width:22px;height:22px;border-radius:50%;background:${h.done?'var(--mint)':'white'};border:2px solid ${h.done?'var(--mint)':'var(--border)'};display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0;">${h.done?'✓':''}</div>
-            <div style="flex:1;">
-              <div style="font-size:13px;font-weight:700;${h.done?'text-decoration:line-through;color:var(--muted)':'color:var(--choco)'}">${h.content||'내용 없음'}</div>
-              ${h.due?`<div style="font-size:11px;color:var(--muted);">📅 마감: ${h.due}</div>`:''}
-              ${h.done?'<div style="font-size:10px;color:var(--mint);">완료 ✓</div>':''}
+        const _now2 = new Date();
+        const _tStr = _now2.getFullYear()+'-'+String(_now2.getMonth()+1).padStart(2,'0')+'-'+String(_now2.getDate()).padStart(2,'0');
+        html += hwItems.map(h=>{
+          const isOverdue = h.due && h.due < _tStr && !h.done;
+          return `
+          <div style="background:${h.done?'#F0FBF6':isOverdue?'#FFE8E4':'var(--cream)'};border-radius:12px;padding:12px 14px;margin-bottom:8px;border-left:3px solid ${h.done?'var(--mint)':isOverdue?'var(--peach)':'var(--cookie)'};">
+            <div style="display:flex;align-items:flex-start;gap:10px;">
+              <div style="width:22px;height:22px;border-radius:50%;background:${h.done?'var(--mint)':'white'};border:2px solid ${h.done?'var(--mint)':isOverdue?'var(--peach)':'var(--border)'};display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0;margin-top:2px;">${h.done?'✓':''}</div>
+              <div style="flex:1;">
+                <div style="font-size:14px;font-weight:700;${h.done?'text-decoration:line-through;color:var(--muted)':'color:var(--choco)'}">${h.content||'내용 없음'}</div>
+                <div style="margin-top:5px;display:flex;gap:8px;flex-wrap:wrap;">
+                  ${h.due
+                    ? `<span style="font-size:11px;background:${isOverdue?'#FFE8E4':'white'};color:${isOverdue?'var(--peach)':'var(--muted)'};padding:2px 8px;border-radius:20px;border:1px solid ${isOverdue?'var(--peach)':'var(--border)'};">📅 마감 ${h.due}${isOverdue?' ⚠️ 기한초과':''}</span>`
+                    : `<span style="font-size:11px;color:var(--muted);">마감일 없음</span>`
+                  }
+                  ${h.done?`<span style="font-size:11px;color:var(--mint);">✓ 완료</span>`:''}
+                </div>
+              </div>
             </div>
-          </div>`).join('');
+          </div>`;
+        }).join('');
       } else if(!logSnap.empty){
         html += `<div style="font-size:13px;color:var(--muted);text-align:center;padding:8px;">아직 숙제가 없어요</div>`;
       }
