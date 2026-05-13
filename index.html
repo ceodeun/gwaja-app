@@ -2940,7 +2940,7 @@ function loadSchedules(){
               : item.noMakeup
               ? `<button onclick="openMakeupModal('${item.id}','${item.date}')" style="background:var(--peach);color:white;border:none;border-radius:20px;padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;">❌ 미완료 · 보충잡기</button>`
               : done
-              ? `<button onclick="${isPast?`openMakeupModal('${item.id}','${item.date}')`:`markLessonDone('${item.id}', false)`}" style="background:var(--mint);color:white;border:none;border-radius:20px;padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;">✓ 완료 · 취소</button>`
+              ? `<button onclick="openMakeupModal('${item.id}','${item.date}')" style="background:var(--mint);color:white;border:none;border-radius:20px;padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;">✓ 완료 · 취소</button>`
               : isToday
               ? `<button onclick="markLessonDone('${item.id}', true)" style="background:var(--peach);color:white;border:none;border-radius:20px;padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;">오늘 · 완료</button>`
               : `<button onclick="markLessonDone('${item.id}', true)" style="background:var(--cream);border:1.5px solid var(--border);color:var(--muted);border-radius:20px;padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;">완료</button>`
@@ -2977,20 +2977,20 @@ function markLessonDone(id, done){
 let _makeupTargetId = '';
 function openMakeupModal(id, date){
   _makeupTargetId = id;
-  // noMakeup 상태에서 다시 누른 경우엔 done 업데이트 없이 모달만 열기
   db.collection('lessonLogs').doc(id).get().then(snap=>{
     const data = snap.data();
-    const needUpdate = !data.noMakeup; // 완료→취소 필요한 경우만 업데이트
-    const next = needUpdate
-      ? db.collection('lessonLogs').doc(id).update({done: false})
-      : Promise.resolve();
+    const isNoMakeup = data.noMakeup;
+    // noMakeup 상태가 아닐 때만 done:false 업데이트
+    const next = isNoMakeup
+      ? Promise.resolve()
+      : db.collection('lessonLogs').doc(id).update({done: false});
     next.then(()=>{
       const tomorrow = new Date();
       tomorrow.setDate(tomorrow.getDate()+1);
       document.getElementById('makeup-date').value = tomorrow.toISOString().slice(0,10);
-      document.getElementById('makeup-desc').textContent = `${date} 수업을 완료하지 못했어요.\n보충 수업을 잡을까요?`;
+      document.getElementById('makeup-desc').textContent = `${date} 수업 보충을 잡을까요?`;
       document.getElementById('modal-makeup').classList.add('on');
-      if(needUpdate) loadSchedules();
+      if(!isNoMakeup) loadSchedules();
     });
   });
 }
