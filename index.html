@@ -492,7 +492,32 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:var(--c
         <div style="text-align:center;font-size:10px;font-weight:700;color:var(--muted);padding:5px 0;">금</div>
         <div style="text-align:center;font-size:10px;font-weight:700;color:var(--muted);padding:5px 0;">토</div>
       </div>
-      <div id="cal-grid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-bottom:16px;"></div>
+      <div id="cal-grid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-bottom:8px;"></div>
+      <!-- 범례 -->
+      <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:14px;padding:0 2px;">
+        <div style="display:flex;align-items:center;gap:4px;font-size:11px;color:var(--muted);">
+          <div style="width:8px;height:8px;border-radius:50%;background:var(--cookie);flex-shrink:0;"></div>예정
+        </div>
+        <div style="display:flex;align-items:center;gap:4px;font-size:11px;color:var(--muted);">
+          <div style="width:8px;height:8px;border-radius:50%;background:var(--mint);flex-shrink:0;"></div>완료
+        </div>
+        <div style="display:flex;align-items:center;gap:4px;font-size:11px;color:var(--muted);">
+          <div style="width:8px;height:8px;border-radius:50%;background:#A89BE8;flex-shrink:0;"></div>보충
+        </div>
+        <div style="display:flex;align-items:center;gap:4px;font-size:11px;color:var(--muted);">
+          <div style="width:8px;height:8px;border-radius:50%;background:var(--peach);flex-shrink:0;"></div>미완료
+        </div>
+      </div>
+
+      <!-- 날짜 클릭 시 숙제 표시 -->
+      <div id="cal-date-hw" style="display:none;background:white;border-radius:16px;padding:16px;margin-bottom:14px;box-shadow:var(--shadow);">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+          <div style="font-size:14px;font-weight:700;color:var(--choco);" id="cal-date-hw-title">📅 날짜 숙제</div>
+          <button onclick="document.getElementById('cal-date-hw').style.display='none';document.querySelectorAll('.st-cal-selected').forEach(e=>{e.classList.remove('st-cal-selected');e.style.outline='none';})" style="background:none;border:none;cursor:pointer;font-size:18px;color:var(--muted);">✕</button>
+        </div>
+        <div id="cal-date-hw-list"></div>
+      </div>
+
       <div class="section-head"><h3>📚 이달 수업</h3></div>
       <div id="cal-lessons">
         <div style="text-align:center;padding:20px;color:var(--muted);font-size:13px;">수업 성사 등록 후 일정이 여기 표시돼요</div>
@@ -2047,6 +2072,98 @@ function showReviews(teacherUid) {
 
 // ── 캘린더 ──
 let calYear=new Date().getFullYear(), calMonth=new Date().getMonth();
+function clickStudentDate(dateStr){
+  if(!currentUser) return;
+
+  // 선택된 날짜 하이라이트
+  document.querySelectorAll('.st-cal-selected').forEach(e=>{
+    e.classList.remove('st-cal-selected');
+    e.style.outline='none';
+  });
+  const dayEl = document.getElementById('st-cal-d-'+dateStr);
+  if(dayEl){ dayEl.style.outline='2.5px solid var(--cookie)'; dayEl.classList.add('st-cal-selected'); }
+
+  const hwBox = document.getElementById('cal-date-hw');
+  const hwTitle = document.getElementById('cal-date-hw-title');
+  const hwList = document.getElementById('cal-date-hw-list');
+
+  const d = new Date(dateStr+'T00:00:00');
+  const dayNames = ['일','월','화','수','목','금','토'];
+  const label = `${dateStr.slice(5).replace('-','월 ')}일 (${dayNames[d.getDay()]})`;
+  hwTitle.textContent = `📅 ${label}`;
+  hwList.innerHTML = '<div style="font-size:13px;color:var(--muted);text-align:center;padding:10px;">불러오는 중...</div>';
+  hwBox.style.display = 'block';
+
+  db.collection('users').doc(currentUser.uid).get().then(uSnap=>{
+    const studentName = uSnap.data()?.name || '';
+
+    // 이 날짜 수업 + 숙제 동시에 가져오기
+    Promise.all([
+      db.collection('lessonLogs').where('student','==',studentName).where('date','==',dateStr).get(),
+      db.collection('homeworks').where('student','==',studentName).get()
+    ]).then(([logSnap, hwSnap])=>{
+
+      let html = '';
+
+      // ── 수업 정보 ──
+      if(!logSnap.empty){
+        logSnap.forEach(doc=>{
+          const item = doc.data();
+          const isMakeup = item.makeup === true;
+          const isNoMakeup = item.noMakeup === true;
+          const [hh,mm]=(item.time||'00:00').split(':');
+          const h=parseInt(hh);
+          const timeStr=`${h<12?'오전':'오후'} ${h%12||12}:${mm}`;
+          const statusColor = isNoMakeup?'var(--peach)':isMakeup?'#A89BE8':'var(--cookie)';
+          const badge = isNoMakeup
+            ? '<span style="background:var(--peach);color:white;font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;">❌ 미완료</span>'
+            : isMakeup
+            ? '<span style="background:#A89BE8;color:white;font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;">🔄 보충 수업</span>'
+            : '<span style="background:var(--cookie);color:white;font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;">📚 수업</span>';
+
+          html += `
+            <div style="background:${isMakeup?'#EDE7F6':isNoMakeup?'#FFE8E4':'#FFF8EE'};border-radius:12px;padding:12px;margin-bottom:10px;border-left:3px solid ${statusColor};">
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+                ${badge}
+                <span style="font-size:12px;color:var(--muted);">${timeStr} · ${item.duration}시간</span>
+              </div>
+              ${item.seq?`<div style="font-size:11px;color:var(--muted);">${item.seq}회차</div>`:''}
+            </div>`;
+        });
+      }
+
+      // ── 숙제 ──
+      const hwItems = [];
+      hwSnap.forEach(doc=>{
+        const data = doc.data();
+        if(data.due === dateStr || data.autoDate === dateStr) hwItems.push({id:doc.id,...data});
+      });
+
+      if(hwItems.length){
+        html += `<div style="font-size:12px;font-weight:700;color:var(--muted);margin-bottom:8px;">✅ 숙제</div>`;
+        html += hwItems.map(h=>`
+          <div style="display:flex;align-items:center;gap:12px;padding:10px;background:${h.done?'#F0FBF6':'var(--cream)'};border-radius:12px;margin-bottom:6px;">
+            <div style="width:22px;height:22px;border-radius:50%;background:${h.done?'var(--mint)':'white'};border:2px solid ${h.done?'var(--mint)':'var(--border)'};display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0;">${h.done?'✓':''}</div>
+            <div style="flex:1;">
+              <div style="font-size:13px;font-weight:700;${h.done?'text-decoration:line-through;color:var(--muted)':'color:var(--choco)'}">${h.content||'내용 없음'}</div>
+              ${h.done?'<div style="font-size:10px;color:var(--mint);">완료 ✓</div>':''}
+            </div>
+          </div>`).join('');
+      } else if(!logSnap.empty){
+        html += `<div style="font-size:13px;color:var(--muted);text-align:center;padding:8px;">아직 숙제가 없어요</div>`;
+      }
+
+      if(!html){
+        html = '<div style="font-size:13px;color:var(--muted);text-align:center;padding:10px;">이 날은 수업이 없어요</div>';
+      }
+
+      hwList.innerHTML = html;
+    });
+  });
+
+  setTimeout(()=>hwBox.scrollIntoView({behavior:'smooth', block:'nearest'}), 100);
+}
+
 function prevMonth(){calMonth--;if(calMonth<0){calMonth=11;calYear--;}renderCalendar();}
 function nextMonth(){calMonth++;if(calMonth>11){calMonth=0;calYear++;}renderCalendar();}
 function renderCalendar(){
@@ -2064,7 +2181,7 @@ function renderCalendar(){
   for(let d=1;d<=days;d++){
     const isToday=d===now.getDate()&&calMonth===now.getMonth()&&calYear===now.getFullYear();
     const dateStr=calYear+'-'+String(calMonth+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
-    cells+=`<div id="st-cal-d-${dateStr}" style="aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:10px;font-size:13px;cursor:pointer;position:relative;${isToday?'background:var(--cookie);color:white;font-weight:700;':''}">${d}</div>`;
+    cells+=`<div id="st-cal-d-${dateStr}" onclick="clickStudentDate('${dateStr}')" style="aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:10px;font-size:13px;cursor:pointer;position:relative;${isToday?'background:var(--cookie);color:white;font-weight:700;':''}">${d}</div>`;
   }
   grid.innerHTML=cells;
   if(!currentUser)return;
