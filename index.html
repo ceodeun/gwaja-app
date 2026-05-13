@@ -2911,10 +2911,10 @@ function loadSchedules(){
           </div>
           <div>
             ${done
-              ? `<div style="background:var(--mint);color:white;border-radius:20px;padding:4px 10px;font-size:11px;font-weight:700;">✓ 완료</div>`
+              ? `<button onclick="markLessonDone('${item.id}', false)" style="background:var(--mint);color:white;border:none;border-radius:20px;padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;">✓ 완료 · 취소</button>`
               : isToday
-              ? `<div style="background:var(--peach);color:white;border-radius:20px;padding:4px 10px;font-size:11px;font-weight:700;">오늘</div>`
-              : `<button onclick="markLessonDone('${item.id}')" style="background:var(--cream);border:1.5px solid var(--border);color:var(--muted);border-radius:20px;padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;">완료</button>`
+              ? `<button onclick="markLessonDone('${item.id}', true)" style="background:var(--peach);color:white;border:none;border-radius:20px;padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;">오늘 · 완료</button>`
+              : `<button onclick="markLessonDone('${item.id}', true)" style="background:var(--cream);border:1.5px solid var(--border);color:var(--muted);border-radius:20px;padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;">완료</button>`
             }
           </div>
         </div>`;
@@ -2939,9 +2939,9 @@ function loadSchedules(){
   });
 }
 
-function markLessonDone(id){
-  db.collection('lessonLogs').doc(id).update({done:true})
-    .then(()=>{ toast('수업 완료! ✅'); loadSchedules(); })
+function markLessonDone(id, done){
+  db.collection('lessonLogs').doc(id).update({done})
+    .then(()=>{ toast(done?'수업 완료! ✅':'완료 취소됐어요'); loadSchedules(); })
     .catch(e=>toast('실패: '+e.message));
 }
 function openAddHomework(){
@@ -2962,24 +2962,147 @@ function saveHomework(){
 function toggleHomework(id,current){db.collection('homeworks').doc(id).update({done:!current}).then(()=>loadHomeworks());}
 function loadHomeworks(){
   if(!currentUser)return;
-  let q=db.collection('homeworks').where('teacherUid','==',currentUser.uid);
-  if(currentStudentName)q=q.where('student','==',currentStudentName);
-  q.get().then(snap=>{
-    const list=document.getElementById('homework-list');if(!list)return;
-    if(snap.empty){list.innerHTML='<div style="text-align:center;padding:30px;color:var(--muted);"><div style="font-size:32px;margin-bottom:8px;">✅</div><div style="font-size:13px;">숙제를 등록해보세요!</div></div>';return;}
-    const items=[];snap.forEach(d=>items.push({id:d.id,...d.data()}));items.sort((a,b)=>a.done-b.done);
-    list.innerHTML=items.map(h=>`
-      <div class="hw-item">
-        <div class="hw-check ${h.done?'done':''}" onclick="toggleHomework('${h.id}',${h.done})">${h.done?'✓':''}</div>
-        <div class="hw-info"><h4 class="${h.done?'done-text':''}">${h.student} · ${h.content}</h4><p>마감: ${h.due||'미정'}</p></div>
-        <button onclick="deleteDoc('homeworks','${h.id}',loadHomeworks)" style="background:none;border:none;cursor:pointer;font-size:16px;color:var(--muted);">🗑️</button>
-      </div>`).join('');
+  const list=document.getElementById('homework-list');if(!list)return;
+
+  // 완료된 수업 날짜 먼저 가져오기
+  db.collection('lessonLogs').where('teacherUid','==',currentUser.uid).get().then(logSnap=>{
+    const doneDates = new Set();
+    logSnap.forEach(d=>{
+      const data=d.data();
+      const isStudent = !currentStudentName || data.student===currentStudentName;
+      const today = new Date(); today.setHours(0,0,0,0);
+      const lessonDate = new Date(data.date); lessonDate.setHours(0,0,0,0);
+      if(isStudent && (data.done || lessonDate < today)) doneDates.add(data.date);
+    });
+
+    let q=db.collection('homeworks').where('teacherUid','==',currentUser.uid);
+    if(currentStudentName)q=q.where('student','==',currentStudentName);
+    q.get().then(snap=>{
+      // 직접 추가한 숙제 + 완료된 날짜의 자동 숙제
+      const manualItems=[];
+      snap.forEach(d=>manualItems.push({id:d.id,...d.data()}));
+
+      // 완료된 날짜마다 숙제 슬롯 자동 생성 (이미 작성된 건 제외)
+      const autoSlots = [...doneDates].sort().reverse().map(date=>{
+        const alreadyWritten = manualItems.some(h=>h.autoDate===date);
+        if(alreadyWritten) return null;
+        return {id:null, autoDate:date, student:currentStudentName, content:'', done:false, isAutoSlot:true};
+      }).filter(Boolean);
+
+      const allItems = [...manualItems.sort((a,b)=>a.done-b.done), ...autoSlots];
+
+      if(!allItems.length){
+        list.innerHTML='<div style="text-align:center;padding:30px;color:var(--muted);"><div style="font-size:32px;margin-bottom:8px;">✅</div><div style="font-size:13px;">완료된 수업이 생기면 숙제를 등록해요!</div></div>';
+        return;
+      }
+
+      list.innerHTML = allItems.map(h=>{
+        if(h.isAutoSlot){
+          return `
+            <div class="hw-item" style="border:1.5px dashed var(--border);background:var(--cream);">
+              <div style="font-size:20px;flex-shrink:0;">📅</div>
+              <div class="hw-info">
+                <h4 style="color:var(--muted);">${h.autoDate} 수업 숙제</h4>
+                <p>탭해서 숙제를 등록해요</p>
+              </div>
+              <button onclick="openAddHomeworkForDate('${h.autoDate}')" style="background:var(--cookie);color:white;border:none;border-radius:20px;padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;">+ 추가</button>
+            </div>`;
+        }
+        return `
+          <div class="hw-item">
+            <div class="hw-check ${h.done?'done':''}" onclick="toggleHomework('${h.id}',${h.done})">${h.done?'✓':''}</div>
+            <div class="hw-info">
+              <h4 class="${h.done?'done-text':''}">${h.content||'숙제 내용 없음'}</h4>
+              <p>${h.autoDate?h.autoDate+' 수업':'마감: '+(h.due||'미정')}</p>
+            </div>
+            <button onclick="deleteDoc('homeworks','${h.id}',loadHomeworks)" style="background:none;border:none;cursor:pointer;font-size:16px;color:var(--muted);">🗑️</button>
+          </div>`;
+      }).join('');
+    });
   });
 }
+
+function openAddHomeworkForDate(date){
+  document.getElementById('hw-student').value=currentStudentName||'';
+  document.getElementById('hw-content').value='';
+  document.getElementById('hw-due').value=date;
+  document.getElementById('modal-homework').classList.add('on');
+}
+
+function loadDiaries(){
+  if(!currentUser)return;
+  const list=document.getElementById('diary-list');if(!list)return;
+
+  // 완료된 수업 날짜 가져오기
+  db.collection('lessonLogs').where('teacherUid','==',currentUser.uid).get().then(logSnap=>{
+    const doneItems = [];
+    logSnap.forEach(d=>{
+      const data=d.data();
+      const isStudent = !currentStudentName || data.student===currentStudentName;
+      const today = new Date(); today.setHours(0,0,0,0);
+      const lessonDate = new Date(data.date); lessonDate.setHours(0,0,0,0);
+      if(isStudent && (data.done || lessonDate < today)){
+        doneItems.push({date:data.date, time:data.time, duration:data.duration, seq:data.seq});
+      }
+    });
+    doneItems.sort((a,b)=>b.date?.localeCompare(a.date));
+
+    let q=db.collection('diaries').where('teacherUid','==',currentUser.uid);
+    if(currentStudentName)q=q.where('student','==',currentStudentName);
+    q.get().then(snap=>{
+      const writtenDates = new Set();
+      const diaryItems=[];
+      snap.forEach(d=>{ diaryItems.push({id:d.id,...d.data()}); writtenDates.add(d.data().date); });
+      diaryItems.sort((a,b)=>b.date?.localeCompare(a.date));
+
+      // 완료됐지만 일지 안 쓴 날짜 → 빈 슬롯
+      const emptySlots = doneItems.filter(d=>!writtenDates.has(d.date)).map(d=>({...d, isEmpty:true}));
+
+      if(!diaryItems.length && !emptySlots.length){
+        list.innerHTML='<div style="text-align:center;padding:30px;color:var(--muted);"><div style="font-size:32px;margin-bottom:8px;">📝</div><div style="font-size:13px;">완료된 수업이 생기면 일지를 작성해요!</div></div>';
+        return;
+      }
+
+      // 날짜순으로 합치기
+      const allDates = [...new Set([...diaryItems.map(d=>d.date), ...emptySlots.map(d=>d.date)])].sort().reverse();
+
+      list.innerHTML = allDates.map(date=>{
+        const diary = diaryItems.find(d=>d.date===date);
+        const slot = emptySlots.find(d=>d.date===date);
+
+        if(diary){
+          return `
+            <div class="diary-card">
+              <div class="dh">
+                <h4>📅 ${diary.date||''} ${slot?.seq?slot.seq+'회차':''}</h4>
+                <button onclick="deleteDoc('diaries','${diary.id}',loadDiaries)" style="background:none;border:none;cursor:pointer;font-size:14px;color:var(--muted);">🗑️</button>
+              </div>
+              <p><strong style="color:var(--choco);">📚 수업</strong> ${diary.content}</p>
+              ${diary.next?`<p style="margin-top:6px;"><strong style="color:var(--choco);">➡️ 다음</strong> ${diary.next}</p>`:''}
+              ${diary.memo?`<div style="background:#FFF8EE;border-radius:8px;padding:8px;margin-top:8px;font-size:11px;color:var(--cookie);">💌 학부모 메모: ${diary.memo}</div>`:''}
+            </div>`;
+        } else {
+          return `
+            <div style="background:var(--cream);border:1.5px dashed var(--border);border-radius:14px;padding:14px;margin-bottom:10px;display:flex;align-items:center;gap:12px;">
+              <div style="font-size:24px;">📝</div>
+              <div style="flex:1;">
+                <div style="font-size:13px;font-weight:700;color:var(--muted);">${date} 수업 ${slot?.seq?slot.seq+'회차':''}</div>
+                <div style="font-size:11px;color:var(--muted);">일지를 작성해주세요</div>
+              </div>
+              <button onclick="openAddDiaryForDate('${date}')" style="background:var(--cookie);color:white;border:none;border-radius:20px;padding:6px 12px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">✏️ 작성</button>
+            </div>`;
+        }
+      }).join('');
+    });
+  });
+}
+
 function openAddDiary(){
   document.getElementById('di-student').value=currentStudentName||'';
   document.getElementById('di-date').value=new Date().toISOString().slice(0,10);
-  document.getElementById('di-content').value='';document.getElementById('di-next').value='';document.getElementById('di-memo').value='';
+  document.getElementById('di-content').value='';
+  document.getElementById('di-next').value='';
+  document.getElementById('di-memo').value='';
   document.getElementById('modal-diary').classList.add('on');
 }
 function saveDiary(){
@@ -2994,23 +3117,13 @@ function saveDiary(){
     .then(()=>{showLoad(false);document.getElementById('modal-diary').classList.remove('on');toast('수업일지 저장됐어요! 📝');loadDiaries();})
     .catch(e=>{showLoad(false);toast('저장 실패: '+e.message);});
 }
-function loadDiaries(){
-  if(!currentUser)return;
-  let q=db.collection('diaries').where('teacherUid','==',currentUser.uid);
-  if(currentStudentName)q=q.where('student','==',currentStudentName);
-  q.get().then(snap=>{
-    const list=document.getElementById('diary-list');if(!list)return;
-    if(snap.empty){list.innerHTML='<div style="text-align:center;padding:30px;color:var(--muted);"><div style="font-size:32px;margin-bottom:8px;">📝</div><div style="font-size:13px;">수업 후 일지를 작성해보세요!</div></div>';return;}
-    const items=[];snap.forEach(d=>items.push({id:d.id,...d.data()}));items.sort((a,b)=>b.date?.localeCompare(a.date));
-    list.innerHTML=items.map(d=>`
-      <div class="diary-card">
-        <div class="dh"><h4>${d.student} · ${d.date||''}</h4>
-        <button onclick="deleteDoc('diaries','${d.id}',loadDiaries)" style="background:none;border:none;cursor:pointer;font-size:14px;color:var(--muted);">🗑️</button></div>
-        <p><strong style="color:var(--choco);">📚 수업</strong> ${d.content}</p>
-        ${d.next?`<p style="margin-top:6px;"><strong style="color:var(--choco);">➡️ 다음</strong> ${d.next}</p>`:''}
-        ${d.memo?`<div style="background:#FFF8EE;border-radius:8px;padding:8px;margin-top:8px;font-size:11px;color:var(--cookie);">💌 학부모 메모: ${d.memo}</div>`:''}
-      </div>`).join('');
-  });
+function openAddDiaryForDate(date){
+  document.getElementById('di-student').value=currentStudentName||'';
+  document.getElementById('di-date').value=date;
+  document.getElementById('di-content').value='';
+  document.getElementById('di-next').value='';
+  document.getElementById('di-memo').value='';
+  document.getElementById('modal-diary').classList.add('on');
 }
 function deleteDoc(collection, id, callback){
   if(!confirm('삭제할까요?'))return;
