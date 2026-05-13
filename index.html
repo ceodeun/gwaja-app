@@ -3077,16 +3077,27 @@ function toggleHomework(id,current){db.collection('homeworks').doc(id).update({d
 function loadHomeworks(){
   if(!currentUser)return;
   const list=document.getElementById('homework-list');if(!list)return;
+  const today = new Date(); today.setHours(0,0,0,0);
+  const todayStr = today.toISOString().slice(0,10);
 
-  // 완료된 수업 날짜 먼저 가져오기
   db.collection('lessonLogs').where('teacherUid','==',currentUser.uid).get().then(logSnap=>{
+    // 유효 수업 날짜 수집:
+    // - 완료(done) 또는 지난날짜 → 포함
+    // - noMakeup(미완료확정) → 제외
+    // - makeup(보충수업) → 현재날짜 이전이면 포함
     const doneDates = new Set();
     logSnap.forEach(d=>{
       const data=d.data();
       const isStudent = !currentStudentName || data.student===currentStudentName;
-      const today = new Date(); today.setHours(0,0,0,0);
+      if(!isStudent) return;
+      if(data.noMakeup) return; // 미완료 확정 → 제외
       const lessonDate = new Date(data.date); lessonDate.setHours(0,0,0,0);
-      if(isStudent && (data.done || lessonDate < today)) doneDates.add(data.date);
+      const isPast = lessonDate < today;
+      const isMakeup = data.makeup === true;
+      // 완료됐거나, 지난날짜 중 미완료아닌것, 보충수업도 지났으면 포함
+      if(data.done || (isPast && !data.hasMakeup) || (isMakeup && isPast) || (isMakeup && data.done)){
+        doneDates.add(data.date);
+      }
     });
 
     let q=db.collection('homeworks').where('teacherUid','==',currentUser.uid);
@@ -3097,10 +3108,22 @@ function loadHomeworks(){
       snap.forEach(d=>manualItems.push({id:d.id,...d.data()}));
 
       // 완료된 날짜마다 숙제 슬롯 자동 생성 (이미 작성된 건 제외)
-      const autoSlots = [...doneDates].sort().reverse().map(date=>{
+      const logList = [];
+      logSnap.forEach(d=>{
+        const data=d.data();
+        const isStudent = !currentStudentName || data.student===currentStudentName;
+        if(!isStudent||data.noMakeup) return;
+        const lessonDate = new Date(data.date); lessonDate.setHours(0,0,0,0);
+        const isPast = lessonDate < today;
+        const isMakeup = data.makeup===true;
+        if(data.done||(isPast&&!data.hasMakeup)||(isMakeup&&isPast)||(isMakeup&&data.done)){
+          logList.push({date:data.date, isMakeup});
+        }
+      });
+      const autoSlots = logList.sort((a,b)=>b.date.localeCompare(a.date)).map(({date,isMakeup})=>{
         const alreadyWritten = manualItems.some(h=>h.autoDate===date);
         if(alreadyWritten) return null;
-        return {id:null, autoDate:date, student:currentStudentName, content:'', done:false, isAutoSlot:true};
+        return {id:null, autoDate:date, student:currentStudentName, content:'', done:false, isAutoSlot:true, isMakeup};
       }).filter(Boolean);
 
       const allItems = [...manualItems.sort((a,b)=>a.done-b.done), ...autoSlots];
@@ -3113,13 +3136,13 @@ function loadHomeworks(){
       list.innerHTML = allItems.map(h=>{
         if(h.isAutoSlot){
           return `
-            <div class="hw-item" style="border:1.5px dashed var(--border);background:var(--cream);">
-              <div style="font-size:20px;flex-shrink:0;">📅</div>
+            <div class="hw-item" style="border:1.5px dashed ${h.isMakeup?'#A89BE8':'var(--border)'};background:${h.isMakeup?'#EDE7F6':'var(--cream)'};">
+              <div style="font-size:20px;flex-shrink:0;">${h.isMakeup?'🔄':'📅'}</div>
               <div class="hw-info">
-                <h4 style="color:var(--muted);">${h.autoDate} 수업 숙제</h4>
+                <h4 style="color:${h.isMakeup?'#6B5FC8':'var(--muted)'};">${h.isMakeup?'보충 ':''}${h.autoDate} 수업 숙제</h4>
                 <p>탭해서 숙제를 등록해요</p>
               </div>
-              <button onclick="openAddHomeworkForDate('${h.autoDate}')" style="background:var(--cookie);color:white;border:none;border-radius:20px;padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;">+ 추가</button>
+              <button onclick="openAddHomeworkForDate('${h.autoDate}')" style="background:${h.isMakeup?'#A89BE8':'var(--cookie)'};color:white;border:none;border-radius:20px;padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;">+ 추가</button>
             </div>`;
         }
         return `
@@ -3147,16 +3170,23 @@ function loadDiaries(){
   if(!currentUser)return;
   const list=document.getElementById('diary-list');if(!list)return;
 
-  // 완료된 수업 날짜 가져오기
+  // 완료된 수업 날짜 가져오기 (미완료 제외, 보충날짜 포함)
   db.collection('lessonLogs').where('teacherUid','==',currentUser.uid).get().then(logSnap=>{
+    const today = new Date(); today.setHours(0,0,0,0);
     const doneItems = [];
     logSnap.forEach(d=>{
       const data=d.data();
       const isStudent = !currentStudentName || data.student===currentStudentName;
-      const today = new Date(); today.setHours(0,0,0,0);
+      if(!isStudent) return;
+      if(data.noMakeup) return; // 미완료 확정 제외
       const lessonDate = new Date(data.date); lessonDate.setHours(0,0,0,0);
-      if(isStudent && (data.done || lessonDate < today)){
-        doneItems.push({date:data.date, time:data.time, duration:data.duration, seq:data.seq});
+      const isPast = lessonDate < today;
+      const isMakeup = data.makeup === true;
+      if(data.done || (isPast && !data.hasMakeup) || (isMakeup && isPast) || (isMakeup && data.done)){
+        doneItems.push({
+          date:data.date, time:data.time, duration:data.duration,
+          seq:data.seq, isMakeup, logId:d.id
+        });
       }
     });
     doneItems.sort((a,b)=>b.date?.localeCompare(a.date));
@@ -3185,10 +3215,11 @@ function loadDiaries(){
         const slot = emptySlots.find(d=>d.date===date);
 
         if(diary){
+          const isMakeup = slot?.isMakeup || doneItems.find(d=>d.date===date)?.isMakeup;
           return `
-            <div class="diary-card">
+            <div class="diary-card" style="border-left:4px solid ${isMakeup?'#A89BE8':'var(--cookie)'};">
               <div class="dh">
-                <h4>📅 ${diary.date||''} ${slot?.seq?slot.seq+'회차':''}</h4>
+                <h4>${isMakeup?'🔄 보충 ':'📅 '}${diary.date||''} ${slot?.seq?slot.seq+'회차':''}</h4>
                 <button onclick="deleteDoc('diaries','${diary.id}',loadDiaries)" style="background:none;border:none;cursor:pointer;font-size:14px;color:var(--muted);">🗑️</button>
               </div>
               <p><strong style="color:var(--choco);">📚 수업</strong> ${diary.content}</p>
@@ -3196,14 +3227,15 @@ function loadDiaries(){
               ${diary.memo?`<div style="background:#FFF8EE;border-radius:8px;padding:8px;margin-top:8px;font-size:11px;color:var(--cookie);">💌 학부모 메모: ${diary.memo}</div>`:''}
             </div>`;
         } else {
+          const isMakeup = slot?.isMakeup;
           return `
-            <div style="background:var(--cream);border:1.5px dashed var(--border);border-radius:14px;padding:14px;margin-bottom:10px;display:flex;align-items:center;gap:12px;">
-              <div style="font-size:24px;">📝</div>
+            <div style="background:${isMakeup?'#EDE7F6':'var(--cream)'};border:1.5px dashed ${isMakeup?'#A89BE8':'var(--border)'};border-radius:14px;padding:14px;margin-bottom:10px;display:flex;align-items:center;gap:12px;">
+              <div style="font-size:24px;">${isMakeup?'🔄':'📝'}</div>
               <div style="flex:1;">
-                <div style="font-size:13px;font-weight:700;color:var(--muted);">${date} 수업 ${slot?.seq?slot.seq+'회차':''}</div>
+                <div style="font-size:13px;font-weight:700;color:${isMakeup?'#6B5FC8':'var(--muted)'};">${isMakeup?'보충 ':''}${date} ${slot?.seq?slot.seq+'회차':''}</div>
                 <div style="font-size:11px;color:var(--muted);">일지를 작성해주세요</div>
               </div>
-              <button onclick="openAddDiaryForDate('${date}')" style="background:var(--cookie);color:white;border:none;border-radius:20px;padding:6px 12px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">✏️ 작성</button>
+              <button onclick="openAddDiaryForDate('${date}')" style="background:${isMakeup?'#A89BE8':'var(--cookie)'};color:white;border:none;border-radius:20px;padding:6px 12px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">✏️ 작성</button>
             </div>`;
         }
       }).join('');
