@@ -431,12 +431,23 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:var(--c
         <div class="quick-cell" onclick="stTab('chat')"><div class="qi">💬</div><div class="ql">채팅</div></div>
         <div class="quick-cell" onclick="toast('준비 중 🍪')"><div class="qi">🎯</div><div class="ql">목표</div></div>
       </div>
+
+      <!-- 오늘/예정 숙제 -->
+      <div class="section-head"><h3>✅ 숙제</h3><a onclick="stTab('calendar')" style="font-size:12px;color:var(--cookie);cursor:pointer;">캘린더 보기</a></div>
+      <div id="st-hw-list">
+        <div style="text-align:center;padding:16px;color:var(--muted);font-size:13px;">불러오는 중...</div>
+      </div>
+
+      <!-- 다가오는 수업 -->
+      <div class="section-head"><h3>📅 다가오는 수업</h3></div>
+      <div id="st-upcoming-list">
+        <div style="text-align:center;padding:16px;color:var(--muted);font-size:13px;">불러오는 중...</div>
+      </div>
+
       <div class="section-head"><h3>📬 선생님 수업 제안</h3></div>
       <div id="proposal-list">
         <div style="text-align:center;padding:20px;color:var(--muted);font-size:13px;">아직 수업 제안이 없어요</div>
       </div>
-      <div class="section-head"><h3>🎓 선생님 찾기</h3><a onclick="stTab('search')" style="font-size:12px;color:var(--cookie);cursor:pointer;">전체보기</a></div>
-      <p style="font-size:13px;color:var(--muted);text-align:center;padding:20px;">검색 탭에서 선생님을 찾아보세요! 🔍</p>
     </div>
 
     <div id="st-search" class="tab-panel">
@@ -1364,6 +1375,7 @@ function goMain(data) {
     loadTeachers();
     loadStudentProposals();
     loadChatList('student');
+    loadStudentHome(name); // 홈 숙제+수업 로드
     calYear = new Date().getFullYear();
     calMonth = new Date().getMonth();
     renderCalendar();
@@ -2653,7 +2665,83 @@ function togglePriceDirect(){
 function setPrice(val){ document.getElementById('ll-price').value=val; document.getElementById('ll-price-view').textContent=val.toLocaleString()+'원'; calcLessonFee(); }
 function highlightPriceBtn(){}
 function toggleDirectInput(){}
-// ── 드럼롤 시간 선택기 ──
+// ── 학생 홈 로드 ──
+function loadStudentHome(nameParam){
+  if(!currentUser) return;
+  const now = new Date();
+  const todayStr = now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0');
+
+  // 이름 가져오기 (파라미터 없으면 users에서)
+  const namePromise = nameParam
+    ? Promise.resolve(nameParam)
+    : db.collection('users').doc(currentUser.uid).get().then(s=>s.data()?.name||'');
+
+  namePromise.then(studentName=>{
+    if(!studentName) return;
+
+    // 숙제 로드
+    db.collection('homeworks').where('student','==',studentName).get().then(snap=>{
+      const hwEl = document.getElementById('st-hw-list');
+      if(!hwEl) return;
+      const items = [];
+      snap.forEach(d=>items.push({id:d.id,...d.data()}));
+      // 미완료 숙제만, 마감순 정렬
+      const pending = items.filter(h=>!h.done).sort((a,b)=>(a.due||'').localeCompare(b.due||''));
+      if(!pending.length){
+        hwEl.innerHTML='<div style="background:white;border-radius:14px;padding:14px;text-align:center;color:var(--mint);font-size:13px;font-weight:700;">✅ 미완료 숙제 없어요!</div>';
+        return;
+      }
+      hwEl.innerHTML = pending.slice(0,5).map(h=>{
+        const isOverdue = h.due && h.due < todayStr;
+        return `
+          <div style="background:white;border-radius:14px;padding:12px 14px;margin-bottom:8px;display:flex;align-items:center;gap:12px;box-shadow:var(--shadow);border-left:3px solid ${isOverdue?'var(--peach)':'var(--cookie)'};">
+            <div style="font-size:20px;flex-shrink:0;">${isOverdue?'⚠️':'📝'}</div>
+            <div style="flex:1;">
+              <div style="font-size:13px;font-weight:700;color:var(--choco);">${h.content||'숙제 내용 없음'}</div>
+              <div style="font-size:11px;color:${isOverdue?'var(--peach)':'var(--muted)'};">마감 ${h.due||h.autoDate||'미정'}${isOverdue?' · 기한 초과!':''}</div>
+            </div>
+          </div>`;
+      }).join('') + (pending.length>5?`<div style="text-align:center;font-size:12px;color:var(--muted);padding:8px;">외 ${pending.length-5}개 더</div>`:'');
+    });
+
+    // 다가오는 수업 로드
+    db.collection('lessonLogs').where('student','==',studentName).get().then(snap=>{
+      const upEl = document.getElementById('st-upcoming-list');
+      if(!upEl) return;
+      const upcoming = [];
+      snap.forEach(d=>{
+        const data=d.data();
+        if(data.date >= todayStr && !data.noMakeup) upcoming.push(data);
+      });
+      upcoming.sort((a,b)=>a.date.localeCompare(b.date));
+      if(!upcoming.length){
+        upEl.innerHTML='<div style="text-align:center;padding:16px;color:var(--muted);font-size:13px;">선생님이 수업 계획을 등록하면 여기 표시돼요</div>';
+        return;
+      }
+      const dayNames=['일','월','화','수','목','금','토'];
+      upEl.innerHTML = upcoming.slice(0,3).map(item=>{
+        const isToday2=item.date===todayStr;
+        const isMakeup=item.makeup===true;
+        const [hh,mm]=(item.time||'00:00').split(':');
+        const h=parseInt(hh);
+        const timeStr=`${h<12?'오전':'오후'} ${h%12||12}:${mm}`;
+        const dow=dayNames[new Date(item.date+'T00:00:00').getDay()];
+        const color=isMakeup?'#A89BE8':isToday2?'var(--peach)':'var(--cookie)';
+        return `
+          <div style="background:white;border-radius:14px;padding:12px 14px;margin-bottom:8px;display:flex;align-items:center;gap:12px;box-shadow:var(--shadow);border-left:3px solid ${color};">
+            <div style="text-align:center;min-width:40px;">
+              <div style="font-size:18px;font-weight:900;color:${color};">${item.date.slice(8)}</div>
+              <div style="font-size:10px;color:var(--muted);">${dow}요일</div>
+            </div>
+            <div style="flex:1;">
+              <div style="font-size:13px;font-weight:700;color:var(--choco);">${isMakeup?'🔄 보충 수업':'📚 수업'} ${isToday2?'· 오늘!':''}</div>
+              <div style="font-size:11px;color:var(--muted);">${timeStr} · ${item.duration}시간${item.seq?' · '+item.seq+'회차':''}</div>
+            </div>
+          </div>`;
+      }).join('');
+    });
+  });
+}
 const DRUM_ITEM_H = 44;
 let _drumState = { ampm: 0, hour: 14, min: 0 }; // 0=오전,1=오후 / hour=0~23 / min 인덱스
 const _minList = [0,5,10,15,20,25,30,35,40,45,50,55];
@@ -3241,8 +3329,12 @@ function saveHomework(){
   const due=document.getElementById('hw-due').value;
   if(!student||!content)return toast('학생 이름과 숙제 내용은 필수예요 🍪');
   showLoad(true);
-  db.collection('homeworks').add({teacherUid:currentUser.uid,student,content,due,done:false,createdAt:new Date().toISOString()})
-    .then(()=>{showLoad(false);document.getElementById('modal-homework').classList.remove('on');toast('숙제 추가됐어요! ✅');loadHomeworks();})
+  // due와 autoDate 둘 다 저장 → 학생 캘린더에서 날짜 클릭 시 뜨게
+  db.collection('homeworks').add({
+    teacherUid:currentUser.uid, student, content,
+    due, autoDate:due, // 수업날짜 기준으로도 조회 가능하게
+    done:false, createdAt:new Date().toISOString()
+  }).then(()=>{showLoad(false);document.getElementById('modal-homework').classList.remove('on');toast('숙제 추가됐어요! ✅');loadHomeworks();})
     .catch(e=>{showLoad(false);toast('저장 실패: '+e.message);});
 }
 function toggleHomework(id,current){db.collection('homeworks').doc(id).update({done:!current}).then(()=>loadHomeworks());}
