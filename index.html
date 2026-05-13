@@ -2165,17 +2165,20 @@ function clickStudentDate(dateStr){
         html += hwItems.map(h=>{
           const isOverdue = h.due && h.due < _tStr && !h.done;
           return `
-          <div style="background:${h.done?'#F0FBF6':isOverdue?'#FFE8E4':'var(--cream)'};border-radius:12px;padding:12px 14px;margin-bottom:8px;border-left:3px solid ${h.done?'var(--mint)':isOverdue?'var(--peach)':'var(--cookie)'};">
+          <div onclick="toggleStudentHw('${h.id}',${h.done})" style="cursor:pointer;background:${h.done?'#F0FBF6':isOverdue?'#FFE8E4':'var(--cream)'};border-radius:12px;padding:12px 14px;margin-bottom:8px;border-left:3px solid ${h.done?'var(--mint)':isOverdue?'var(--peach)':'var(--cookie)'};transition:all .15s;">
             <div style="display:flex;align-items:flex-start;gap:10px;">
-              <div style="width:22px;height:22px;border-radius:50%;background:${h.done?'var(--mint)':'white'};border:2px solid ${h.done?'var(--mint)':isOverdue?'var(--peach)':'var(--border)'};display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0;margin-top:2px;">${h.done?'✓':''}</div>
+              <div style="width:26px;height:26px;border-radius:50%;background:${h.done?'var(--mint)':'white'};border:2px solid ${h.done?'var(--mint)':isOverdue?'var(--peach)':'var(--border)'};display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;margin-top:1px;">${h.done?'✓':''}</div>
               <div style="flex:1;">
                 <div style="font-size:14px;font-weight:700;${h.done?'text-decoration:line-through;color:var(--muted)':'color:var(--choco)'}">${h.content||'내용 없음'}</div>
-                <div style="margin-top:5px;display:flex;gap:8px;flex-wrap:wrap;">
+                <div style="margin-top:5px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
                   ${h.due
                     ? `<span style="font-size:11px;background:${isOverdue?'#FFE8E4':'white'};color:${isOverdue?'var(--peach)':'var(--muted)'};padding:2px 8px;border-radius:20px;border:1px solid ${isOverdue?'var(--peach)':'var(--border)'};">📅 마감 ${h.due}${isOverdue?' ⚠️ 기한초과':''}</span>`
                     : `<span style="font-size:11px;color:var(--muted);">마감일 없음</span>`
                   }
-                  ${h.done?`<span style="font-size:11px;color:var(--mint);">✓ 완료</span>`:''}
+                  ${h.done
+                    ? `<span style="font-size:11px;color:var(--mint);font-weight:700;">✓ 완료</span>`
+                    : `<span style="font-size:11px;color:var(--muted);">탭해서 완료 처리</span>`
+                  }
                 </div>
               </div>
             </div>
@@ -3362,6 +3365,22 @@ function saveHomework(){
   }).then(()=>{showLoad(false);document.getElementById('modal-homework').classList.remove('on');toast('숙제 추가됐어요! ✅');loadHomeworks();})
     .catch(e=>{showLoad(false);toast('저장 실패: '+e.message);});
 }
+function toggleStudentHw(id, current){
+  db.collection('homeworks').doc(id).update({done: !current})
+    .then(()=>{
+      toast(!current ? '숙제 완료! 🎉' : '완료 취소됐어요');
+      // 현재 열린 날짜 다시 로드
+      const selected = document.querySelector('.st-cal-selected');
+      if(selected){
+        const dateStr = selected.id.replace('st-cal-d-','');
+        clickStudentDate(dateStr);
+      }
+      // 홈 숙제 목록도 새로고침
+      db.collection('users').doc(currentUser.uid).get().then(u=>loadStudentHome(u.data()?.name||''));
+    })
+    .catch(e=>toast('실패: '+e.message));
+}
+
 function toggleHomework(id,current){db.collection('homeworks').doc(id).update({done:!current}).then(()=>loadHomeworks());}
 function loadHomeworks(){
   if(!currentUser)return;
