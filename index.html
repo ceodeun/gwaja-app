@@ -565,11 +565,11 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:var(--c
       </div>
       <div class="stats-card">
         <div class="stat-row">
-          <div class="stat-item"><div class="stat-val">0</div><div class="stat-lbl">총 수업</div></div>
+          <div class="stat-item"><div class="stat-val" id="st-stat-count">0</div><div class="stat-lbl">총 수업</div></div>
           <div class="stat-div"></div>
-          <div class="stat-item"><div class="stat-val">0</div><div class="stat-lbl">연결 선생님</div></div>
+          <div class="stat-item"><div class="stat-val" id="st-stat-teachers">0</div><div class="stat-lbl">연결 선생님</div></div>
           <div class="stat-div"></div>
-          <div class="stat-item"><div class="stat-val">0h</div><div class="stat-lbl">누적 학습</div></div>
+          <div class="stat-item"><div class="stat-val" id="st-stat-hours">0h</div><div class="stat-lbl">누적 학습</div></div>
         </div>
       </div>
       <div class="menu-card">
@@ -1379,7 +1379,8 @@ function goMain(data) {
     loadTeachers();
     loadStudentProposals();
     loadChatList('student');
-    loadStudentHome(name); // 홈 숙제+수업 로드
+    loadStudentHome(name);
+    loadStudentStats();
     calYear = new Date().getFullYear();
     calMonth = new Date().getMonth();
     renderCalendar();
@@ -1922,6 +1923,10 @@ function stTab(n) {
   if (n==='chat') loadChatList('student');
   if (n==='calendar') renderCalendar();
   if (n==='map') initMap();
+  if (n==='me') loadStudentStats();
+  if (n==='home') {
+    db.collection('users').doc(currentUser.uid).get().then(u=>loadStudentHome(u.data()?.name||''));
+  }
 }
 
 function tcTab(n) {
@@ -2688,6 +2693,35 @@ function togglePriceDirect(){
 function setPrice(val){ document.getElementById('ll-price').value=val; document.getElementById('ll-price-view').textContent=val.toLocaleString()+'원'; calcLessonFee(); }
 function highlightPriceBtn(){}
 function toggleDirectInput(){}
+function loadStudentStats(){
+  if(!currentUser) return;
+  db.collection('users').doc(currentUser.uid).get().then(uSnap=>{
+    const studentName = uSnap.data()?.name || '';
+    if(!studentName) return;
+    db.collection('lessonLogs').where('student','==',studentName).get().then(snap=>{
+      let count = 0;
+      let totalHours = 0;
+      const teachers = new Set();
+      snap.forEach(d=>{
+        const data = d.data();
+        // 완료된 수업만 카운트 (미완료 제외)
+        if(data.noMakeup) return;
+        const now = new Date();
+        const todayStr = now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0');
+        const isPast = data.date < todayStr;
+        if(data.done || isPast){
+          count++;
+          totalHours += data.duration || 0;
+          if(data.teacherUid) teachers.add(data.teacherUid);
+        }
+      });
+      document.getElementById('st-stat-count').textContent = count;
+      document.getElementById('st-stat-teachers').textContent = teachers.size;
+      document.getElementById('st-stat-hours').textContent = totalHours + 'h';
+    });
+  });
+}
+
 // ── 학생 홈 로드 ──
 function loadStudentHome(nameParam){
   if(!currentUser) return;
