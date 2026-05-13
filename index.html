@@ -2839,37 +2839,110 @@ function saveSchedule(){
 }
 function loadSchedules(){
   if(!currentUser)return;
-  let q=db.collection('schedules').where('teacherUid','==',currentUser.uid);
-  if(currentStudentName)q=q.where('student','==',currentStudentName);
-  q.get().then(snap=>{
-    const list=document.getElementById('schedule-list');if(!list)return;
-    if(snap.empty){list.innerHTML='<div style="text-align:center;padding:30px;color:var(--muted);"><div style="font-size:32px;margin-bottom:8px;">📅</div><div style="font-size:13px;">아직 스케줄이 없어요</div></div>';return;}
-    const days=['월요일','화요일','수요일','목요일','금요일','토요일','일요일'];
-    const items=[];snap.forEach(d=>items.push({id:d.id,...d.data()}));
-    items.sort((a,b)=>days.indexOf(a.day)-days.indexOf(b.day));
-    // 시간 포맷 변환
+  const list=document.getElementById('schedule-list');
+  if(!list)return;
+  list.innerHTML='<div style="text-align:center;padding:20px;color:var(--muted);font-size:13px;">불러오는 중...</div>';
+
+  const today = new Date();
+  today.setHours(0,0,0,0);
+  const todayStr = today.toISOString().slice(0,10);
+
+  // schedules + lessonLogs 둘 다 가져오기
+  Promise.all([
+    db.collection('schedules').where('teacherUid','==',currentUser.uid).get(),
+    db.collection('lessonLogs').where('teacherUid','==',currentUser.uid).get()
+  ]).then(([schedSnap, logSnap]) => {
+
+    // 요일별 정기 스케줄
+    let schedItems = [];
+    schedSnap.forEach(d => {
+      const data = d.data();
+      if(!currentStudentName || data.student === currentStudentName) {
+        schedItems.push({id:d.id, ...data});
+      }
+    });
+
+    // lessonLogs에서 날짜별 수업 기록 (이번달 + 미래)
+    let logItems = [];
+    logSnap.forEach(d => {
+      const data = d.data();
+      if(!currentStudentName || data.student === currentStudentName) {
+        logItems.push({id:d.id, ...data});
+      }
+    });
+
+    // lessonLogs 기반으로 날짜별 카드 생성
+    logItems.sort((a,b)=>a.date?.localeCompare(b.date));
+
     function fmtTime(t){
       if(!t)return'';
       const [h,m]=t.split(':');
       const hh=parseInt(h);
       return `${hh<12?'오전':'오후'} ${hh%12||12}:${m}`;
     }
-    list.innerHTML=items.map(s=>`
-      <div class="schedule-card">
-        <div class="day" style="min-width:36px;">
-          <div style="font-size:14px;font-weight:900;color:var(--cookie);">${s.day?.slice(0,1)||''}</div>
-          <div style="font-size:10px;color:var(--muted);margin-top:2px;">${fmtTime(s.time)}</div>
-        </div>
-        <div class="info" style="flex:1;">
-          <h4 style="display:flex;align-items:center;gap:6px;">
-            ${s.student} · ${s.subject||'과목 미정'}
-            ${s.fromPlan?'<span style="font-size:10px;background:var(--cookie);color:white;padding:2px 6px;border-radius:20px;">자동</span>':''}
-          </h4>
-          <p>📍 ${s.place||'장소 미정'}</p>
-        </div>
-        <button onclick="deleteDoc('schedules','${s.id}',loadSchedules)" style="background:none;border:none;cursor:pointer;font-size:16px;color:var(--muted);">🗑️</button>
-      </div>`).join('');
+
+    if(!logItems.length && !schedItems.length){
+      list.innerHTML='<div style="text-align:center;padding:30px;color:var(--muted);"><div style="font-size:32px;margin-bottom:8px;">📅</div><div style="font-size:13px;">아직 스케줄이 없어요</div></div>';
+      return;
+    }
+
+    // 날짜별 수업 카드
+    const logHtml = logItems.map(item => {
+      const itemDate = new Date(item.date);
+      itemDate.setHours(0,0,0,0);
+      const isPast = itemDate < today;
+      const isToday = item.date === todayStr;
+      const done = item.done || isPast; // 지난 날짜는 자동 완료
+
+      const dayNames = ['일','월','화','수','목','금','토'];
+      const dow = dayNames[new Date(item.date).getDay()];
+      const monthDay = item.date?.slice(5)||'';
+
+      return `
+        <div style="display:flex;align-items:center;gap:12px;padding:12px;background:white;border-radius:14px;margin-bottom:8px;box-shadow:var(--shadow);border-left:4px solid ${done?'var(--mint)':isToday?'var(--peach)':'var(--cookie)'};">
+          <div style="text-align:center;min-width:44px;flex-shrink:0;">
+            <div style="font-size:10px;color:var(--muted);">${monthDay}</div>
+            <div style="font-size:15px;font-weight:900;color:${done?'var(--mint)':isToday?'var(--peach)':'var(--cookie)'};">${dow}</div>
+            <div style="font-size:10px;color:var(--muted);">${fmtTime(item.time)}</div>
+          </div>
+          <div style="flex:1;">
+            <div style="font-size:13px;font-weight:700;color:var(--choco);margin-bottom:2px;">${item.student} · ${item.duration}시간</div>
+            <div style="font-size:11px;color:var(--muted);">₩${(item.total||0).toLocaleString()} ${item.seq?'· '+item.seq+'회차':''}</div>
+          </div>
+          <div>
+            ${done
+              ? `<div style="background:var(--mint);color:white;border-radius:20px;padding:4px 10px;font-size:11px;font-weight:700;">✓ 완료</div>`
+              : isToday
+              ? `<div style="background:var(--peach);color:white;border-radius:20px;padding:4px 10px;font-size:11px;font-weight:700;">오늘</div>`
+              : `<button onclick="markLessonDone('${item.id}')" style="background:var(--cream);border:1.5px solid var(--border);color:var(--muted);border-radius:20px;padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;">완료</button>`
+            }
+          </div>
+        </div>`;
+    }).join('');
+
+    // 정기 스케줄 (반복 요일)
+    const days=['월요일','화요일','수요일','목요일','금요일','토요일','일요일'];
+    schedItems.sort((a,b)=>days.indexOf(a.day)-days.indexOf(b.day));
+    const schedHtml = schedItems.length ? `
+      <div style="font-size:12px;font-weight:700;color:var(--muted);margin:14px 0 8px;">📌 정기 수업 요일</div>
+      ${schedItems.map(s=>`
+        <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:white;border-radius:12px;margin-bottom:6px;border:1.5px solid var(--border);">
+          <div style="width:32px;height:32px;border-radius:50%;background:var(--cookie);color:white;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;flex-shrink:0;">${s.day?.slice(0,1)||''}</div>
+          <div style="flex:1;">
+            <div style="font-size:13px;font-weight:700;color:var(--choco);">${fmtTime(s.time)} · ${s.subject||'과목 미정'}</div>
+            <div style="font-size:11px;color:var(--muted);">📍 ${s.place||'장소 미정'}</div>
+          </div>
+          <button onclick="deleteDoc('schedules','${s.id}',loadSchedules)" style="background:none;border:none;cursor:pointer;font-size:14px;color:var(--muted);">🗑️</button>
+        </div>`).join('')}` : '';
+
+    list.innerHTML = (logItems.length ? logHtml : '') + schedHtml;
   });
+}
+
+function markLessonDone(id){
+  db.collection('lessonLogs').doc(id).update({done:true})
+    .then(()=>{ toast('수업 완료! ✅'); loadSchedules(); })
+    .catch(e=>toast('실패: '+e.message));
 }
 function openAddHomework(){
   document.getElementById('hw-student').value=currentStudentName||'';
