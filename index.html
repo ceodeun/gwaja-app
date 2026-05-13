@@ -689,10 +689,11 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:var(--c
             <span id="plan-hours" style="font-size:16px;font-weight:900;">0시간</span>
           </div>
           <div style="border-top:1px solid rgba(255,255,255,.3);margin:10px 0;"></div>
-          <div style="display:flex;justify-content:space-between;align-items:center;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
             <span style="font-size:13px;opacity:.9;">한 달 과외비</span>
             <span id="plan-fee" style="font-size:22px;font-weight:900;">₩0</span>
           </div>
+          <button onclick="savePlan()" style="width:100%;padding:12px;background:white;color:var(--green);border:none;border-radius:100px;font-size:14px;font-weight:900;cursor:pointer;font-family:inherit;">📅 달력에 일정 저장하기</button>
         </div>
       </div>
 
@@ -2180,19 +2181,19 @@ function calcPlan(){
   const price = parseInt(document.getElementById('plan-price')?.value||0);
   const duration = parseFloat(document.getElementById('plan-duration')?.value||1);
   const timeVal = document.getElementById('plan-time')?.value||'15:00';
+  const student = document.getElementById('plan-student')?.value||'';
 
   if(!selectedDays.length || !price){ 
     document.getElementById('plan-result').style.display='none';
     document.getElementById('plan-schedule-list').innerHTML='<div style="font-size:13px;color:var(--muted);text-align:center;padding:16px;">요일과 시간을 설정하면 일정이 자동으로 정리돼요</div>';
+    window._planData = null;
     return;
   }
 
   // 이번 달 해당 요일 날짜 계산
-  const dayMap = {'일':0,'월':1,'화':2,'수':3,'목':4,'금':5,'토':6};
   const year = tcCalYear, month = tcCalMonth;
   const daysInMonth = new Date(year, month+1, 0).getDate();
   const lessonDates = [];
-
   for(let d=1; d<=daysInMonth; d++){
     const dow = new Date(year, month, d).getDay();
     const dowName = ['일','월','화','수','목','금','토'][dow];
@@ -2203,6 +2204,13 @@ function calcPlan(){
   const feePerLesson = Math.round(price * duration);
   const totalFee = feePerLesson * count;
   const totalHours = duration * count;
+  const monthStr = year+'-'+String(month+1).padStart(2,'0');
+  const [hh,mm] = timeVal.split(':');
+  const h = parseInt(hh), ampm = h<12?'오전':'오후', h12 = h%12||12;
+  const timeStr = `${ampm} ${h12}:${mm}`;
+
+  // 전역 저장 (savePlan에서 사용)
+  window._planData = { student, lessonDates, price, duration, feePerLesson, totalFee, totalHours, count, timeVal, timeStr, monthStr, year, month };
 
   // 결과 표시
   document.getElementById('plan-result').style.display='block';
@@ -2212,10 +2220,6 @@ function calcPlan(){
 
   // 수업 일정표
   const months = ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
-  const [hh,mm] = timeVal.split(':');
-  const h = parseInt(hh), ampm = h<12?'오전':'오후', h12 = h%12||12;
-  const timeStr = `${ampm} ${h12}:${mm}`;
-
   const list = document.getElementById('plan-schedule-list');
   list.innerHTML = lessonDates.map((item,i)=>`
     <div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);">
@@ -2234,6 +2238,54 @@ function calcPlan(){
       <span style="font-size:13px;font-weight:700;color:var(--choco);">총 ${count}회 · ${totalHours}시간</span>
       <span style="font-size:15px;font-weight:900;color:var(--green);">₩${totalFee.toLocaleString()}</span>
     </div>`;
+}
+
+// ── 수업 계획 저장 ──
+function savePlan(){
+  if(!window._planData) return toast('먼저 요일과 시급을 설정해주세요');
+  if(!currentUser) return;
+  const p = window._planData;
+
+  showLoad(true);
+
+  // 기존 이달 계획 삭제 후 새로 저장
+  db.collection('lessonLogs')
+    .where('teacherUid','==',currentUser.uid)
+    .where('month','==',p.monthStr)
+    .where('fromPlan','==',true)
+    .get()
+    .then(snap => {
+      const deletes = snap.docs.map(d => db.collection('lessonLogs').doc(d.id).delete());
+      return Promise.all(deletes);
+    })
+    .then(() => {
+      // 새 일정 일괄 저장
+      const saves = p.lessonDates.map((item, i) => {
+        const dateStr = p.year+'-'+String(p.month+1).padStart(2,'0')+'-'+String(item.date).padStart(2,'0');
+        return db.collection('lessonLogs').add({
+          teacherUid: currentUser.uid,
+          student: p.student || '미지정',
+          date: dateStr,
+          time: p.timeVal,
+          duration: p.duration,
+          price: p.price,
+          total: p.feePerLesson,
+          month: p.monthStr,
+          fromPlan: true,   // 계획에서 자동 저장된 항목 표시
+          seq: i+1,
+          createdAt: new Date().toISOString()
+        });
+      });
+      return Promise.all(saves);
+    })
+    .then(() => {
+      showLoad(false);
+      toast(`${p.count}회 수업 일정이 달력에 저장됐어요! 📅🍪`);
+      // 달력 새로고침 → 점 표시
+      renderTcCalendar();
+      loadTcLessons();
+    })
+    .catch(e => { showLoad(false); toast('저장 실패: '+e.message); });
 }
 function loadMyStudentsForSelect(){
   if(!currentUser)return;
@@ -2511,19 +2563,24 @@ function loadTcLessons(){
       if(dayEl&&!dayEl.querySelector('.cal-dot')){
         dayEl.style.position='relative';
         const dot=document.createElement('div');dot.className='cal-dot';
-        dot.style.cssText='width:4px;height:4px;border-radius:50%;background:var(--mint);position:absolute;bottom:3px;';
+        // 계획 저장 항목: 쿠키색, 직접 기록: 민트색
+        const dotColor = item.fromPlan ? 'var(--cookie)' : 'var(--mint)';
+        dot.style.cssText=`width:5px;height:5px;border-radius:50%;background:${dotColor};position:absolute;bottom:3px;`;
         dayEl.appendChild(dot);
       }
     });
     list.innerHTML=items.map(item=>`
       <div style="background:white;border-radius:12px;padding:12px 14px;margin-bottom:8px;display:flex;align-items:center;gap:12px;box-shadow:var(--shadow);">
-        <div style="background:var(--cream);border-radius:10px;padding:6px 10px;text-align:center;min-width:44px;">
+        <div style="background:${item.fromPlan?'#FFF3E0':'var(--cream)'};border-radius:10px;padding:6px 10px;text-align:center;min-width:44px;">
           <div style="font-size:10px;color:var(--muted);">${item.date?.slice(5)||''}</div>
           <div style="font-size:12px;font-weight:700;color:var(--cookie);">${item.time||''}</div>
         </div>
         <div style="flex:1;">
-          <div style="font-size:13px;font-weight:700;color:var(--choco);">${item.student} · ${item.duration}시간</div>
-          <div style="font-size:11px;color:var(--muted);">₩ ${(item.total||0).toLocaleString()}</div>
+          <div style="display:flex;align-items:center;gap:6px;">
+            <div style="font-size:13px;font-weight:700;color:var(--choco);">${item.student} · ${item.duration}시간</div>
+            ${item.fromPlan?`<span style="font-size:10px;background:var(--cookie);color:white;padding:2px 6px;border-radius:20px;">계획</span>`:''}
+          </div>
+          <div style="font-size:11px;color:var(--muted);">₩ ${(item.total||0).toLocaleString()}${item.seq?` · ${item.seq}회차`:''}</div>
         </div>
         <button onclick="deleteDoc('lessonLogs','${item.id}',loadTcLessons)" style="background:none;border:none;cursor:pointer;font-size:14px;color:var(--muted);">🗑️</button>
       </div>`).join('');
