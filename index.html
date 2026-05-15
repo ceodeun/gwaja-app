@@ -406,7 +406,9 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:var(--c
         <div style="text-align:center;padding:20px;color:var(--muted);font-size:13px;">아직 수업 제안이 없어요</div>
       </div>
       <div class="section-head"><h3>🎓 선생님 찾기</h3><a onclick="stTab('search')" style="font-size:12px;color:var(--cookie);cursor:pointer;">전체보기</a></div>
-      <p style="font-size:13px;color:var(--muted);text-align:center;padding:20px;">검색 탭에서 선생님을 찾아보세요! 🔍</p>
+      <div id="home-teacher-list">
+        <div style="text-align:center;padding:24px;color:var(--muted);font-size:13px;">선생님 불러오는 중... 🍬</div>
+      </div>
     </div>
     <div id="st-search" class="tab-panel">
       <div class="search-bar">
@@ -1763,11 +1765,13 @@ function openTeacherDetail(uid) {
 
 // ── 선생님 목록 로드 ──
 function loadTeachers() {
-  const q = document.getElementById('s-inp').value.trim().toLowerCase();
+  const qEl = document.getElementById('s-inp');
+  const q = qEl ? qEl.value.trim().toLowerCase() : '';
   const minP = parseInt(document.getElementById('f-min')?.value || 0) || 0;
   const maxP = parseInt(document.getElementById('f-max')?.value || 0) || 0;
   db.collection('teachers').get().then(snap => {
     const list = document.getElementById('t-list');
+    const homeList = document.getElementById('home-teacher-list');
     const teachers = [];
     snap.forEach(d => {
       const t = d.data();
@@ -1778,11 +1782,7 @@ function loadTeachers() {
       if (filterMode && (t.travelMode||'') !== filterMode) return;
       teachers.push(t);
     });
-    if (!teachers.length) {
-      list.innerHTML = '<div style="text-align:center;padding:40px;color:var(--muted);"><div style="font-size:36px;margin-bottom:10px;">🔍</div><div>검색 결과가 없어요</div></div>';
-      return;
-    }
-    list.innerHTML = teachers.map(t => `
+    const cardHtml = teachers => teachers.map(t => `
       <div class="tcard">
         <div class="tcard-top">
           <div class="tcard-av">🎓</div>
@@ -1809,6 +1809,9 @@ function loadTeachers() {
         </div>
       </div>
     `).join('');
+    const emptyHtml = '<div style="text-align:center;padding:40px;color:var(--muted);"><div style="font-size:36px;margin-bottom:10px;">🔍</div><div>검색 결과가 없어요</div></div>';
+    if (list) list.innerHTML = teachers.length ? cardHtml(teachers) : emptyHtml;
+    if (homeList) homeList.innerHTML = teachers.length ? cardHtml(teachers.slice(0, 3)) : '<div style="text-align:center;padding:24px;color:var(--muted);font-size:13px;">아직 등록된 선생님이 없어요 🔍</div>';
   });
 }
 
@@ -2462,17 +2465,33 @@ const PLACES = [
 function initMap() {
   if (mapInstance) { mapInstance.invalidateSize(); renderPlaceList(); return; }
   setTimeout(() => {
-    mapInstance = L.map('study-map', { center:[37.5590, 126.9430], zoom:14, zoomControl:false });
+    // 기본 위치: 서울 시청 (GPS 실패 시 fallback)
+    const defaultCenter = [37.5665, 126.9780];
+    mapInstance = L.map('study-map', { center: defaultCenter, zoom: 14, zoomControl: false });
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution:'© OpenStreetMap', maxZoom:19
+      attribution: '© OpenStreetMap', maxZoom: 19
     }).addTo(mapInstance);
-    L.control.zoom({position:'topright'}).addTo(mapInstance);
-    // CSS 필터로 파스텔
+    L.control.zoom({ position: 'topright' }).addTo(mapInstance);
     const style = document.createElement('style');
     style.textContent = '.leaflet-tile-pane{filter:saturate(0.7) brightness(1.05);}';
     document.head.appendChild(style);
     addMarkers();
     renderPlaceList();
+    // GPS로 현재 위치 이동
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(pos => {
+        const lat = pos.coords.latitude;
+        const lng = pos.coords.longitude;
+        mapInstance.flyTo([lat, lng], 15, { duration: 1 });
+        // 내 위치 마커
+        const meIcon = L.divIcon({
+          className: '',
+          html: '<div style="width:16px;height:16px;background:#FF2D78;border-radius:50%;border:3px solid white;box-shadow:0 2px 8px rgba(255,45,120,.5);"></div>',
+          iconSize: [16, 16], iconAnchor: [8, 8]
+        });
+        L.marker([lat, lng], { icon: meIcon }).addTo(mapInstance).bindPopup('📍 내 위치');
+      }, () => {});
+    }
   }, 100);
 }
 
