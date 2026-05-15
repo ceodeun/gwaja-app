@@ -3229,6 +3229,150 @@ function switchRole(targetRole) {
     .catch(e => { showLoad(false); toast('전환 실패: ' + e.message); console.error(e); });
 }
 
+// ── 학부모 탭 전환 ──
+function prTab(n) {
+  ['home','link','me'].forEach(t => {
+    const p = document.getElementById('pr-'+t);
+    const b = document.getElementById('pr-b-'+t);
+    if(p) p.classList.toggle('active', t===n);
+    if(b) b.classList.toggle('on', t===n);
+  });
+  if(n==='home') loadParentHome();
+}
+
+// ── 학부모 홈 로드 ──
+function loadParentHome() {
+  if(!currentUser) return;
+  db.collection('parentLinks').where('parentUid','==',currentUser.uid).get().then(snap => {
+    const list = document.getElementById('pr-children-list');
+    const stat = document.getElementById('pr-stat-children');
+    if(stat) stat.textContent = snap.size;
+    if(snap.empty) {
+      if(list) {
+        const emptyHtml = '<div style="background:white;border-radius:20px;padding:24px;text-align:center;box-shadow:var(--shadow);border:2px dashed var(--border);">'
+          + '<div style="font-size:48px;margin-bottom:12px;">👨‍👩‍👧</div>'
+          + '<div style="font-size:15px;font-weight:700;color:var(--choco);margin-bottom:6px;">아직 연결된 자녀가 없어요</div>'
+          + '<div style="font-size:13px;color:var(--muted);margin-bottom:16px;">자녀의 연결 코드를 입력해서 수업 현황을 확인해봐요!</div>'
+          + '<button onclick="prTab(String.fromCharCode(39)+String.fromCharCode(39))" style="padding:12px 24px;background:var(--cookie);color:white;border:none;border-radius:100px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;">🔗 자녀 연결하기</button>'
+          + '</div>';
+        list.innerHTML = emptyHtml;
+        // 버튼 직접 이벤트 연결
+        const btn = list.querySelector('button');
+        if(btn) btn.onclick = () => prTab('link');
+      }
+      return;
+    }
+    const promises = [];
+    snap.forEach(d => {
+      promises.push(
+        db.collection('users').doc(d.data().childUid).get()
+          .then(u => ({link: d.data(), user: u.data()||{}}))
+      );
+    });
+    Promise.all(promises).then(items => {
+      if(list) list.innerHTML = items.map(({link, user}) =>
+        '<div style="background:white;border-radius:20px;padding:16px;margin-bottom:12px;box-shadow:var(--shadow);border:2px solid var(--border);display:flex;align-items:center;gap:14px;">' +
+        '<div style="width:52px;height:52px;border-radius:50%;background:var(--pink-light);display:flex;align-items:center;justify-content:center;font-size:28px;">🎒</div>' +
+        '<div style="flex:1;"><div style="font-size:16px;font-weight:900;color:var(--choco);">'+(user.nickname||user.name||'자녀')+'</div>' +
+        '<div style="font-size:12px;color:var(--muted);">연결된 자녀</div></div>' +
+        '<div style="font-size:20px;color:var(--border);">›</div></div>'
+      ).join('');
+    });
+  }).catch(e => console.log('parentLinks:', e));
+
+  // 리포트
+  db.collection('parentReports').get().then(snap => {
+    const stat = document.getElementById('pr-stat-reports');
+    if(stat) stat.textContent = snap.size;
+    const el = document.getElementById('pr-reports-list');
+    if(!el || snap.empty) {
+      if(el) el.innerHTML = '<div style="text-align:center;padding:20px;color:var(--muted);font-size:13px;">자녀 연결 후 선생님 리포트가 여기 표시돼요</div>';
+      return;
+    }
+    const items = [];
+    snap.forEach(d => items.push({id:d.id,...d.data()}));
+    items.sort((a,b)=>(b.sentAt||'').localeCompare(a.sentAt||''));
+    el.innerHTML = items.slice(0,5).map(r =>
+      '<div style="background:white;border-radius:18px;padding:16px;margin-bottom:12px;box-shadow:var(--shadow);border:2px solid var(--border);">' +
+      '<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">' +
+      '<div style="width:36px;height:36px;border-radius:50%;background:var(--lav-light,#EDE0FF);display:flex;align-items:center;justify-content:center;font-size:18px;">📨</div>' +
+      '<div><div style="font-size:13px;font-weight:700;color:var(--choco);">'+(r.student||'')+'</div>' +
+      '<div style="font-size:11px;color:var(--muted);">'+(r.sentAt||'').slice(0,10)+' 선생님 리포트</div></div></div>' +
+      '<div style="background:var(--cream);border-radius:12px;padding:12px;font-size:13px;color:var(--choco);line-height:1.7;">'+(r.text||'')+'</div></div>'
+    ).join('');
+  }).catch(()=>{});
+}
+
+// ── 코드 입력 자동 이동 ──
+function codeNext(inp, idx) {
+  inp.style.borderColor = inp.value ? 'var(--cookie)' : 'var(--border)';
+  if(inp.value) {
+    const inputs = [...document.querySelectorAll('.code-inp')];
+    const next = inputs[idx + (idx === 2 ? 2 : 1)];
+    if(next) next.focus();
+  }
+}
+
+// ── 자녀 연결 ──
+function connectChild() {
+  const inputs = [...document.querySelectorAll('.code-inp')];
+  const code = inputs.map(i=>i.value.toUpperCase()).join('');
+  if(code.length < 6) { toast('코드 6자리를 모두 입력해주세요'); return; }
+  showLoad(true);
+  db.collection('linkCodes').where('code','==',code).where('used','==',false).get().then(snap => {
+    if(snap.empty) { showLoad(false); toast('유효하지 않은 코드예요 🔍'); return; }
+    const doc = snap.docs[0];
+    const data = doc.data();
+    const created = new Date(data.createdAt);
+    if((new Date() - created) > 10*60*1000) {
+      showLoad(false); toast('코드가 만료됐어요. 새 코드를 받아주세요'); return;
+    }
+    return db.collection('parentLinks').add({
+      parentUid: currentUser.uid, childUid: data.studentUid,
+      code, createdAt: new Date().toISOString()
+    }).then(() => db.collection('linkCodes').doc(doc.id).update({used:true}));
+  }).then(() => {
+    showLoad(false);
+    toast('자녀와 연결됐어요! 🎉🍬');
+    inputs.forEach(i => { i.value=''; i.style.borderColor='var(--border)'; });
+    prTab('home');
+  }).catch(e => { showLoad(false); toast('연결 실패: '+(e?.message||'')); });
+}
+
+// ── 내 연결 코드 (학생) ──
+let _codeTimer = null;
+function showMyCode() {
+  if(!currentUser) return;
+  regenCode();
+  document.getElementById('modal-mycode').classList.add('on');
+}
+
+function regenCode() {
+  if(!currentUser) return;
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let code = '';
+  for(let i=0;i<6;i++) code += chars[Math.floor(Math.random()*chars.length)];
+  db.collection('linkCodes').add({
+    code, studentUid: currentUser.uid, used: false, createdAt: new Date().toISOString()
+  }).then(() => {
+    const display = document.getElementById('code-display');
+    if(display) {
+      const mkBox = c => '<div style="width:46px;height:54px;background:var(--pink-light);border:2.5px solid var(--cookie);border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:900;color:var(--cookie);">'+c+'</div>';
+      const sep = '<span style="font-size:24px;font-weight:900;color:var(--border);align-self:center;margin:0 4px;">-</span>';
+      display.innerHTML = code.slice(0,3).split('').map(mkBox).join('') + sep + code.slice(3,6).split('').map(mkBox).join('');
+    }
+    if(_codeTimer) clearInterval(_codeTimer);
+    let secs = 599;
+    const timerEl = document.getElementById('code-timer');
+    _codeTimer = setInterval(() => {
+      secs--;
+      const m = Math.floor(secs/60), s = secs%60;
+      if(timerEl) timerEl.textContent = '⏱ '+m+':'+String(s).padStart(2,'0')+' 남았어요';
+      if(secs <= 0) { clearInterval(_codeTimer); if(timerEl) timerEl.textContent = '⏱ 만료됐어요. 새 코드를 발급해주세요'; }
+    }, 1000);
+  }).catch(e => toast('코드 생성 실패: '+e.message));
+}
+
 // Enter 키
 // ── 학생 정보 수정 ──
 let selectedEditGrade = '', selectedGoal = '';
