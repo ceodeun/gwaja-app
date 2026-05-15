@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>과자 🍪 과외하자</title>
+<title>과자 🍬 과외하자</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
 
 <!-- Firebase SDK (compat 버전 - 가장 안정적) -->
@@ -16,10 +16,10 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <style>
 :root{
-  --cream:#FFF8F0;--cookie:#FF7A2F;--choco:#3D1F00;
-  --mint:#FF4FA3;--peach:#FFD600;--lavender:#7C6FFF;--green:#00C97A;
-  --white:#FFFDF8;--muted:#A0866A;--border:#FFD9B8;
-  --shadow:0 6px 28px rgba(255,122,47,.15);
+  --cream:#FFF0F6;--cookie:#FF3D8F;--choco:#6B0040;
+  --mint:#FF85C2;--peach:#FFD166;--lavender:#B48FFF;--green:#3DD9A4;
+  --white:#FFFAFC;--muted:#B07090;--border:#FFB8D9;
+  --shadow:0 6px 28px rgba(255,61,143,.15);
 }
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
 body{font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:var(--choco);max-width:430px;margin:0 auto;min-height:100dvh;}
@@ -49,11 +49,11 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:var(--c
 .tab-panel.active{display:block;}
 
 /* SPLASH */
-#s-splash{background:linear-gradient(170deg,#FFD6B0,#FF7A2F);align-items:center;justify-content:center;padding:40px 28px;text-align:center;}
+#s-splash{background:linear-gradient(170deg,#FFD6EC,#FF3D8F);align-items:center;justify-content:center;padding:40px 28px;text-align:center;}
 .splash-emoji{font-size:80px;margin-bottom:16px;display:block;animation:bounce 2s infinite;}
 @keyframes bounce{0%,100%{transform:translateY(0);}50%{transform:translateY(-16px);}}
 .splash-logo{font-size:52px;font-weight:900;color:var(--choco);margin-bottom:6px;}
-.splash-logo em{color:var(--peach);font-style:normal;}
+.splash-logo em{color:var(--mint);font-style:normal;}
 .splash-sub{font-size:13px;color:var(--choco);opacity:.7;margin-bottom:40px;line-height:1.6;}
 .splash-btns{width:100%;max-width:260px;display:flex;flex-direction:column;gap:10px;}
 
@@ -95,7 +95,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:var(--c
 .search-inp{flex:1;padding:11px 16px;background:white;border:2px solid var(--border);border-radius:100px;font-size:14px;font-family:inherit;outline:none;}
 .search-inp:focus{border-color:var(--cookie);}
 
-.earn-card{background:linear-gradient(135deg,#00C97A,#7C6FFF);border-radius:16px;padding:18px;color:white;margin-bottom:14px;}
+.earn-card{background:linear-gradient(135deg,#3DD9A4,#B48FFF);border-radius:16px;padding:18px;color:white;margin-bottom:14px;}
 .earn-card h4{font-size:12px;opacity:.85;margin-bottom:5px;}
 .earn-amount{font-size:30px;font-weight:900;}
 
@@ -194,26 +194,26 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:var(--c
 
 <div class="toast" id="toast"></div>
 <div class="loading" id="loading">
-  <div class="loading-icon">🍪</div>
+  <div class="loading-icon">🍬</div>
   <p>잠깐만요...</p>
 </div>
 
 <!-- SPLASH -->
 <div id="s-splash" class="screen active">
-  <span class="splash-emoji">🍪</span>
+  <span class="splash-emoji">🍬</span>
   <div class="splash-logo">과<em>자</em></div>
   <div class="splash-sub">크래커처럼 바삭한 선생님<br>찹쌀떡처럼 찰떡인 과외 매칭</div>
   <div class="splash-btns">
-    <button class="btn btn-cookie" onclick="go('s-signup')">회원가입 🍪</button>
+    <button class="btn btn-cookie" onclick="go('s-signup')">회원가입 🍬</button>
     <button class="btn btn-outline" onclick="go('s-login')" style="background:rgba(255,255,255,.5);">로그인</button>
   </div>
 </div>
 
 <!-- 회원가입 -->
 <div id="s-signup" class="screen">
-  <div style="background:linear-gradient(160deg,#D4A96A,var(--choco));padding:40px 24px 28px;color:white;">
+  <div style="background:linear-gradient(160deg,#FF85C2,#FF3D8F);padding:40px 24px 28px;color:white;">
     <button onclick="go('s-splash')" style="background:none;border:none;cursor:pointer;color:rgba(255,255,255,.8);font-size:22px;margin-bottom:12px;">←</button>
-    <div style="font-size:36px;margin-bottom:8px;">🍪</div>
+    <div style="font-size:36px;margin-bottom:8px;">🍬</div>
     <h2 style="font-size:24px;font-weight:900;margin-bottom:4px;">과자 시작하기</h2>
     <p style="font-size:13px;opacity:.8;">무료로 가입하고 과외를 시작해요</p>
   </div>
@@ -227,16 +227,16 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:var(--c
     <input class="inp" id="su-pw" type="password" placeholder="••••••">
     <label class="label">비밀번호 확인</label>
     <input class="inp" id="su-pw2" type="password" placeholder="••••••" style="margin-bottom:20px;">
-    <button class="btn btn-cookie" onclick="doSignup()">가입하기 🍪</button>
+    <button class="btn btn-cookie" onclick="doSignup()">가입하기 🍬</button>
     <p style="text-align:center;margin-top:14px;font-size:13px;color:var(--muted);">이미 계정이 있으신가요? <a onclick="go('s-login')" style="color:var(--cookie);font-weight:700;cursor:pointer;">로그인</a></p>
   </div>
 </div>
 
 <!-- 로그인 -->
 <div id="s-login" class="screen">
-  <div style="background:linear-gradient(160deg,#D4A96A,var(--choco));padding:40px 24px 28px;color:white;">
+  <div style="background:linear-gradient(160deg,#FF85C2,#FF3D8F);padding:40px 24px 28px;color:white;">
     <button onclick="go('s-splash')" style="background:none;border:none;cursor:pointer;color:rgba(255,255,255,.8);font-size:22px;margin-bottom:12px;">←</button>
-    <div style="font-size:36px;margin-bottom:8px;">🍪</div>
+    <div style="font-size:36px;margin-bottom:8px;">🍬</div>
     <h2 style="font-size:24px;font-weight:900;margin-bottom:4px;">다시 만났네요!</h2>
     <p style="font-size:13px;opacity:.8;">로그인하고 과자 시작해요</p>
   </div>
@@ -246,7 +246,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:var(--c
     <input class="inp" id="li-email" type="email" placeholder="example@email.com">
     <label class="label">비밀번호</label>
     <input class="inp" id="li-pw" type="password" placeholder="••••••" style="margin-bottom:20px;">
-    <button class="btn btn-cookie" onclick="doLogin()">로그인 🍪</button>
+    <button class="btn btn-cookie" onclick="doLogin()">로그인 🍬</button>
     <p style="text-align:center;margin-top:12px;font-size:13px;"><a onclick="doResetPw()" style="color:var(--muted);cursor:pointer;">비밀번호를 잊으셨나요?</a></p>
     <p style="text-align:center;margin-top:10px;font-size:13px;color:var(--muted);">계정이 없으신가요? <a onclick="go('s-signup')" style="color:var(--cookie);font-weight:700;cursor:pointer;">회원가입</a></p>
   </div>
@@ -254,9 +254,9 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:var(--c
 
 <!-- 역할 선택 -->
 <div id="s-role" class="screen">
-  <div style="background:linear-gradient(160deg,#D4A96A,var(--cookie));padding:44px 24px 28px;color:white;">
+  <div style="background:linear-gradient(160deg,#FFD6EC,#FF3D8F);padding:44px 24px 28px;color:white;">
     <div style="font-size:13px;opacity:.8;margin-bottom:4px;">환영해요! 🎉</div>
-    <h2 style="font-size:24px;font-weight:900;margin-bottom:6px;">어떤 과자세요? 🍪</h2>
+    <h2 style="font-size:24px;font-weight:900;margin-bottom:6px;">어떤 과자세요? 🍬</h2>
     <p style="font-size:13px;opacity:.8;">역할을 선택해주세요</p>
   </div>
   <div style="padding:18px;flex:1;">
@@ -274,13 +274,13 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:var(--c
     </div>
   </div>
   <div style="padding:0 18px 32px;">
-    <button class="btn btn-cookie" onclick="saveRole()">다음으로 → 🍪</button>
+    <button class="btn btn-cookie" onclick="saveRole()">다음으로 → 🍬</button>
   </div>
 </div>
 
 <!-- 선생님 프로필 등록 -->
 <div id="s-tsetup" class="screen">
-  <div style="background:linear-gradient(160deg,#00C97A,#7C6FFF);padding:40px 24px 24px;color:white;">
+  <div style="background:linear-gradient(160deg,#3DD9A4,#B48FFF);padding:40px 24px 24px;color:white;">
     <h2 style="font-size:22px;font-weight:900;margin-bottom:4px;">🎓 프로필 설정</h2>
     <p style="font-size:13px;opacity:.8;">선생님 정보를 입력해주세요</p>
   </div>
@@ -327,7 +327,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:var(--c
 
 <!-- 학생 프로필 설정 -->
 <div id="s-ssetup" class="screen">
-  <div style="background:linear-gradient(160deg,var(--cookie),var(--choco));padding:40px 24px 24px;color:white;">
+  <div style="background:linear-gradient(160deg,#FF3D8F,#6B0040);padding:40px 24px 24px;color:white;">
     <h2 style="font-size:22px;font-weight:900;margin-bottom:4px;">🎒 학생 정보 설정</h2>
     <p style="font-size:13px;opacity:.8;">이름은 매칭 전까지 공개되지 않아요 🔒</p>
   </div>
@@ -375,12 +375,12 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:var(--c
 <!-- 학생 메인 -->
 <div id="s-student" class="screen">
   <div class="topbar">
-    <div class="logo">과<em>자</em> 🍪</div>
-    <button style="background:none;border:none;cursor:pointer;font-size:20px;" onclick="toast('알림 준비 중 🍪')">🔔</button>
+    <div class="logo">과<em>자</em> 🍬</div>
+    <button style="background:none;border:none;cursor:pointer;font-size:20px;" onclick="toast('알림 준비 중 🍬')">🔔</button>
   </div>
   <div class="tab-panels">
     <div id="st-home" class="tab-panel active">
-      <div class="hero" style="background:linear-gradient(135deg,#FF7A2F,#FF4FA3);">
+      <div class="hero" style="background:linear-gradient(135deg,#FF3D8F,#B48FFF);">
         <div class="hero-text">
           <div class="hi">안녕하세요 👋</div>
           <h2 id="st-hi">찰떡 선생님을<br>찾아봐요!</h2>
@@ -391,9 +391,9 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:var(--c
       <div class="section-head"><h3>🧭 빠른 메뉴</h3></div>
       <div class="quick-grid">
         <div class="quick-cell" onclick="stTab('search')"><div class="qi">🔍</div><div class="ql">선생님 찾기</div></div>
-        <div class="quick-cell" onclick="toast('준비 중 🍪')"><div class="qi">📅</div><div class="ql">수업 일정</div></div>
-        <div class="quick-cell" onclick="toast('준비 중 🍪')"><div class="qi">💬</div><div class="ql">채팅</div></div>
-        <div class="quick-cell" onclick="toast('준비 중 🍪')"><div class="qi">🎯</div><div class="ql">목표</div></div>
+        <div class="quick-cell" onclick="toast('준비 중 🍬')"><div class="qi">📅</div><div class="ql">수업 일정</div></div>
+        <div class="quick-cell" onclick="toast('준비 중 🍬')"><div class="qi">💬</div><div class="ql">채팅</div></div>
+        <div class="quick-cell" onclick="toast('준비 중 🍬')"><div class="qi">🎯</div><div class="ql">목표</div></div>
       </div>
       <div class="section-head"><h3>📬 선생님 수업 제안</h3></div>
       <div id="proposal-list">
@@ -503,7 +503,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:var(--c
       </div>
     </div>
     <div id="st-me" class="tab-panel" style="padding-bottom:100px;">
-      <div class="profile-hero" style="background:linear-gradient(160deg,#D4A96A,var(--choco));">
+      <div class="profile-hero" style="background:linear-gradient(160deg,#FF85C2,#FF3D8F);">
         <span class="profile-emoji">🎒</span>
         <div class="profile-name" id="st-name">학생</div>
         <span class="profile-badge">🎒 학생 · 과자 멤버</span>
@@ -538,12 +538,12 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:var(--c
 <!-- 선생님 메인 -->
 <div id="s-teacher" class="screen">
   <div class="topbar">
-    <div class="logo">과<em>자</em> 🍪</div>
-    <button style="background:none;border:none;cursor:pointer;font-size:20px;" onclick="toast('알림 준비 중 🍪')">🔔</button>
+    <div class="logo">과<em>자</em> 🍬</div>
+    <button style="background:none;border:none;cursor:pointer;font-size:20px;" onclick="toast('알림 준비 중 🍬')">🔔</button>
   </div>
   <div class="tab-panels">
     <div id="tc-home" class="tab-panel active">
-      <div class="hero" style="background:linear-gradient(135deg,#00C97A,#7C6FFF);">
+      <div class="hero" style="background:linear-gradient(135deg,#3DD9A4,#B48FFF);">
         <div class="hero-text">
           <div class="hi">선생님 안녕하세요 🎓</div>
           <h2 id="tc-hi">오늘도 달콤한<br>수업 준비됐나요?</h2>
@@ -767,7 +767,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:var(--c
       </div>
     </div>
     <div id="tc-me" class="tab-panel">
-      <div class="profile-hero" style="background:linear-gradient(160deg,#00C97A,#7C6FFF);">
+      <div class="profile-hero" style="background:linear-gradient(160deg,#3DD9A4,#B48FFF);">
         <span class="profile-emoji">🎓</span>
         <div class="profile-name" id="tc-name">선생님</div>
         <span class="profile-badge">🎓 선생님 · 과자 멤버</span>
@@ -810,11 +810,11 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:var(--c
 
 <!-- 후기 작성 화면 -->
 <div id="s-review" class="screen">
-  <div style="background:linear-gradient(160deg,var(--cookie),var(--choco));padding:40px 24px 24px;color:white;">
+  <div style="background:linear-gradient(160deg,#FF3D8F,#6B0040);padding:40px 24px 24px;color:white;">
     <button id="review-back" style="background:none;border:none;cursor:pointer;color:rgba(255,255,255,.8);font-size:22px;margin-bottom:12px;">←</button>
     <div style="font-size:13px;opacity:.8;margin-bottom:4px;">수업이 끝났나요? 🎉</div>
     <h2 style="font-size:22px;font-weight:900;margin-bottom:4px;">후기를 남겨주세요!</h2>
-    <p style="font-size:13px;opacity:.8;">선생님에게 큰 도움이 돼요 🍪</p>
+    <p style="font-size:13px;opacity:.8;">선생님에게 큰 도움이 돼요 🍬</p>
   </div>
   <div style="padding:20px 18px;flex:1;overflow-y:auto;">
     <div class="profile-section">
@@ -851,7 +851,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:var(--c
 
 <!-- 학생 내 정보 수정 -->
 <div id="s-student-edit" class="screen">
-  <div style="background:linear-gradient(160deg,var(--cookie),var(--choco));padding:40px 24px 24px;color:white;">
+  <div style="background:linear-gradient(160deg,#FF3D8F,#6B0040);padding:40px 24px 24px;color:white;">
     <button onclick="go('s-student')" style="background:none;border:none;cursor:pointer;color:rgba(255,255,255,.8);font-size:22px;margin-bottom:12px;">←</button>
     <h2 style="font-size:22px;font-weight:900;margin-bottom:4px;">✏️ 내 정보 수정</h2>
     <p style="font-size:13px;opacity:.8;">프로필을 업데이트해요</p>
@@ -953,7 +953,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:var(--c
 
 <!-- 결제 내역 -->
 <div id="s-payment" class="screen">
-  <div style="background:linear-gradient(160deg,#00C97A,#7C6FFF);padding:40px 24px 24px;color:white;">
+  <div style="background:linear-gradient(160deg,#3DD9A4,#B48FFF);padding:40px 24px 24px;color:white;">
     <button onclick="go('s-student')" style="background:none;border:none;cursor:pointer;color:rgba(255,255,255,.8);font-size:22px;margin-bottom:12px;">←</button>
     <h2 style="font-size:22px;font-weight:900;margin-bottom:4px;">💳 결제 내역</h2>
     <p style="font-size:13px;opacity:.8;">수업료 및 구독 결제 현황</p>
@@ -1024,7 +1024,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:var(--c
           <div style="font-size:14px;font-weight:700;color:var(--choco);">₩140,000</div>
         </div>
         <div style="padding:16px 18px;display:flex;align-items:center;gap:14px;">
-          <div style="width:42px;height:42px;border-radius:12px;background:#E8F7EF;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;">🍪</div>
+          <div style="width:42px;height:42px;border-radius:12px;background:#E8F7EF;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;">🍬</div>
           <div style="flex:1;">
             <div style="font-size:13px;font-weight:700;color:var(--choco);">과자 프리미엄 구독</div>
             <div style="font-size:11px;color:var(--muted);">2026.05.01 · 자동결제</div>
@@ -1073,7 +1073,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:var(--c
 
 <!-- 선생님 상세 프로필 -->
 <div id="s-teacher-detail" class="screen" style="overflow-y:auto;">
-  <div style="background:linear-gradient(160deg,#D4A96A,var(--choco));padding:48px 20px 60px;text-align:center;color:white;">
+  <div style="background:linear-gradient(160deg,#FF85C2,#FF3D8F);padding:48px 20px 60px;text-align:center;color:white;">
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
       <button onclick="go('s-student')" style="background:none;border:none;cursor:pointer;color:rgba(255,255,255,.8);font-size:22px;">←</button>
       <span style="font-size:14px;color:rgba(255,255,255,.8);">선생님 프로필</span>
@@ -1107,11 +1107,11 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:var(--c
 <!-- 학부모 메인 -->
 <div id="s-parent" class="screen">
   <div class="topbar">
-    <div class="logo">과<em>자</em> 🍪</div>
+    <div class="logo">과<em>자</em> 🍬</div>
   </div>
   <div class="tab-panels">
     <div class="tab-panel active" style="display:block;">
-      <div class="hero" style="background:linear-gradient(135deg,var(--lavender),#6B5FC8);">
+      <div class="hero" style="background:linear-gradient(135deg,#B48FFF,#FF3D8F);">
         <div class="hero-text">
           <div class="hi">학부모님 안녕하세요 👨‍👩‍👧</div>
           <h2 id="pr-hi">자녀 수업을<br>확인해요</h2>
@@ -1122,7 +1122,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:var(--c
       <div style="text-align:center;padding:40px 20px;color:var(--muted);">
         <div style="font-size:36px;margin-bottom:10px;">👧</div>
         <div style="font-size:14px;margin-bottom:16px;">자녀 계정과 연결하면<br>수업 현황을 확인할 수 있어요</div>
-        <button class="btn" style="background:var(--lavender);color:white;max-width:200px;" onclick="toast('자녀 연결 준비 중 🍪')">자녀 연결하기</button>
+        <button class="btn" style="background:var(--lavender);color:white;max-width:200px;" onclick="toast('자녀 연결 준비 중 🍬')">자녀 연결하기</button>
       </div>
       <div class="menu-card" style="margin:0 0 10px;">
         <div class="menu-item" onclick="doLogout()" style="color:var(--peach);">🚪 로그아웃</div>
@@ -1137,7 +1137,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:var(--c
   <div class="modal">
     <span class="modal-icon">🎉</span>
     <h3 id="match-modal-title">수업 성사 등록</h3>
-    <p id="match-modal-desc">수업이 확정됐나요?<br>등록하면 매칭 기록이 저장돼요 🍪</p>
+    <p id="match-modal-desc">수업이 확정됐나요?<br>등록하면 매칭 기록이 저장돼요 🍬</p>
     <div style="background:var(--cream);border-radius:12px;padding:12px;margin-bottom:16px;text-align:left;">
       <div id="match-student-wrap">
         <label style="font-size:12px;font-weight:700;color:var(--muted);display:block;margin-bottom:6px;">🎒 학생 이름</label>
@@ -1171,7 +1171,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:var(--c
   <div class="modal">
     <span class="modal-icon">📊</span>
     <h3>성적 변화 인증</h3>
-    <p style="margin-bottom:12px;">학생의 성적 변화를 등록해요<br>프로필에 표시돼요 🍪</p>
+    <p style="margin-bottom:12px;">학생의 성적 변화를 등록해요<br>프로필에 표시돼요 🍬</p>
     <div style="text-align:left;">
       <label class="label" style="margin-top:0;">과목</label>
       <input class="inp" id="gc-subject" placeholder="예) 수학">
@@ -1331,7 +1331,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:var(--c
   <div class="modal">
     <span class="modal-icon">💬</span>
     <h3 id="modal-title">선생님에게</h3>
-    <p>대화를 요청할까요?<br>선생님이 수락하면 채팅이 시작돼요 🍪</p>
+    <p>대화를 요청할까요?<br>선생님이 수락하면 채팅이 시작돼요 🍬</p>
     <button class="btn btn-cookie" onclick="sendReq()" style="margin-bottom:10px;">대화 요청 보내기</button>
     <button class="btn btn-outline" onclick="closeModal()">취소</button>
   </div>
@@ -1445,7 +1445,7 @@ function doResetPw() {
 
 // ── 로그아웃 ──
 function doLogout() {
-  auth.signOut().then(() => toast('로그아웃 됐어요 🍪'));
+  auth.signOut().then(() => toast('로그아웃 됐어요 🍬'));
 }
 
 // ── 역할 선택 ──
@@ -1457,7 +1457,7 @@ function pickRole(role) {
 }
 
 function saveRole() {
-  if (!selectedRole) { toast('역할을 선택해주세요 🍪'); return; }
+  if (!selectedRole) { toast('역할을 선택해주세요 🍬'); return; }
   if (!currentUser) { toast('로그인이 필요해요'); return; }
   showLoad(true);
   db.collection('users').doc(currentUser.uid).update({ role: selectedRole })
@@ -1479,7 +1479,7 @@ function saveTeacher() {
   const subjects = document.getElementById('t-subjects').value.trim();
   const price = document.getElementById('t-price').value;
   const intro = document.getElementById('t-intro').value.trim();
-  if (!univ || !subjects || !price) { toast('대학교, 과목, 시급은 필수예요 🍪'); return; }
+  if (!univ || !subjects || !price) { toast('대학교, 과목, 시급은 필수예요 🍬'); return; }
 
   const prefs = [...document.querySelectorAll('#s-tsetup .pref-btn.on')].map(b => b.textContent);
   showLoad(true);
@@ -1547,7 +1547,7 @@ function proposeLesson(studentUid) {
     type: 'teacherPropose',
     status: 'pending',
     createdAt: new Date().toISOString()
-  }).then(() => toast('수업 제안을 보냈어요! 📚🍪'))
+  }).then(() => toast('수업 제안을 보냈어요! 📚🍬'))
     .catch(e => toast('제안 실패: ' + e.message));
 }
 
@@ -1690,7 +1690,7 @@ function sendReq() {
   db.collection('chatRequests').doc(currentUser.uid + '_' + selectedTeacherId).set({
     studentUid: currentUser.uid, teacherUid: selectedTeacherId,
     status: 'pending', createdAt: new Date().toISOString()
-  }).then(() => { closeModal(); toast('대화 요청을 보냈어요! 🍪'); })
+  }).then(() => { closeModal(); toast('대화 요청을 보냈어요! 🍬'); })
     .catch(e => toast('요청 실패: ' + e.message));
 }
 
@@ -1761,7 +1761,7 @@ function loadRequests() {
               </div>
             </div>
             <div class="req-actions">
-              <button class="accept-btn" onclick="acceptReq('${reqId}','${req.studentUid}','${student.name||'학생'}')">수락 🍪</button>
+              <button class="accept-btn" onclick="acceptReq('${reqId}','${req.studentUid}','${student.name||'학생'}')">수락 🍬</button>
               <button class="reject-btn" onclick="rejectReq('${reqId}')">거절</button>
             </div>
           </div>
@@ -1806,7 +1806,7 @@ function loadStudentProposals() {
               </div>
             </div>
             <div class="req-actions">
-              <button class="accept-btn" onclick="acceptProposal('${reqId}','${req.teacherUid}')">수락 🍪</button>
+              <button class="accept-btn" onclick="acceptProposal('${reqId}','${req.teacherUid}')">수락 🍬</button>
               <button class="reject-btn" onclick="rejectReq('${reqId}')">거절</button>
             </div>
           </div>
@@ -1820,7 +1820,7 @@ function acceptProposal(reqId, teacherUid) {
   db.collection('chatRequests').doc(reqId).update({ status: 'accepted' })
     .then(() => {
       showLoad(false);
-      toast('선생님과 연결됐어요! 🍪');
+      toast('선생님과 연결됐어요! 🍬');
       // proposal-list 비우기
       const list = document.getElementById('proposal-list');
       if (list) list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--muted);font-size:13px;">수락 완료! 채팅 탭에서 대화해요 💬</div>';
@@ -1834,7 +1834,7 @@ function acceptProposal(reqId, teacherUid) {
 function acceptReq(reqId, studentUid, studentName) {
   db.collection('chatRequests').doc(reqId).update({ status: 'accepted' })
     .then(() => {
-      toast(studentName + ' 학생과 연결됐어요! 🍪');
+      toast(studentName + ' 학생과 연결됐어요! 🍬');
       loadRequests();
     })
     .catch(e => toast('수락 실패: ' + e.message));
@@ -1916,7 +1916,7 @@ function saveStudent() {
   const location = document.getElementById('ss-location').value.trim();
   const subjects = document.getElementById('ss-subjects').value.trim();
   const gradeLevel = document.getElementById('ss-grade-level').value;
-  if (!school || !grade) { toast('학교와 학년은 필수예요 🍪'); return; }
+  if (!school || !grade) { toast('학교와 학년은 필수예요 🍬'); return; }
   showLoad(true);
   db.collection('students').doc(currentUser.uid).set({
     uid: currentUser.uid, school, grade, location, subjects, gradeLevel,
@@ -1937,7 +1937,7 @@ let currentStarRating = 0;
 function setStar(n) {
   currentStarRating = n;
   const stars = document.querySelectorAll('#star-btns span');
-  const labels = ['', '별로예요', '그저 그래요', '괜찮아요', '좋아요!', '최고예요! 🍪'];
+  const labels = ['', '별로예요', '그저 그래요', '괜찮아요', '좋아요!', '최고예요! 🍬'];
   stars.forEach((s, i) => {
     s.style.opacity = i < n ? '1' : '0.3';
     s.style.color = i < n ? '#F5A623' : '';
@@ -1976,13 +1976,13 @@ function openMatchModal() {
     priceWrap.style.display = 'none';
     studentWrap.style.display = 'none';
     title.textContent = '수업 확정하기 🎉';
-    desc.innerHTML = '선생님과 수업이 확정됐나요?<br>기록해두면 수업 관리가 편해져요 🍪';
+    desc.innerHTML = '선생님과 수업이 확정됐나요?<br>기록해두면 수업 관리가 편해져요 🍬';
   } else {
     // 선생님: 학생 이름 + 시급 보이기
     priceWrap.style.display = 'block';
     studentWrap.style.display = 'block';
     title.textContent = '수업 성사 등록';
-    desc.innerHTML = '수업이 확정됐나요?<br>등록하면 정산 내역에 반영돼요 🍪';
+    desc.innerHTML = '수업이 확정됐나요?<br>등록하면 정산 내역에 반영돼요 🍬';
   }
   document.getElementById('modal-match').classList.add('on');
 }
@@ -1990,7 +1990,7 @@ function openMatchModal() {
 function registerMatch() {
   const subject = document.getElementById('match-subject').value.trim();
   const date = document.getElementById('match-date').value;
-  if (!subject) { toast('과목을 입력해주세요 🍪'); return; }
+  if (!subject) { toast('과목을 입력해주세요 🍬'); return; }
 
   showLoad(true);
 
@@ -2005,13 +2005,13 @@ function registerMatch() {
     }).then(() => {
       showLoad(false);
       document.getElementById('modal-match').classList.remove('on');
-      toast('수업이 확정됐어요! 🎉🍪');
+      toast('수업이 확정됐어요! 🎉🍬');
     }).catch(e => { showLoad(false); toast('등록 실패: ' + e.message); });
   } else {
     // 선생님: 학생 이름 + 시급 + 수수료 저장
     const studentName = document.getElementById('match-student').value.trim() || '학생';
     const price = parseInt(document.getElementById('match-price').value || 0);
-    if (!price) { toast('시급을 입력해주세요 🍪'); showLoad(false); return; }
+    if (!price) { toast('시급을 입력해주세요 🍬'); showLoad(false); return; }
     const fee = Math.round(price * 0.10);
     db.collection('matches').add({
       teacherUid: currentUser.uid,
@@ -2052,7 +2052,7 @@ function submitReview() {
     });
   }).then(() => {
     showLoad(false);
-    toast('후기가 등록됐어요! ⭐🍪');
+    toast('후기가 등록됐어요! ⭐🍬');
     go('s-student');
   }).catch(e => { showLoad(false); toast('등록 실패: ' + e.message); });
 }
@@ -2571,7 +2571,7 @@ function confirmSendParent() {
   }).then(() => {
     showLoad(false);
     document.getElementById('modal-send-parent').classList.remove('on');
-    toast('학부모님께 전송됐어요! 📨🍪');
+    toast('학부모님께 전송됐어요! 📨🍬');
   }).catch(e => { showLoad(false); toast('전송 실패: ' + e.message); });
 }
 
@@ -2639,7 +2639,7 @@ function saveLessonLog() {
   const time = document.getElementById('ll-time').value;
   const duration = parseFloat(document.getElementById('ll-duration').value);
   const price = parseInt(document.getElementById('ll-price').value || 0);
-  if (!student) { toast('학생 이름을 입력해주세요 🍪'); return; }
+  if (!student) { toast('학생 이름을 입력해주세요 🍬'); return; }
 
   const total = Math.round(price * duration);
   showLoad(true);
@@ -2734,8 +2734,8 @@ function loadFeedbackStudents() {
 function sendFeedback() {
   const student = document.getElementById('tc-feedback-student').value;
   const text = document.getElementById('tc-feedback-text').value.trim();
-  if (!student) { toast('학생을 선택해주세요 🍪'); return; }
-  if (!text) { toast('피드백 내용을 입력해주세요 🍪'); return; }
+  if (!student) { toast('학생을 선택해주세요 🍬'); return; }
+  if (!text) { toast('피드백 내용을 입력해주세요 🍬'); return; }
 
   const monthStr = tcCalYear + '-' + String(tcCalMonth+1).padStart(2,'0');
   const months = ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
@@ -2853,7 +2853,7 @@ function saveGradeCert() {
   }).then(() => {
     showLoad(false);
     document.getElementById('modal-grade').classList.remove('on');
-    toast('성적 인증 등록됐어요! 📊🍪');
+    toast('성적 인증 등록됐어요! 📊🍬');
     loadGradeCerts();
   }).catch(e => { showLoad(false); toast('저장 실패: ' + e.message); });
 }
@@ -2897,7 +2897,7 @@ function saveSchedule() {
   const time = document.getElementById('sch-time').value;
   const subject = document.getElementById('sch-subject').value.trim();
   const place = document.getElementById('sch-place').value.trim();
-  if (!student || !subject) { toast('학생 이름과 과목은 필수예요 🍪'); return; }
+  if (!student || !subject) { toast('학생 이름과 과목은 필수예요 🍬'); return; }
   showLoad(true);
   db.collection('schedules').add({
     teacherUid: currentUser.uid, student, day, time, subject, place,
@@ -2949,7 +2949,7 @@ function saveHomework() {
   const student = document.getElementById('hw-student').value.trim();
   const content = document.getElementById('hw-content').value.trim();
   const due = document.getElementById('hw-due').value;
-  if (!student || !content) { toast('학생 이름과 숙제 내용은 필수예요 🍪'); return; }
+  if (!student || !content) { toast('학생 이름과 숙제 내용은 필수예요 🍬'); return; }
   showLoad(true);
   db.collection('homeworks').add({
     teacherUid: currentUser.uid, student, content, due,
@@ -3008,7 +3008,7 @@ function saveDiary() {
   const content = document.getElementById('di-content').value.trim();
   const next = document.getElementById('di-next').value.trim();
   const memo = document.getElementById('di-memo').value.trim();
-  if (!student || !content) { toast('학생 이름과 수업 내용은 필수예요 🍪'); return; }
+  if (!student || !content) { toast('학생 이름과 수업 내용은 필수예요 🍬'); return; }
   showLoad(true);
   db.collection('diaries').add({
     teacherUid: currentUser.uid, student, date, content, next, memo,
@@ -3161,7 +3161,7 @@ function addCard() {
   const num = document.getElementById('card-number').value;
   const name = document.getElementById('card-name').value.trim();
   if (!num || num.length < 19) { toast('카드 번호를 올바르게 입력해주세요'); return; }
-  toast('카드가 등록됐어요! 💳🍪');
+  toast('카드가 등록됐어요! 💳🍬');
   document.getElementById('add-card-section').style.display = 'none';
   // 실제 결제 연동은 PortOne으로 추후 구현
 }
