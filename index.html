@@ -16,21 +16,22 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <style>
 :root{
-  --cream:#FFF0F6;--cookie:#FF3D8F;--choco:#6B0040;
-  --mint:#FF85C2;--peach:#FFD166;--lavender:#B48FFF;--green:#3DD9A4;
-  --white:#FFFAFC;--muted:#B07090;--border:#FFB8D9;
-  --shadow:0 6px 28px rgba(255,61,143,.15);
+  --cream:#FFF2F8;--cookie:#FF2D78;--choco:#5C003A;
+  --mint:#3ECFB2;--peach:#FFB800;--lavender:#8B7FFF;--green:#3ECFB2;
+  --white:#FFFAFC;--muted:#C080A0;--border:#FFADD4;
+  --shadow:0 6px 32px rgba(255,45,120,.14);
+  --pink-light:#FFE0F0;--lav-light:#EDE0FF;--mint-light:#DCF8F3;--yellow-light:#FFF4CC;
 }
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
-body{font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:var(--choco);max-width:430px;margin:0 auto;min-height:100dvh;}
+body{font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:var(--choco);max-width:430px;margin:0 auto;min-height:100dvh;letter-spacing:-.01em;}
 .screen{display:none;flex-direction:column;min-height:100dvh;}
 .screen.active{display:flex;}
-.btn{padding:14px;border:none;border-radius:100px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;width:100%;transition:all .15s;}
+.btn{padding:15px;border:none;border-radius:100px;font-size:16px;font-weight:900;cursor:pointer;font-family:inherit;width:100%;transition:all .15s;letter-spacing:-.02em;}
 .btn-cookie{background:var(--cookie);color:white;}
 .btn-outline{background:transparent;color:var(--choco);border:2px solid var(--choco);}
 .btn-green{background:var(--green);color:white;}
 .inp{width:100%;padding:13px 16px;background:white;border:2px solid var(--border);border-radius:14px;font-size:14px;font-family:inherit;color:var(--choco);outline:none;margin-bottom:10px;}
-.inp:focus{border-color:var(--cookie);}
+.inp:focus{border-color:var(--cookie);box-shadow:0 0 0 3px rgba(255,45,120,.12);}
 .inp::placeholder{color:var(--muted);}
 .label{font-size:12px;font-weight:700;color:var(--muted);margin-bottom:5px;margin-top:12px;display:block;}
 
@@ -41,6 +42,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:var(--c
 .bottom-bar{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;background:white;border-top:1.5px solid var(--border);display:flex;z-index:100;padding-bottom:env(safe-area-inset-bottom);}
 .tab-btn{flex:1;background:none;border:none;padding:9px 0 11px;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;color:var(--border);font-family:inherit;}
 .tab-btn.on{color:var(--cookie);}
+.tab-btn .ti{font-size:22px;}
 .tab-btn .ti{font-size:20px;}
 .tab-btn .tl{font-size:10px;font-weight:700;}
 
@@ -49,11 +51,11 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:var(--c
 .tab-panel.active{display:block;}
 
 /* SPLASH */
-#s-splash{background:linear-gradient(170deg,#FFD6EC,#FF3D8F);align-items:center;justify-content:center;padding:40px 28px;text-align:center;}
+#s-splash{background:linear-gradient(160deg,#FFB8D9,#FF2D78,#C4006A);align-items:center;justify-content:center;padding:40px 28px;text-align:center;}
 .splash-emoji{font-size:80px;margin-bottom:16px;display:block;animation:bounce 2s infinite;}
 @keyframes bounce{0%,100%{transform:translateY(0);}50%{transform:translateY(-16px);}}
 .splash-logo{font-size:52px;font-weight:900;color:var(--choco);margin-bottom:6px;}
-.splash-logo em{color:var(--mint);font-style:normal;}
+.splash-logo em{color:#FFE066;font-style:normal;text-shadow:0 2px 12px rgba(255,184,0,.5);}
 .splash-sub{font-size:13px;color:var(--choco);opacity:.7;margin-bottom:40px;line-height:1.6;}
 .splash-btns{width:100%;max-width:260px;display:flex;flex-direction:column;gap:10px;}
 
@@ -61,7 +63,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:var(--c
 .hero{border-radius:22px;padding:22px;color:white;margin-bottom:18px;display:flex;align-items:center;justify-content:space-between;}
 .hero-emoji{font-size:60px;}
 .hero-text .hi{font-size:12px;opacity:.8;margin-bottom:3px;}
-.hero-text h2{font-size:20px;font-weight:900;line-height:1.3;margin-bottom:3px;}
+.hero-text h2{font-size:22px;font-weight:900;line-height:1.25;margin-bottom:4px;letter-spacing:-.03em;}
 .hero-text p{font-size:11px;opacity:.7;}
 
 /* CARDS */
@@ -71,11 +73,11 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:var(--c
 .role-card h3{font-size:16px;font-weight:700;margin-bottom:3px;color:var(--choco);}
 .role-card p{font-size:12px;color:var(--muted);}
 
-.tcard{background:white;border-radius:16px;padding:14px;margin-bottom:12px;border:1.5px solid var(--border);box-shadow:var(--shadow);}
+.tcard{background:white;border-radius:20px;padding:16px;margin-bottom:12px;border:2px solid var(--border);box-shadow:var(--shadow);}
 .tcard-top{display:flex;gap:12px;}
 .tcard-av{width:50px;height:50px;border-radius:50%;background:var(--cream);display:flex;align-items:center;justify-content:center;font-size:26px;flex-shrink:0;}
 .tcard-body h4{font-size:14px;font-weight:700;margin-bottom:3px;color:var(--choco);}
-.school-badge{display:inline-block;font-size:10px;font-weight:700;padding:2px 9px;border-radius:20px;background:#FFF3E0;color:var(--cookie);margin-bottom:5px;}
+.school-badge{display:inline-block;font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px;background:var(--pink-light);color:var(--cookie);margin-bottom:5px;}
 .desc{font-size:12px;color:var(--muted);line-height:1.5;}
 .tags{display:flex;gap:5px;flex-wrap:wrap;margin-top:5px;}
 .tag{font-size:10px;background:#F5F0E8;color:var(--muted);padding:2px 9px;border-radius:20px;}
@@ -87,7 +89,8 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:var(--c
 
 .quick-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:18px;}
 .quick-cell{background:white;border-radius:14px;padding:12px 4px;text-align:center;cursor:pointer;border:1.5px solid var(--border);box-shadow:var(--shadow);}
-.quick-cell:hover{border-color:var(--cookie);}
+.quick-cell:hover{border-color:var(--cookie);background:var(--pink-light);}
+.quick-cell{transition:all .15s;}
 .qi{font-size:22px;margin-bottom:4px;}
 .ql{font-size:10px;font-weight:600;color:var(--muted);}
 
@@ -95,7 +98,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:var(--c
 .search-inp{flex:1;padding:11px 16px;background:white;border:2px solid var(--border);border-radius:100px;font-size:14px;font-family:inherit;outline:none;}
 .search-inp:focus{border-color:var(--cookie);}
 
-.earn-card{background:linear-gradient(135deg,#3DD9A4,#B48FFF);border-radius:16px;padding:18px;color:white;margin-bottom:14px;}
+.earn-card{background:linear-gradient(135deg,#8B7FFF,#3ECFB2);border-radius:16px;padding:18px;color:white;margin-bottom:14px;}
 .earn-card h4{font-size:12px;opacity:.85;margin-bottom:5px;}
 .earn-amount{font-size:30px;font-weight:900;}
 
@@ -106,7 +109,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:var(--c
 .stats-card{background:white;border-radius:16px;margin:-24px 0 14px;padding:18px;box-shadow:var(--shadow);}
 .stat-row{display:grid;grid-template-columns:repeat(3,1fr);}
 .stat-item{text-align:center;}
-.stat-val{font-size:20px;font-weight:900;color:var(--choco);}
+.stat-val{font-size:22px;font-weight:900;color:var(--cookie);}
 .stat-lbl{font-size:10px;color:var(--muted);margin-top:2px;}
 .stat-div{width:1px;background:var(--border);}
 .menu-card{background:white;border-radius:16px;overflow:hidden;margin-bottom:10px;}
@@ -118,7 +121,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:var(--c
 .profile-section h3{font-size:14px;font-weight:700;margin-bottom:12px;color:var(--choco);}
 .mode-btns{display:flex;gap:6px;margin-bottom:12px;}
 .mode-btn{flex:1;padding:9px 4px;border:1.5px solid var(--border);border-radius:10px;background:var(--cream);color:var(--muted);font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;text-align:center;}
-.mode-btn.on{background:var(--cookie);border-color:var(--cookie);color:white;}
+.mode-btn.on{background:var(--cookie);border-color:var(--cookie);color:white;box-shadow:0 3px 10px rgba(255,45,120,.3);}
 .pref-btns{display:flex;gap:6px;flex-wrap:wrap;}
 .pref-btn{padding:7px 12px;border:1.5px solid var(--border);border-radius:100px;background:var(--cream);color:var(--muted);font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;}
 .pref-btn.on{background:var(--cookie);border-color:var(--cookie);color:white;}
@@ -145,13 +148,13 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:var(--c
 .subtab-btn.on{color:var(--cookie);border-bottom-color:var(--cookie);}
 .subpanel{display:none;}
 .subpanel.active{display:block;}
-.schedule-card{background:white;border-radius:14px;padding:14px;margin-bottom:10px;border-left:4px solid var(--cookie);box-shadow:var(--shadow);display:flex;align-items:flex-start;gap:12px;}
-.schedule-card .day{font-size:11px;font-weight:700;color:var(--cookie);min-width:44px;}
+.schedule-card{background:var(--pink-light);border-radius:16px;padding:14px;margin-bottom:10px;border-left:4px solid var(--cookie);box-shadow:var(--shadow);display:flex;align-items:flex-start;gap:12px;}
+.schedule-card .day{font-size:11px;font-weight:900;color:var(--cookie);min-width:44px;}
 .schedule-card .info h4{font-size:13px;font-weight:700;color:var(--choco);margin-bottom:2px;}
 .schedule-card .info p{font-size:11px;color:var(--muted);}
-.hw-item{background:white;border-radius:12px;padding:12px 14px;margin-bottom:8px;display:flex;align-items:center;gap:12px;box-shadow:var(--shadow);}
+.hw-item{background:white;border-radius:16px;padding:13px 15px;margin-bottom:8px;display:flex;align-items:center;gap:12px;box-shadow:var(--shadow);border:1.5px solid var(--border);}
 .hw-check{width:22px;height:22px;border-radius:50%;border:2px solid var(--border);cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:12px;}
-.hw-check.done{background:var(--mint);border-color:var(--mint);color:white;}
+.hw-check.done{background:var(--cookie);border-color:var(--cookie);color:white;}
 .hw-info{flex:1;}
 .hw-info h4{font-size:13px;font-weight:700;color:var(--choco);margin-bottom:2px;}
 .hw-info p{font-size:11px;color:var(--muted);}
@@ -174,15 +177,15 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:var(--c
 .chat-list-item{background:white;padding:14px 18px;display:flex;gap:12px;align-items:center;border-bottom:1px solid var(--border);cursor:pointer;}
 .chat-list-item:hover{background:#FFF8EE;}
 .chat-av-sm{width:46px;height:46px;border-radius:50%;background:var(--cream);display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;}
-.req-card{background:white;border-radius:16px;padding:16px;margin-bottom:12px;border:1.5px solid var(--border);box-shadow:var(--shadow);}
+.req-card{background:white;border-radius:20px;padding:16px;margin-bottom:12px;border:2px solid var(--border);box-shadow:var(--shadow);}
 .req-card .rh{display:flex;align-items:center;gap:12px;margin-bottom:10px;}
 .req-card .rav{width:46px;height:46px;border-radius:50%;background:var(--cream);display:flex;align-items:center;justify-content:center;font-size:26px;}
 .req-card h4{font-size:14px;font-weight:700;color:var(--choco);}
 .req-card p{font-size:12px;color:var(--muted);}
-.new-tag{background:var(--peach);color:white;font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;margin-left:6px;}
+.new-tag{background:var(--peach);color:#5C3A00;font-size:10px;font-weight:900;padding:3px 10px;border-radius:20px;margin-left:6px;}
 .req-actions{display:flex;gap:8px;}
-.accept-btn{flex:1;padding:10px;background:var(--cookie);color:white;border:none;border-radius:100px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;}
-.reject-btn{padding:10px 14px;background:transparent;color:var(--muted);border:1.5px solid var(--border);border-radius:100px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;}
+.accept-btn{flex:1;padding:12px;background:var(--cookie);color:white;border:none;border-radius:16px;font-size:14px;font-weight:900;cursor:pointer;font-family:inherit;box-shadow:0 4px 14px rgba(255,45,120,.3);}
+.reject-btn{padding:12px 16px;background:#FFF2F8;color:var(--cookie);border:2px solid var(--border);border-radius:16px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;}
 .overlay.on{display:flex;}
 .modal{background:white;border-radius:24px;padding:28px 22px;text-align:center;width:100%;max-width:300px;}
 .modal-icon{font-size:56px;margin-bottom:12px;display:block;}
@@ -211,7 +214,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:var(--c
 
 <!-- 회원가입 -->
 <div id="s-signup" class="screen">
-  <div style="background:linear-gradient(160deg,#FF85C2,#FF3D8F);padding:40px 24px 28px;color:white;">
+  <div style="background:linear-gradient(160deg,#FF6BAF,#FF2D78);padding:40px 24px 28px;color:white;">
     <button onclick="go('s-splash')" style="background:none;border:none;cursor:pointer;color:rgba(255,255,255,.8);font-size:22px;margin-bottom:12px;">←</button>
     <div style="font-size:36px;margin-bottom:8px;">🍬</div>
     <h2 style="font-size:24px;font-weight:900;margin-bottom:4px;">과자 시작하기</h2>
@@ -234,7 +237,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:var(--c
 
 <!-- 로그인 -->
 <div id="s-login" class="screen">
-  <div style="background:linear-gradient(160deg,#FF85C2,#FF3D8F);padding:40px 24px 28px;color:white;">
+  <div style="background:linear-gradient(160deg,#FF6BAF,#FF2D78);padding:40px 24px 28px;color:white;">
     <button onclick="go('s-splash')" style="background:none;border:none;cursor:pointer;color:rgba(255,255,255,.8);font-size:22px;margin-bottom:12px;">←</button>
     <div style="font-size:36px;margin-bottom:8px;">🍬</div>
     <h2 style="font-size:24px;font-weight:900;margin-bottom:4px;">다시 만났네요!</h2>
@@ -254,7 +257,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:var(--c
 
 <!-- 역할 선택 -->
 <div id="s-role" class="screen">
-  <div style="background:linear-gradient(160deg,#FFD6EC,#FF3D8F);padding:44px 24px 28px;color:white;">
+  <div style="background:linear-gradient(160deg,#FFB8D9,#FF2D78);padding:44px 24px 28px;color:white;">
     <div style="font-size:13px;opacity:.8;margin-bottom:4px;">환영해요! 🎉</div>
     <h2 style="font-size:24px;font-weight:900;margin-bottom:6px;">어떤 과자세요? 🍬</h2>
     <p style="font-size:13px;opacity:.8;">역할을 선택해주세요</p>
@@ -280,7 +283,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:var(--c
 
 <!-- 선생님 프로필 등록 -->
 <div id="s-tsetup" class="screen">
-  <div style="background:linear-gradient(160deg,#3DD9A4,#B48FFF);padding:40px 24px 24px;color:white;">
+  <div style="background:linear-gradient(160deg,#8B7FFF,#3ECFB2);padding:40px 24px 24px;color:white;">
     <h2 style="font-size:22px;font-weight:900;margin-bottom:4px;">🎓 프로필 설정</h2>
     <p style="font-size:13px;opacity:.8;">선생님 정보를 입력해주세요</p>
   </div>
@@ -327,7 +330,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:var(--c
 
 <!-- 학생 프로필 설정 -->
 <div id="s-ssetup" class="screen">
-  <div style="background:linear-gradient(160deg,#FF3D8F,#6B0040);padding:40px 24px 24px;color:white;">
+  <div style="background:linear-gradient(160deg,#FF2D78,#8B0050);padding:40px 24px 24px;color:white;">
     <h2 style="font-size:22px;font-weight:900;margin-bottom:4px;">🎒 학생 정보 설정</h2>
     <p style="font-size:13px;opacity:.8;">이름은 매칭 전까지 공개되지 않아요 🔒</p>
   </div>
@@ -380,7 +383,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:var(--c
   </div>
   <div class="tab-panels">
     <div id="st-home" class="tab-panel active">
-      <div class="hero" style="background:linear-gradient(135deg,#FF3D8F,#B48FFF);">
+      <div class="hero" style="background:linear-gradient(135deg,#FF2D78,#8B7FFF);">
         <div class="hero-text">
           <div class="hi">안녕하세요 👋</div>
           <h2 id="st-hi">찰떡 선생님을<br>찾아봐요!</h2>
@@ -503,7 +506,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:var(--c
       </div>
     </div>
     <div id="st-me" class="tab-panel" style="padding-bottom:100px;">
-      <div class="profile-hero" style="background:linear-gradient(160deg,#FF85C2,#FF3D8F);">
+      <div class="profile-hero" style="background:linear-gradient(160deg,#FF6BAF,#FF2D78);">
         <span class="profile-emoji">🎒</span>
         <div class="profile-name" id="st-name">학생</div>
         <span class="profile-badge">🎒 학생 · 과자 멤버</span>
@@ -543,7 +546,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:var(--c
   </div>
   <div class="tab-panels">
     <div id="tc-home" class="tab-panel active">
-      <div class="hero" style="background:linear-gradient(135deg,#3DD9A4,#B48FFF);">
+      <div class="hero" style="background:linear-gradient(135deg,#8B7FFF,#3ECFB2);">
         <div class="hero-text">
           <div class="hi">선생님 안녕하세요 🎓</div>
           <h2 id="tc-hi">오늘도 달콤한<br>수업 준비됐나요?</h2>
@@ -767,7 +770,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:var(--c
       </div>
     </div>
     <div id="tc-me" class="tab-panel">
-      <div class="profile-hero" style="background:linear-gradient(160deg,#3DD9A4,#B48FFF);">
+      <div class="profile-hero" style="background:linear-gradient(160deg,#8B7FFF,#3ECFB2);">
         <span class="profile-emoji">🎓</span>
         <div class="profile-name" id="tc-name">선생님</div>
         <span class="profile-badge">🎓 선생님 · 과자 멤버</span>
@@ -810,7 +813,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:var(--c
 
 <!-- 후기 작성 화면 -->
 <div id="s-review" class="screen">
-  <div style="background:linear-gradient(160deg,#FF3D8F,#6B0040);padding:40px 24px 24px;color:white;">
+  <div style="background:linear-gradient(160deg,#FF2D78,#8B0050);padding:40px 24px 24px;color:white;">
     <button id="review-back" style="background:none;border:none;cursor:pointer;color:rgba(255,255,255,.8);font-size:22px;margin-bottom:12px;">←</button>
     <div style="font-size:13px;opacity:.8;margin-bottom:4px;">수업이 끝났나요? 🎉</div>
     <h2 style="font-size:22px;font-weight:900;margin-bottom:4px;">후기를 남겨주세요!</h2>
@@ -851,7 +854,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:var(--c
 
 <!-- 학생 내 정보 수정 -->
 <div id="s-student-edit" class="screen">
-  <div style="background:linear-gradient(160deg,#FF3D8F,#6B0040);padding:40px 24px 24px;color:white;">
+  <div style="background:linear-gradient(160deg,#FF2D78,#8B0050);padding:40px 24px 24px;color:white;">
     <button onclick="go('s-student')" style="background:none;border:none;cursor:pointer;color:rgba(255,255,255,.8);font-size:22px;margin-bottom:12px;">←</button>
     <h2 style="font-size:22px;font-weight:900;margin-bottom:4px;">✏️ 내 정보 수정</h2>
     <p style="font-size:13px;opacity:.8;">프로필을 업데이트해요</p>
@@ -953,7 +956,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:var(--c
 
 <!-- 결제 내역 -->
 <div id="s-payment" class="screen">
-  <div style="background:linear-gradient(160deg,#3DD9A4,#B48FFF);padding:40px 24px 24px;color:white;">
+  <div style="background:linear-gradient(160deg,#8B7FFF,#3ECFB2);padding:40px 24px 24px;color:white;">
     <button onclick="go('s-student')" style="background:none;border:none;cursor:pointer;color:rgba(255,255,255,.8);font-size:22px;margin-bottom:12px;">←</button>
     <h2 style="font-size:22px;font-weight:900;margin-bottom:4px;">💳 결제 내역</h2>
     <p style="font-size:13px;opacity:.8;">수업료 및 구독 결제 현황</p>
@@ -1073,7 +1076,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:var(--c
 
 <!-- 선생님 상세 프로필 -->
 <div id="s-teacher-detail" class="screen" style="overflow-y:auto;">
-  <div style="background:linear-gradient(160deg,#FF85C2,#FF3D8F);padding:48px 20px 60px;text-align:center;color:white;">
+  <div style="background:linear-gradient(160deg,#FF6BAF,#FF2D78);padding:48px 20px 60px;text-align:center;color:white;">
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
       <button onclick="go('s-student')" style="background:none;border:none;cursor:pointer;color:rgba(255,255,255,.8);font-size:22px;">←</button>
       <span style="font-size:14px;color:rgba(255,255,255,.8);">선생님 프로필</span>
@@ -1111,7 +1114,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:var(--c
   </div>
   <div class="tab-panels">
     <div class="tab-panel active" style="display:block;">
-      <div class="hero" style="background:linear-gradient(135deg,#B48FFF,#FF3D8F);">
+      <div class="hero" style="background:linear-gradient(135deg,#8B7FFF,#FF2D78);">
         <div class="hero-text">
           <div class="hi">학부모님 안녕하세요 👨‍👩‍👧</div>
           <h2 id="pr-hi">자녀 수업을<br>확인해요</h2>
@@ -2243,7 +2246,7 @@ function renderCalendar() {
   for(let i=0; i<first; i++) cells += '<div></div>';
   for(let d=1; d<=days; d++) {
     const isToday = d===today.getDate() && calMonth===today.getMonth() && calYear===today.getFullYear();
-    cells += '<div style="aspect-ratio:1;display:flex;align-items:center;justify-content:center;border-radius:10px;font-size:13px;cursor:pointer;'+(isToday?'background:var(--cookie);color:white;font-weight:700;':'')+'" id="stcal-'+d+'">'+d+'</div>';
+    cells += '<div style="aspect-ratio:1;display:flex;align-items:center;justify-content:center;border-radius:10px;font-size:13px;cursor:pointer;'+(isToday?'background:var(--cookie);color:white;font-weight:900;':'')+'" id="stcal-'+d+'">'+d+'</div>';
   }
   grid.innerHTML = cells;
 
@@ -2445,7 +2448,7 @@ function renderTcCalendar() {
   for(let i=0;i<first;i++) cells += '<div></div>';
   for(let d=1;d<=days;d++) {
     const isToday = d===today.getDate() && tcCalMonth===today.getMonth() && tcCalYear===today.getFullYear();
-    const bg = isToday ? 'background:var(--cookie);color:white;font-weight:700;' : '';
+    const bg = isToday ? 'background:var(--cookie);color:white;font-weight:900;' : '';
     cells += '<div onclick="clickTcDate(' + d + ')" style="aspect-ratio:1;display:flex;align-items:center;justify-content:center;border-radius:10px;font-size:13px;cursor:pointer;' + bg + '">' + d + '</div>';
   }
   grid.innerHTML = cells;
@@ -2594,7 +2597,7 @@ function renderTcCalendar() {
   for(let d=1; d<=days; d++) {
     const isToday = d===today.getDate() && tcCalMonth===today.getMonth() && tcCalYear===today.getFullYear();
     const dateStr = tcCalYear+'-'+String(tcCalMonth+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
-    cells += `<div onclick="clickDay('${dateStr}',${d})" style="aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:10px;font-size:12px;cursor:pointer;transition:all .15s;${isToday?'background:var(--cookie);color:white;font-weight:700;':'background:transparent;'}" id="cal-d-${dateStr}">${d}</div>`;
+    cells += `<div onclick="clickDay('${dateStr}',${d})" style="aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:10px;font-size:12px;cursor:pointer;transition:all .15s;${isToday?'background:var(--cookie);color:white;font-weight:900;':'background:transparent;'}" id="cal-d-${dateStr}">${d}</div>`;
   }
   grid.innerHTML = cells;
   loadTcLessons();
