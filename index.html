@@ -1833,8 +1833,7 @@ function goMain(data) {
   const role = data && data.role;
   const name = (data && data.name) || '사용자';
   if (role === 'student') {
-    document.getElementById('st-hi').innerHTML = name + '님,<br>찰떡 선생님을 찾아봐요!';
-    const displayNickname = nickname || name;
+    const displayNickname = (data && data.nickname) || name;
     document.getElementById('st-name').textContent = displayNickname;
     document.getElementById('st-hi').innerHTML = displayNickname+'님,<br>찰떡 선생님을 찾아봐요!';
     go('s-student');
