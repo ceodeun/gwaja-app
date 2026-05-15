@@ -222,8 +222,11 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:var(--c
   </div>
   <div style="padding:20px 18px;flex:1;overflow-y:auto;">
     <div class="error" id="err-signup"></div>
-    <label class="label" style="margin-top:0;">이름</label>
+    <label class="label" style="margin-top:0;">이름 (실명)</label>
     <input class="inp" id="su-name" type="text" placeholder="홍길동">
+    <label class="label">별명 🏷️</label>
+    <input class="inp" id="su-nickname" type="text" placeholder="예) 수학왕🔥 / 젤리선생님 / 공부하는곰">
+    <p style="font-size:11px;color:var(--muted);margin-top:-6px;margin-bottom:10px;">앱에서 보여지는 이름이에요. 언제든 바꿀 수 있어요!</p>
     <label class="label">이메일</label>
     <input class="inp" id="su-email" type="email" placeholder="example@email.com">
     <label class="label">비밀번호 (6자 이상)</label>
@@ -862,8 +865,11 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:var(--c
   <div style="padding:18px;flex:1;overflow-y:auto;padding-bottom:40px;">
     <div class="card">
       <h3 style="font-size:14px;font-weight:700;margin-bottom:12px;">📚 기본 정보</h3>
-      <label class="label" style="margin-top:0;">이름</label>
+      <label class="label" style="margin-top:0;">이름 (실명)</label>
       <input class="inp" id="edit-name" placeholder="홍길동">
+      <label class="label">별명 🏷️</label>
+      <input class="inp" id="edit-nickname" placeholder="예) 수학왕🔥 / 젤리곰">
+      <p style="font-size:11px;color:var(--muted);margin-top:-6px;margin-bottom:6px;">앱에서 보여지는 이름이에요</p>
       <label class="label">학교 이름</label>
       <input class="inp" id="edit-school" placeholder="예) 방배중학교">
       <label class="label">학년/유형</label>
@@ -1656,7 +1662,7 @@ function loadTeachers() {
         <div class="tcard-top">
           <div class="tcard-av">🎓</div>
           <div class="tcard-body" style="flex:1;">
-            <h4>${t.name}</h4>
+            <h4>${t.nickname || t.name} ${t.nickname ? '<span style="font-size:10px;color:var(--muted);font-weight:400;">('+t.name+')</span>' : ''}</h4>
             <span class="school-badge">${t.univ||''} ${t.dept||''}</span>
             <div class="desc">${t.intro||''}</div>
             <div class="tags">
@@ -1703,7 +1709,9 @@ function goMain(data) {
   const name = (data && data.name) || '사용자';
   if (role === 'student') {
     document.getElementById('st-hi').innerHTML = name + '님,<br>찰떡 선생님을 찾아봐요!';
-    document.getElementById('st-name').textContent = name;
+    const displayNickname = nickname || name;
+    document.getElementById('st-name').textContent = displayNickname;
+    document.getElementById('st-hi').innerHTML = displayNickname+'님,<br>찰떡 선생님을 찾아봐요!';
     go('s-student');
     loadTeachers();
     loadStudentProposals();
@@ -3099,7 +3107,11 @@ function openStudentEdit() {
       if (d.progressKor) { document.getElementById('prog-kor-range').value = d.progressKor; document.getElementById('prog-kor-bar').style.width = d.progressKor+'%'; document.getElementById('prog-kor-pct').textContent = d.progressKor+'%'; }
     }
     db.collection('users').doc(currentUser.uid).get().then(usnap => {
-      if (usnap.exists) document.getElementById('edit-name').value = usnap.data().name || '';
+      if (usnap.exists) {
+        document.getElementById('edit-name').value = usnap.data().name || '';
+        const nickEl = document.getElementById('edit-nickname');
+        if (nickEl) nickEl.value = usnap.data().nickname || '';
+      }
     });
   });
   go('s-student-edit');
@@ -3119,8 +3131,9 @@ function saveStudentEdit() {
   const progressEng = document.getElementById('prog-eng-range').value;
   const progressKor = document.getElementById('prog-kor-range').value;
   showLoad(true);
+  const nickname = (document.getElementById('edit-nickname')?.value || '').trim() || name;
   Promise.all([
-    db.collection('users').doc(currentUser.uid).update({ name }),
+    db.collection('users').doc(currentUser.uid).update({ name, nickname }),
     db.collection('students').doc(currentUser.uid).set({
       uid: currentUser.uid, school, location, subjects, gradeLevel,
       grade: selectedEditGrade || '',
