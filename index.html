@@ -769,6 +769,22 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:var(--c
       </div>
     </div>
 
+    <div id="tc-community" class="tab-panel" style="padding:0 0 80px;">
+      <div style="background:linear-gradient(135deg,#8B7FFF,#FF2D78);padding:20px 16px 14px;color:white;">
+        <div style="font-size:18px;font-weight:900;margin-bottom:4px;">🍪 선생님 커뮤니티</div>
+        <div style="font-size:12px;opacity:.85;">과외 선생님들끼리 정보를 나눠요</div>
+      </div>
+      <div style="display:flex;gap:6px;padding:10px 14px;overflow-x:auto;background:white;border-bottom:1px solid var(--border);">
+        <button class="chip on" id="cf-all" onclick="filterCommunity('all',this)">전체</button>
+        <button class="chip" id="cf-tips" onclick="filterCommunity('tips',this)">💡 팁</button>
+        <button class="chip" id="cf-qna" onclick="filterCommunity('qna',this)">❓ Q&A</button>
+        <button class="chip" id="cf-price" onclick="filterCommunity('price',this)">💰 시급</button>
+        <button class="chip" id="cf-free" onclick="filterCommunity('free',this)">💬 수다</button>
+      </div>
+      <div style="padding:12px 14px;"><div id="community-list"><div style="text-align:center;padding:40px;color:var(--muted);"><div style="font-size:36px;margin-bottom:10px;">🍪</div><div style="font-size:14px;font-weight:700;margin-bottom:6px;">아직 글이 없어요</div><div style="font-size:12px;">첫 번째 글을 남겨보세요!</div></div></div></div>
+      <button onclick="document.getElementById('modal-post').classList.add('on')" style="position:fixed;bottom:90px;right:calc(50% - 200px);background:var(--cookie);color:white;border:none;border-radius:50%;width:52px;height:52px;font-size:22px;cursor:pointer;box-shadow:0 4px 16px rgba(255,45,120,.4);z-index:200;">✏️</button>
+    </div>
+
     <div id="tc-chat" class="tab-panel" style="padding:0;">
       <div id="tc-chat-list">
         <div style="text-align:center;padding:50px 20px;color:var(--muted);">
@@ -818,7 +834,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:var(--c
     <button class="tab-btn on" id="tc-b-home" onclick="tcTab('home')"><span class="ti">🏠</span><span class="tl">홈</span></button>
     <button class="tab-btn" id="tc-b-students" onclick="tcTab('students')"><span class="ti">🔍</span><span class="tl">학생 찾기</span></button>
     <button class="tab-btn" id="tc-b-tccalendar" onclick="tcTab('tccalendar')"><span class="ti">📋</span><span class="tl">수업계획</span></button>
-    <button class="tab-btn" id="tc-b-manage" onclick="tcTab('manage')"><span class="ti">📋</span><span class="tl">수업관리</span></button>
+    <button class="tab-btn" id="tc-b-community" onclick="tcTab('community')"><span class="ti">🍪</span><span class="tl">커뮤니티</span></button>
     <button class="tab-btn" id="tc-b-me" onclick="tcTab('me')"><span class="ti">🧑</span><span class="tl">나</span></button>
   </div>
 </div>
@@ -1473,6 +1489,80 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:var(--c
   </div>
 </div>
 
+<!-- ── 계약서 모달 ── -->
+<div class="overlay" id="modal-contract" onclick="if(event.target===this)closeContract()">
+  <div class="modal" style="max-height:88dvh;overflow-y:auto;text-align:left;padding:24px 20px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+      <div style="font-size:18px;font-weight:900;color:var(--choco);">📄 과외 계약서</div>
+      <button onclick="closeContract()" style="background:none;border:none;cursor:pointer;font-size:20px;color:var(--muted);">✕</button>
+    </div>
+    <div style="background:var(--cream);border-radius:14px;padding:14px;margin-bottom:14px;border:1.5px solid var(--border);">
+      <div style="font-size:11px;color:var(--muted);margin-bottom:6px;">계약 당사자</div>
+      <div style="font-size:13px;font-weight:700;color:var(--choco);" id="contract-parties">선생님 ↔ 학생</div>
+    </div>
+    <!-- 수업 조건 입력 -->
+    <div style="font-size:13px;font-weight:700;color:var(--choco);margin-bottom:8px;">📚 수업 조건</div>
+    <label class="label">과목</label>
+    <input class="inp" id="ct-subject" placeholder="예) 수능 수학, 영어 독해">
+    <label class="label">수업 요일 및 시간</label>
+    <input class="inp" id="ct-schedule" placeholder="예) 매주 화·목 오후 5~7시">
+    <label class="label">수업 장소</label>
+    <input class="inp" id="ct-place" placeholder="예) 강남구 스터디카페 or 학생 자택">
+    <label class="label">시급 (원)</label>
+    <input class="inp" id="ct-price" type="number" placeholder="예) 50000">
+    <label class="label">계약 기간</label>
+    <input class="inp" id="ct-period" placeholder="예) 2026년 6월 ~ 2026년 8월 (3개월)">
+
+    <!-- 노쇼 정책 -->
+    <div style="font-size:13px;font-weight:700;color:var(--choco);margin:12px 0 8px;">🚫 노쇼 · 보강 정책</div>
+    <div style="background:white;border-radius:12px;padding:12px;border:1.5px solid var(--border);margin-bottom:10px;">
+      <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;margin-bottom:8px;">
+        <input type="radio" name="noshowPolicy" value="24h" style="accent-color:var(--cookie);" checked>
+        <span><b>24시간 전</b> 연락 시 보강 진행</span>
+      </label>
+      <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;margin-bottom:8px;">
+        <input type="radio" name="noshowPolicy" value="samefee" style="accent-color:var(--cookie);">
+        <span>당일 취소 시 <b>수업료 50% 청구</b></span>
+      </label>
+      <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;">
+        <input type="radio" name="noshowPolicy" value="custom" style="accent-color:var(--cookie);">
+        <span>별도 협의</span>
+      </label>
+    </div>
+    <textarea class="inp" id="ct-extra" rows="3" placeholder="추가 협의 사항 (선택)" style="resize:none;"></textarea>
+
+    <!-- 동의 -->
+    <div style="background:#FFF3F8;border-radius:12px;padding:12px;margin-bottom:14px;font-size:12px;color:var(--muted);line-height:1.7;border:1.5px solid var(--border);">
+      위 조건에 선생님과 학생(학부모) 양측이 동의하며, 과외 진행 중 문제 발생 시 과자🍬 플랫폼을 통해 원만히 해결하도록 합니다.
+    </div>
+    <div style="display:flex;gap:4px;margin-bottom:14px;align-items:flex-start;">
+      <input type="checkbox" id="ct-agree" style="accent-color:var(--cookie);margin-top:2px;flex-shrink:0;">
+      <label for="ct-agree" style="font-size:12px;color:var(--choco);cursor:pointer;">위 내용을 확인했으며 계약에 동의합니다</label>
+    </div>
+    <button class="btn btn-cookie" onclick="submitContract()" style="margin-bottom:10px;">✅ 계약 완료</button>
+    <button class="btn btn-outline" onclick="closeContract()">나중에 작성하기</button>
+  </div>
+</div>
+
+<!-- ── 커뮤니티 글 작성 모달 ── -->
+<div class="overlay" id="modal-post" onclick="if(event.target===this)document.getElementById('modal-post').classList.remove('on')">
+  <div class="modal" style="text-align:left;padding:24px 20px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+      <div style="font-size:16px;font-weight:900;color:var(--choco);">✏️ 글 쓰기</div>
+      <button onclick="document.getElementById('modal-post').classList.remove('on')" style="background:none;border:none;cursor:pointer;font-size:20px;color:var(--muted);">✕</button>
+    </div>
+    <select class="inp" id="post-category" style="margin-bottom:8px;">
+      <option value="tips">💡 과외 팁 공유</option>
+      <option value="qna">❓ 질문 · 고민</option>
+      <option value="price">💰 시급 정보</option>
+      <option value="free">💬 자유 수다</option>
+    </select>
+    <input class="inp" id="post-title" placeholder="제목을 입력하세요">
+    <textarea class="inp" id="post-body" rows="5" placeholder="내용을 입력하세요" style="resize:none;line-height:1.7;"></textarea>
+    <button class="btn btn-cookie" onclick="submitPost()" style="margin-top:4px;">게시하기 🍬</button>
+  </div>
+</div>
+
 <script>
 // ── Firebase 초기화 ──
 const firebaseConfig = {
@@ -1736,10 +1826,17 @@ function openTeacherDetail(uid) {
     document.getElementById('td-name').textContent = t.name + ' 선생님';
     document.getElementById('td-univ').textContent = (t.univ||'') + ' ' + (t.dept||'');
     document.getElementById('td-av').innerHTML = t.photoURL ? '<img src="'+t.photoURL+'" style="width:100%;height:100%;object-fit:cover;">' : '🎓';
+    // 신뢰도 배지 생성
+    const trustBadges = [];
+    if (t.verified) trustBadges.push('<span style="background:#3ECFB2;color:white;font-size:11px;padding:3px 10px;border-radius:20px;font-weight:700;">✅ 재학 인증</span>');
+    if ((t.ratingCount||0) >= 5) trustBadges.push('<span style="background:#F5A623;color:white;font-size:11px;padding:3px 10px;border-radius:20px;font-weight:700;">⭐ 후기 '+t.ratingCount+'개</span>');
+    if ((t.femaleRatio||0) > 0) trustBadges.push('<span style="background:rgba(255,255,255,.25);color:white;font-size:11px;padding:3px 10px;border-radius:20px;">👩 여학생 '+(t.femaleRatio||0)+'% · 👦 남학생 '+(100-(t.femaleRatio||0))+'%</span>');
+    if ((t.rating||0) >= 4.5) trustBadges.push('<span style="background:#FF2D78;color:white;font-size:11px;padding:3px 10px;border-radius:20px;font-weight:700;">🔥 우수 선생님</span>');
     document.getElementById('td-badges').innerHTML =
       '<span style="background:rgba(255,255,255,.2);color:white;font-size:11px;padding:3px 10px;border-radius:20px;">'+t.subjects+'</span>' +
       '<span style="background:rgba(255,255,255,.2);color:white;font-size:11px;padding:3px 10px;border-radius:20px;">'+(t.price||0).toLocaleString()+'원/시간</span>' +
-      '<span style="background:rgba(255,255,255,.2);color:white;font-size:11px;padding:3px 10px;border-radius:20px;">🗺️ '+t.travelMode+'</span>';
+      '<span style="background:rgba(255,255,255,.2);color:white;font-size:11px;padding:3px 10px;border-radius:20px;">🗺️ '+t.travelMode+'</span>' +
+      trustBadges.join('');
     document.getElementById('td-story').textContent = t.story || t.intro || '입시 스토리를 아직 작성하지 않았어요';
     const mc = document.getElementById('td-method-card');
     if (t.method) { document.getElementById('td-method').textContent = t.method; mc.style.display = 'block'; } else mc.style.display = 'none';
@@ -1782,7 +1879,13 @@ function loadTeachers() {
       if (filterMode && (t.travelMode||'') !== filterMode) return;
       teachers.push(t);
     });
-    const cardHtml = teachers => teachers.map(t => `
+    const cardHtml = teachers => teachers.map(t => {
+      const trustBadges = [];
+      if (t.verified) trustBadges.push('<span style="background:#3ECFB2;color:white;font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;">✅ 재학 인증</span>');
+      if ((t.ratingCount||0) >= 5) trustBadges.push('<span style="background:#FFF3CC;color:#B8860B;font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;">⭐ 후기 '+t.ratingCount+'개</span>');
+      if ((t.femaleRatio||0) > 0) trustBadges.push('<span style="background:var(--pink-light);color:var(--cookie);font-size:10px;padding:2px 8px;border-radius:20px;">👩 '+t.femaleRatio+'% · 👦 '+(100-t.femaleRatio)+'%</span>');
+      if ((t.rating||0) >= 4.5) trustBadges.push('<span style="background:#FFE8E4;color:#FF2D78;font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;">🔥 우수</span>');
+      return `
       <div class="tcard">
         <div class="tcard-top">
           <div class="tcard-av">🎓</div>
@@ -1797,7 +1900,8 @@ function loadTeachers() {
           </div>
           <div class="price">${(t.price||0).toLocaleString()}원<br>/시간</div>
         </div>
-        <div style="display:flex;align-items:center;gap:6px;margin-top:8px;margin-bottom:8px;">
+        ${trustBadges.length ? `<div style="display:flex;gap:4px;flex-wrap:wrap;margin:6px 0;">${trustBadges.join('')}</div>` : ''}
+        <div style="display:flex;align-items:center;gap:6px;margin-top:6px;margin-bottom:8px;">
           <span style="color:#F5A623;font-size:14px;">${'★'.repeat(Math.round(t.rating||0))}${'☆'.repeat(5-Math.round(t.rating||0))}</span>
           <span style="font-size:12px;font-weight:700;color:var(--choco);">${t.rating ? t.rating.toFixed(1) : '0.0'}</span>
           <span style="font-size:11px;color:var(--muted);">(${t.ratingCount||0}개 후기)</span>
@@ -1807,8 +1911,8 @@ function loadTeachers() {
           <button onclick="openTeacherDetail('${t.uid}')" style="flex:1;padding:10px;background:var(--cream);color:var(--choco);border:1.5px solid var(--border);border-radius:100px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">👤 프로필 보기</button>
           <button class="chat-btn" style="flex:1;" onclick="event.stopPropagation();selectedTeacherId='${t.uid}';selectedTeacherName='${t.name}';document.getElementById('modal-req-desc').textContent='${t.name} 선생님에게 대화를 요청할까요?';showModal('modal-req')">💬 대화 요청</button>
         </div>
-      </div>
-    `).join('');
+      </div>`;
+    }).join('');
     const emptyHtml = '<div style="text-align:center;padding:40px;color:var(--muted);"><div style="font-size:36px;margin-bottom:10px;">🔍</div><div>검색 결과가 없어요</div></div>';
     if (list) list.innerHTML = teachers.length ? cardHtml(teachers) : emptyHtml;
     if (homeList) homeList.innerHTML = teachers.length ? cardHtml(teachers.slice(0, 3)) : '<div style="text-align:center;padding:24px;color:var(--muted);font-size:13px;">아직 등록된 선생님이 없어요 🔍</div>';
@@ -1974,8 +2078,133 @@ function acceptReq(reqId, studentUid, studentName) {
     .then(() => {
       toast(studentName + ' 학생과 연결됐어요! 🍬');
       loadRequests();
+      // 계약서 팝업 자동 호출
+      window._contractReqId = reqId;
+      window._contractStudentName = studentName;
+      openContract(studentName);
     })
     .catch(e => toast('수락 실패: ' + e.message));
+}
+
+// ── 계약서 ──
+function openContract(studentName) {
+  const teacherName = document.getElementById('tc-name')?.textContent || '선생님';
+  document.getElementById('contract-parties').textContent = teacherName + ' 선생님  ↔  ' + (studentName || '학생') + ' 학생(학부모)';
+  document.getElementById('modal-contract').classList.add('on');
+}
+function closeContract() {
+  document.getElementById('modal-contract').classList.remove('on');
+}
+function submitContract() {
+  if (!document.getElementById('ct-agree').checked) { toast('계약 내용에 동의해주세요 🍬'); return; }
+  const subject = document.getElementById('ct-subject').value.trim();
+  const schedule = document.getElementById('ct-schedule').value.trim();
+  const place = document.getElementById('ct-place').value.trim();
+  const price = document.getElementById('ct-price').value.trim();
+  const period = document.getElementById('ct-period').value.trim();
+  const noshow = document.querySelector('input[name="noshowPolicy"]:checked')?.value || '24h';
+  const extra = document.getElementById('ct-extra').value.trim();
+  if (!subject || !schedule || !price) { toast('과목, 일정, 시급은 필수예요!'); return; }
+  const contractData = {
+    reqId: window._contractReqId || '',
+    teacherUid: currentUser?.uid || '',
+    studentName: window._contractStudentName || '',
+    subject, schedule, place, price: parseInt(price)||0, period, noshow, extra,
+    createdAt: new Date().toISOString(), status: 'active'
+  };
+  showLoad(true);
+  db.collection('contracts').add(contractData).then(() => {
+    showLoad(false);
+    closeContract();
+    toast('계약서가 저장됐어요! 📄🍬');
+    // 입력 초기화
+    ['ct-subject','ct-schedule','ct-place','ct-price','ct-period','ct-extra'].forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
+    document.getElementById('ct-agree').checked = false;
+  }).catch(e => { showLoad(false); toast('저장 실패: ' + e.message); });
+}
+
+// ── 커뮤니티 ──
+let communityFilter = 'all';
+const categoryLabel = { tips:'💡 팁', qna:'❓ Q&A', price:'💰 시급', free:'💬 수다' };
+
+function filterCommunity(type, btn) {
+  communityFilter = type;
+  document.querySelectorAll('[id^="cf-"]').forEach(b => b.classList.remove('on'));
+  btn.classList.add('on');
+  loadCommunity();
+}
+
+function loadCommunity() {
+  const list = document.getElementById('community-list');
+  if (!list) return;
+  list.innerHTML = '<div style="text-align:center;padding:30px;color:var(--muted);">불러오는 중... 🍪</div>';
+  let query = db.collection('community').orderBy('createdAt', 'desc').limit(30);
+  if (communityFilter !== 'all') query = db.collection('community').where('category', '==', communityFilter).orderBy('createdAt', 'desc').limit(30);
+  query.get().then(snap => {
+    if (snap.empty) {
+      list.innerHTML = '<div style="text-align:center;padding:40px;color:var(--muted);"><div style="font-size:36px;margin-bottom:10px;">🍪</div><div style="font-size:14px;font-weight:700;margin-bottom:6px;">아직 글이 없어요</div><div style="font-size:12px;">첫 번째 글을 남겨보세요!</div></div>';
+      return;
+    }
+    list.innerHTML = snap.docs.map(d => {
+      const p = d.data();
+      const ago = getAgo(p.createdAt);
+      return `<div style="background:white;border-radius:16px;padding:14px;margin-bottom:10px;box-shadow:var(--shadow);cursor:pointer;" onclick="openPost('${d.id}')">
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px;">
+          <span style="background:var(--pink-light);color:var(--cookie);font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;">${categoryLabel[p.category]||p.category}</span>
+          <span style="font-size:11px;color:var(--muted);margin-left:auto;">${ago}</span>
+        </div>
+        <div style="font-size:14px;font-weight:700;color:var(--choco);margin-bottom:4px;">${p.title||''}</div>
+        <div style="font-size:12px;color:var(--muted);line-height:1.6;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;">${p.body||''}</div>
+        <div style="display:flex;align-items:center;gap:12px;margin-top:10px;font-size:11px;color:var(--muted);">
+          <span>🎓 ${p.authorName||'선생님'}</span>
+          <span>❤️ ${p.likes||0}</span>
+          <span>💬 ${p.commentCount||0}</span>
+        </div>
+      </div>`;
+    }).join('');
+  }).catch(() => {
+    list.innerHTML = '<div style="text-align:center;padding:30px;color:var(--muted);">불러오기 실패 😢</div>';
+  });
+}
+
+function submitPost() {
+  const title = document.getElementById('post-title').value.trim();
+  const body = document.getElementById('post-body').value.trim();
+  const category = document.getElementById('post-category').value;
+  if (!title || !body) { toast('제목과 내용을 입력해주세요!'); return; }
+  if (!currentUser) { toast('로그인이 필요해요'); return; }
+  showLoad(true);
+  db.collection('users').doc(currentUser.uid).get().then(snap => {
+    const authorName = snap.data()?.name || '선생님';
+    return db.collection('community').add({
+      title, body, category,
+      authorUid: currentUser.uid, authorName,
+      likes: 0, commentCount: 0,
+      createdAt: new Date().toISOString()
+    });
+  }).then(() => {
+    showLoad(false);
+    document.getElementById('modal-post').classList.remove('on');
+    document.getElementById('post-title').value = '';
+    document.getElementById('post-body').value = '';
+    toast('게시됐어요! 🍪');
+    loadCommunity();
+  }).catch(e => { showLoad(false); toast('게시 실패: ' + e.message); });
+}
+
+function openPost(postId) {
+  toast('게시글 상세 준비 중 🍪');
+}
+
+function getAgo(isoStr) {
+  if (!isoStr) return '';
+  const diff = Date.now() - new Date(isoStr).getTime();
+  const m = Math.floor(diff / 60000);
+  if (m < 1) return '방금';
+  if (m < 60) return m + '분 전';
+  const h = Math.floor(m / 60);
+  if (h < 24) return h + '시간 전';
+  return Math.floor(h / 24) + '일 전';
 }
 
 // ── 요청 거절 ──
@@ -2004,7 +2233,7 @@ function stTab(n) {
   if (n === 'map') initMap();
 }
 function tcTab(n) {
-  ['home','students','tccalendar','manage','chat','me'].forEach(t => {
+  ['home','students','tccalendar','community','chat','me'].forEach(t => {
     const panel = document.getElementById('tc-'+t);
     if (panel) panel.classList.toggle('active', t===n);
     const btn = document.getElementById('tc-b-'+t);
@@ -2012,7 +2241,7 @@ function tcTab(n) {
   });
   if (n === 'students') loadStudents();
   if (n === 'chat') loadChatList('teacher');
-  if (n === 'manage') loadMyStudents();
+  if (n === 'community') loadCommunity();
   if (n === 'tccalendar') initTcCalendar();
   if (n === 'me') { loadGradeCerts(); }
 }
