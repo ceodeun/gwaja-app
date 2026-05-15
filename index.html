@@ -1227,6 +1227,22 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:var(--c
 </div>
 
 <!-- 대화 요청 모달 -->
+<!-- 역할 전환 모달 -->
+<div class="overlay" id="modal-switch-role" onclick="if(event.target===this)this.classList.remove('on')">
+  <div class="modal" style="text-align:center;">
+    <div class="modal-handle" style="width:36px;height:4px;background:var(--border);border-radius:100px;margin:0 auto 16px;"></div>
+    <div style="font-size:48px;margin-bottom:12px;" id="switch-role-emoji">🎓</div>
+    <h3 style="font-size:18px;font-weight:900;margin-bottom:6px;" id="switch-role-title">선생님으로 전환</h3>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:20px;" id="switch-role-desc">선생님 모드로 전환할까요?<br>언제든 다시 전환할 수 있어요 🍬</p>
+    <div id="switch-role-info" style="background:var(--cream);border-radius:14px;padding:14px;margin-bottom:20px;text-align:left;display:none;">
+      <div style="font-size:12px;font-weight:700;color:var(--muted);margin-bottom:8px;">현재 등록된 프로필</div>
+      <div id="switch-role-profile"></div>
+    </div>
+    <button id="switch-role-btn" onclick="confirmSwitchRole()" style="width:100%;padding:15px;background:var(--cookie);color:white;border:none;border-radius:100px;font-size:16px;font-weight:900;cursor:pointer;font-family:inherit;box-shadow:0 4px 14px rgba(255,45,120,.3);margin-bottom:10px;">전환하기 ✨</button>
+    <button onclick="document.getElementById('modal-switch-role').classList.remove('on')" style="width:100%;padding:13px;background:none;border:2px solid var(--border);border-radius:100px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;color:var(--muted);">취소</button>
+  </div>
+</div>
+
 <!-- 학부모 연결 코드 모달 -->
 <div class="overlay" id="modal-mycode" onclick="if(event.target===this)this.classList.remove('on')">
   <div class="modal" style="text-align:center;">
