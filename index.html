@@ -2054,16 +2054,25 @@ function saveStudent() {
   const gradeLevel = document.getElementById('ss-grade-level').value;
   if (!school || !grade) { toast('학교와 학년은 필수예요 🍬'); return; }
   showLoad(true);
-  db.collection('students').doc(currentUser.uid).set({
-    uid: currentUser.uid, school, grade, location, subjects, gradeLevel,
-    createdAt: new Date().toISOString()
-  }).then(() => {
-    return db.collection('users').doc(currentUser.uid).update({ profileComplete: true });
-  }).then(() => {
+  // 1. students 저장 + users 업데이트 동시에
+  Promise.all([
+    db.collection('students').doc(currentUser.uid).set({
+      uid: currentUser.uid, school, grade, location, subjects, gradeLevel,
+      createdAt: new Date().toISOString()
+    }),
+    db.collection('users').doc(currentUser.uid).update({ profileComplete: true, role: 'student' })
+  ]).then(() => {
+    // 2. users 다시 읽어서 goMain
+    return db.collection('users').doc(currentUser.uid).get();
+  }).then(snap => {
     showLoad(false);
     toast('프로필 저장 완료! 🎒');
-    db.collection('users').doc(currentUser.uid).get().then(snap => goMain(snap.data()));
-  }).catch(e => { showLoad(false); toast('저장 실패: ' + e.message); });
+    goMain(snap.data());
+  }).catch(e => {
+    showLoad(false);
+    toast('저장 실패: ' + e.message);
+    console.error('saveStudent error:', e);
+  });
 }
 
 // ── 후기 관련 ──
