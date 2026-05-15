@@ -1117,30 +1117,132 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:var(--c
 <div id="s-parent" class="screen">
   <div class="topbar">
     <div class="logo">과<em>자</em> 🍬</div>
+    <button style="background:none;border:none;cursor:pointer;font-size:20px;" onclick="toast('알림 준비 중 🍬')">🔔</button>
   </div>
   <div class="tab-panels">
-    <div class="tab-panel active" style="display:block;">
+    <!-- 홈 -->
+    <div id="pr-home" class="tab-panel active">
       <div class="hero" style="background:linear-gradient(135deg,#8B7FFF,#FF2D78);">
         <div class="hero-text">
           <div class="hi">학부모님 안녕하세요 👨‍👩‍👧</div>
           <h2 id="pr-hi">자녀 수업을<br>확인해요</h2>
-          <p>월 ₩4,900 구독</p>
+          <p>수업 현황 · 숙제 · 피드백</p>
         </div>
         <div class="hero-emoji">🥐</div>
       </div>
-      <div style="text-align:center;padding:40px 20px;color:var(--muted);">
-        <div style="font-size:36px;margin-bottom:10px;">👧</div>
-        <div style="font-size:14px;margin-bottom:16px;">자녀 계정과 연결하면<br>수업 현황을 확인할 수 있어요</div>
-        <button class="btn" style="background:var(--lavender);color:white;max-width:200px;" onclick="toast('자녀 연결 준비 중 🍬')">자녀 연결하기</button>
+      <!-- 연결된 자녀 목록 -->
+      <div class="section-head"><h3>👧 연결된 자녀</h3><a onclick="prTab('link')" style="font-size:12px;color:var(--cookie);cursor:pointer;">+ 자녀 추가</a></div>
+      <div id="pr-children-list">
+        <div style="background:white;border-radius:20px;padding:24px;text-align:center;box-shadow:var(--shadow);border:2px dashed var(--border);">
+          <div style="font-size:48px;margin-bottom:12px;">👨‍👩‍👧</div>
+          <div style="font-size:15px;font-weight:700;color:var(--choco);margin-bottom:6px;">아직 연결된 자녀가 없어요</div>
+          <div style="font-size:13px;color:var(--muted);margin-bottom:16px;">자녀의 연결 코드를 입력해서<br>수업 현황을 확인해봐요!</div>
+          <button onclick="prTab('link')" style="padding:12px 24px;background:var(--cookie);color:white;border:none;border-radius:100px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;box-shadow:0 4px 14px rgba(255,45,120,.3);">🔗 자녀 연결하기</button>
+        </div>
       </div>
-      <div class="menu-card" style="margin:0 0 10px;">
+      <!-- 학부모 리포트 -->
+      <div class="section-head" style="margin-top:20px;"><h3>📨 선생님 리포트</h3></div>
+      <div id="pr-reports-list">
+        <div style="text-align:center;padding:20px;color:var(--muted);font-size:13px;">자녀 연결 후 선생님 리포트가 여기 표시돼요</div>
+      </div>
+    </div>
+
+    <!-- 자녀 연결 탭 -->
+    <div id="pr-link" class="tab-panel">
+      <div style="background:linear-gradient(135deg,#8B7FFF,#FF2D78);border-radius:20px;padding:24px;color:white;margin-bottom:20px;text-align:center;">
+        <div style="font-size:48px;margin-bottom:10px;">🔗</div>
+        <div style="font-size:18px;font-weight:900;margin-bottom:6px;">자녀 연결하기</div>
+        <div style="font-size:13px;opacity:.85;">자녀 앱에서 연결 코드를 확인하고<br>아래에 입력해주세요</div>
+      </div>
+
+      <!-- 코드 입력 -->
+      <div style="background:white;border-radius:20px;padding:20px;margin-bottom:14px;box-shadow:var(--shadow);">
+        <h3 style="font-size:15px;font-weight:700;margin-bottom:14px;">🔢 연결 코드 입력</h3>
+        <div style="display:flex;gap:8px;justify-content:center;margin-bottom:16px;" id="code-inputs">
+          <input class="code-inp" maxlength="1" oninput="codeNext(this,0)" style="width:48px;height:56px;text-align:center;font-size:22px;font-weight:900;border:2.5px solid var(--border);border-radius:14px;font-family:inherit;outline:none;color:var(--choco);background:var(--cream);">
+          <input class="code-inp" maxlength="1" oninput="codeNext(this,1)" style="width:48px;height:56px;text-align:center;font-size:22px;font-weight:900;border:2.5px solid var(--border);border-radius:14px;font-family:inherit;outline:none;color:var(--choco);background:var(--cream);">
+          <input class="code-inp" maxlength="1" oninput="codeNext(this,2)" style="width:48px;height:56px;text-align:center;font-size:22px;font-weight:900;border:2.5px solid var(--border);border-radius:14px;font-family:inherit;outline:none;color:var(--choco);background:var(--cream);">
+          <span style="font-size:24px;font-weight:900;color:var(--border);align-self:center;">-</span>
+          <input class="code-inp" maxlength="1" oninput="codeNext(this,3)" style="width:48px;height:56px;text-align:center;font-size:22px;font-weight:900;border:2.5px solid var(--border);border-radius:14px;font-family:inherit;outline:none;color:var(--choco);background:var(--cream);">
+          <input class="code-inp" maxlength="1" oninput="codeNext(this,4)" style="width:48px;height:56px;text-align:center;font-size:22px;font-weight:900;border:2.5px solid var(--border);border-radius:14px;font-family:inherit;outline:none;color:var(--choco);background:var(--cream);">
+          <input class="code-inp" maxlength="1" oninput="codeNext(this,5)" style="width:48px;height:56px;text-align:center;font-size:22px;font-weight:900;border:2.5px solid var(--border);border-radius:14px;font-family:inherit;outline:none;color:var(--choco);background:var(--cream);">
+        </div>
+        <button onclick="connectChild()" style="width:100%;padding:15px;background:var(--cookie);color:white;border:none;border-radius:100px;font-size:16px;font-weight:900;cursor:pointer;font-family:inherit;box-shadow:0 4px 14px rgba(255,45,120,.3);">🔗 연결하기</button>
+      </div>
+
+      <!-- 자녀에게 코드 받는 방법 안내 -->
+      <div style="background:var(--pink-light);border-radius:20px;padding:18px;margin-bottom:14px;">
+        <h3 style="font-size:14px;font-weight:700;color:var(--choco);margin-bottom:12px;">📱 연결 코드 받는 방법</h3>
+        <div style="display:flex;flex-direction:column;gap:10px;">
+          <div style="display:flex;gap:12px;align-items:flex-start;">
+            <div style="width:28px;height:28px;border-radius:50%;background:var(--cookie);color:white;font-size:13px;font-weight:900;display:flex;align-items:center;justify-content:center;flex-shrink:0;">1</div>
+            <div style="font-size:13px;color:var(--choco);line-height:1.6;">자녀가 과자 앱 실행</div>
+          </div>
+          <div style="display:flex;gap:12px;align-items:flex-start;">
+            <div style="width:28px;height:28px;border-radius:50%;background:var(--cookie);color:white;font-size:13px;font-weight:900;display:flex;align-items:center;justify-content:center;flex-shrink:0;">2</div>
+            <div style="font-size:13px;color:var(--choco);line-height:1.6;"><b>🧑 나</b> 탭 → <b>학부모 연결</b> 클릭</div>
+          </div>
+          <div style="display:flex;gap:12px;align-items:flex-start;">
+            <div style="width:28px;height:28px;border-radius:50%;background:var(--cookie);color:white;font-size:13px;font-weight:900;display:flex;align-items:center;justify-content:center;flex-shrink:0;">3</div>
+            <div style="font-size:13px;color:var(--choco);line-height:1.6;">6자리 연결 코드 확인 후 알려주기</div>
+          </div>
+          <div style="display:flex;gap:12px;align-items:flex-start;">
+            <div style="width:28px;height:28px;border-radius:50%;background:var(--cookie);color:white;font-size:13px;font-weight:900;display:flex;align-items:center;justify-content:center;flex-shrink:0;">4</div>
+            <div style="font-size:13px;color:var(--choco);line-height:1.6;">위 입력창에 코드 입력 후 연결!</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 나 탭 -->
+    <div id="pr-me" class="tab-panel" style="padding-bottom:100px;">
+      <div class="profile-hero" style="background:linear-gradient(160deg,#8B7FFF,#FF2D78);">
+        <span class="profile-emoji">🥐</span>
+        <div class="profile-name" id="pr-name">학부모</div>
+        <span class="profile-badge">🥐 학부모 · 과자 멤버</span>
+      </div>
+      <div class="stats-card">
+        <div class="stat-row">
+          <div class="stat-item"><div class="stat-val" id="pr-stat-children">0</div><div class="stat-lbl">연결 자녀</div></div>
+          <div class="stat-div"></div>
+          <div class="stat-item"><div class="stat-val" id="pr-stat-reports">0</div><div class="stat-lbl">받은 리포트</div></div>
+          <div class="stat-div"></div>
+          <div class="stat-item"><div class="stat-val">-</div><div class="stat-lbl">구독</div></div>
+        </div>
+      </div>
+      <div class="menu-card">
+        <div class="menu-item" onclick="prTab('link')"><span>🔗 자녀 연결하기</span><span>›</span></div>
+        <div class="menu-item" onclick="toast('준비 중 🍬')"><span>💳 구독 관리</span><span>›</span></div>
+      </div>
+      <div class="menu-card">
         <div class="menu-item" onclick="doLogout()" style="color:var(--peach);">🚪 로그아웃</div>
       </div>
     </div>
   </div>
+  <div class="bottom-bar">
+    <button class="tab-btn on" id="pr-b-home" onclick="prTab('home')"><span class="ti">🏠</span><span class="tl">홈</span></button>
+    <button class="tab-btn" id="pr-b-link" onclick="prTab('link')"><span class="ti">🔗</span><span class="tl">자녀 연결</span></button>
+    <button class="tab-btn" id="pr-b-me" onclick="prTab('me')"><span class="ti">🧑</span><span class="tl">나</span></button>
+  </div>
 </div>
 
 <!-- 대화 요청 모달 -->
+<!-- 학부모 연결 코드 모달 -->
+<div class="overlay" id="modal-mycode" onclick="if(event.target===this)this.classList.remove('on')">
+  <div class="modal" style="text-align:center;">
+    <div class="modal-handle" style="width:36px;height:4px;background:var(--border);border-radius:100px;margin:0 auto 16px;"></div>
+    <div style="font-size:48px;margin-bottom:12px;">🔗</div>
+    <h3 style="font-size:18px;font-weight:900;margin-bottom:6px;">학부모 연결 코드</h3>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:20px;">이 코드를 부모님께 알려주세요!<br>10분간 유효해요</p>
+    <div style="display:flex;gap:6px;justify-content:center;margin-bottom:20px;">
+      <div id="code-display" style="display:flex;gap:8px;align-items:center;justify-content:center;flex-wrap:wrap;"></div>
+    </div>
+    <div id="code-timer" style="font-size:13px;color:var(--muted);margin-bottom:16px;">⏱ 9:59 남았어요</div>
+    <button onclick="regenCode()" style="width:100%;padding:13px;background:var(--pink-light);color:var(--cookie);border:none;border-radius:100px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;margin-bottom:10px;">🔄 새 코드 발급</button>
+    <button onclick="document.getElementById('modal-mycode').classList.remove('on')" style="width:100%;padding:13px;background:none;border:2px solid var(--border);border-radius:100px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;color:var(--muted);">닫기</button>
+  </div>
+</div>
+
 <!-- 수업 성사 등록 모달 -->
 <div class="overlay" id="modal-match" onclick="if(event.target===this)document.getElementById('modal-match').classList.remove('on')">
   <div class="modal">
