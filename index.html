@@ -3198,6 +3198,35 @@ document.addEventListener('input', e => {
   if (e.target.id === 'll-price') calcLessonFee();
 });
 
+// ── 역할 전환 ──
+function switchRole(targetRole) {
+  if(!currentUser) return;
+  const label = targetRole === 'teacher' ? '선생님' : '학생';
+  if(!confirm(label + '으로 전환할까요?\n언제든 다시 전환할 수 있어요!')) return;
+  showLoad(true);
+  db.collection('users').doc(currentUser.uid).update({ role: targetRole })
+    .then(() => {
+      showLoad(false);
+      toast(label + ' 모드로 전환됐어요! 🍬');
+      return db.collection('users').doc(currentUser.uid).get();
+    })
+    .then(snap => {
+      const data = snap.data();
+      if(targetRole === 'teacher') {
+        db.collection('teachers').doc(currentUser.uid).get().then(tsnap => {
+          if(tsnap.exists) goMain(data);
+          else { toast('선생님 프로필을 설정해주세요 🎓'); go('s-tsetup'); }
+        });
+      } else {
+        db.collection('students').doc(currentUser.uid).get().then(ssnap => {
+          if(ssnap.exists) goMain(data);
+          else { toast('학생 프로필을 설정해주세요 🎒'); go('s-ssetup'); }
+        });
+      }
+    })
+    .catch(e => { showLoad(false); toast('전환 실패: ' + e.message); });
+}
+
 // Enter 키
 // ── 학생 정보 수정 ──
 let selectedEditGrade = '', selectedGoal = '';
