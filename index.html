@@ -3202,29 +3202,31 @@ document.addEventListener('input', e => {
 function switchRole(targetRole) {
   if(!currentUser) return;
   const label = targetRole === 'teacher' ? '선생님' : '학생';
-  if(!confirm(label + '으로 전환할까요?\n언제든 다시 전환할 수 있어요!')) return;
+  if(!confirm(label + '으로 전환할까요?')) return;
   showLoad(true);
+  // 1. Firestore role 업데이트
   db.collection('users').doc(currentUser.uid).update({ role: targetRole })
     .then(() => {
+      // 2. 프로필 있는지 확인
+      const colName = targetRole === 'teacher' ? 'teachers' : 'students';
+      return Promise.all([
+        db.collection('users').doc(currentUser.uid).get(),
+        db.collection(colName).doc(currentUser.uid).get()
+      ]);
+    })
+    .then(([userSnap, profileSnap]) => {
       showLoad(false);
       toast(label + ' 모드로 전환됐어요! 🍬');
-      return db.collection('users').doc(currentUser.uid).get();
-    })
-    .then(snap => {
-      const data = snap.data();
-      if(targetRole === 'teacher') {
-        db.collection('teachers').doc(currentUser.uid).get().then(tsnap => {
-          if(tsnap.exists) goMain(data);
-          else { toast('선생님 프로필을 설정해주세요 🎓'); go('s-tsetup'); }
-        });
+      const data = userSnap.data();
+      // 3. 화면 전환
+      if(profileSnap.exists) {
+        goMain(data);
       } else {
-        db.collection('students').doc(currentUser.uid).get().then(ssnap => {
-          if(ssnap.exists) goMain(data);
-          else { toast('학생 프로필을 설정해주세요 🎒'); go('s-ssetup'); }
-        });
+        if(targetRole === 'teacher') go('s-tsetup');
+        else go('s-ssetup');
       }
     })
-    .catch(e => { showLoad(false); toast('전환 실패: ' + e.message); });
+    .catch(e => { showLoad(false); toast('전환 실패: ' + e.message); console.error(e); });
 }
 
 // Enter 키
