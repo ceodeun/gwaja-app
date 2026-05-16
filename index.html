@@ -589,6 +589,60 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:var(--c
           <div style="font-size:13px;">아직 대화 요청이 없어요<br>학생이 요청을 보내면 여기 표시돼요</div>
         </div>
       </div>
+
+      <!-- 시범과외 가이드 -->
+      <div id="trial-guide-section">
+        <div class="section-head"><h3>🎓 시범과외 가이드</h3><a onclick="dismissGuide()" style="font-size:11px;color:var(--muted);cursor:pointer;">숨기기</a></div>
+        <div style="background:linear-gradient(135deg,#8B7FFF20,#FF2D7810);border:1.5px solid var(--border);border-radius:18px;padding:16px;margin:0 18px 16px;">
+          <div style="font-size:13px;font-weight:700;color:var(--choco);margin-bottom:12px;">💡 첫 시범과외, 이렇게 준비해요!</div>
+          <div id="guide-steps">
+            <div class="guide-step" onclick="toggleGuideStep(this)">
+              <div style="display:flex;align-items:center;gap:10px;">
+                <div style="width:28px;height:28px;border-radius:50%;background:var(--cookie);color:white;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:900;flex-shrink:0;">1</div>
+                <div style="font-size:13px;font-weight:700;color:var(--choco);">자기소개서 미리 준비하기</div>
+                <span style="margin-left:auto;color:var(--muted);font-size:14px;">›</span>
+              </div>
+              <div class="guide-detail" style="display:none;margin-top:10px;margin-left:38px;font-size:12px;color:var(--muted);line-height:1.7;">
+                학교, 전공, 가르칠 과목, 수업 스타일을 간단히 정리해두세요. 학부모님이 처음 연락 왔을 때 바로 보내면 신뢰도 UP! 📄
+              </div>
+            </div>
+            <div style="height:1px;background:var(--border);margin:10px 0;"></div>
+            <div class="guide-step" onclick="toggleGuideStep(this)">
+              <div style="display:flex;align-items:center;gap:10px;">
+                <div style="width:28px;height:28px;border-radius:50%;background:var(--lavender);color:white;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:900;flex-shrink:0;">2</div>
+                <div style="font-size:13px;font-weight:700;color:var(--choco);">시범 수업 전 학생 파악</div>
+                <span style="margin-left:auto;color:var(--muted);font-size:14px;">›</span>
+              </div>
+              <div class="guide-detail" style="display:none;margin-top:10px;margin-left:38px;font-size:12px;color:var(--muted);line-height:1.7;">
+                학년, 현재 성적, 목표 점수, 취약 단원을 미리 파악해요. "어떤 부분이 제일 어려우세요?" 한 마디가 학생 마음을 열어요 🔑
+              </div>
+            </div>
+            <div style="height:1px;background:var(--border);margin:10px 0;"></div>
+            <div class="guide-step" onclick="toggleGuideStep(this)">
+              <div style="display:flex;align-items:center;gap:10px;">
+                <div style="width:28px;height:28px;border-radius:50%;background:var(--mint);color:white;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:900;flex-shrink:0;">3</div>
+                <div style="font-size:13px;font-weight:700;color:var(--choco);">시범 수업 당일 체크리스트</div>
+                <span style="margin-left:auto;color:var(--muted);font-size:14px;">›</span>
+              </div>
+              <div class="guide-detail" style="display:none;margin-top:10px;margin-left:38px;font-size:12px;color:var(--muted);line-height:1.7;">
+                ✅ 교재/프린트물 준비<br>✅ 5분 일찍 도착<br>✅ 수업 후 간단한 다음 진도 안내<br>✅ 당일 학부모님께 짧은 문자 피드백 발송 🍬
+              </div>
+            </div>
+            <div style="height:1px;background:var(--border);margin:10px 0;"></div>
+            <div class="guide-step" onclick="toggleGuideStep(this)">
+              <div style="display:flex;align-items:center;gap:10px;">
+                <div style="width:28px;height:28px;border-radius:50%;background:var(--peach);color:white;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:900;flex-shrink:0;">4</div>
+                <div style="font-size:13px;font-weight:700;color:var(--choco);">시범 후 계약 성사 팁</div>
+                <span style="margin-left:auto;color:var(--muted);font-size:14px;">›</span>
+              </div>
+              <div class="guide-detail" style="display:none;margin-top:10px;margin-left:38px;font-size:12px;color:var(--muted);line-height:1.7;">
+                수업 후 3가지를 전달하세요:<br>① 오늘 수업 요약<br>② 다음 달 계획<br>③ 계약 조건 안내<br>이 순서대로면 성사율 쑥쑥! 📈
+              </div>
+            </div>
+          </div>
+          <button onclick="openContract('학생')" style="width:100%;margin-top:14px;padding:12px;background:var(--cookie);color:white;border:none;border-radius:100px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">📄 계약서 바로 작성하기</button>
+        </div>
+      </div>
     </div>
     <div id="tc-students" class="tab-panel">
       <div class="search-bar">
@@ -604,63 +658,157 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:var(--c
         </div>
       </div>
     </div>
-    <!-- 선생님 캘린더 탭 -->
-    <div id="tc-tccalendar" class="tab-panel" style="padding:16px;overflow-y:auto;">
+    <!-- 수업계획 탭 -->
+    <div id="tc-tccalendar" class="tab-panel" style="padding:0 0 80px;overflow-y:auto;">
 
-      <!-- 캘린더 헤더 -->
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
-        <button onclick="tcPrevMonth()" style="background:none;border:none;cursor:pointer;font-size:20px;color:var(--muted);">‹</button>
-        <h3 id="tc-cal-title" style="font-size:17px;font-weight:700;color:var(--choco);"></h3>
-        <button onclick="tcNextMonth()" style="background:none;border:none;cursor:pointer;font-size:20px;color:var(--muted);">›</button>
+      <!-- 서브탭 -->
+      <div style="display:flex;background:white;border-bottom:1.5px solid var(--border);position:sticky;top:0;z-index:10;">
+        <button class="subtab-btn on" id="cal-sub-calendar" onclick="calSubTab('calendar')" style="flex:1;font-size:12px;">📅 캘린더</button>
+        <button class="subtab-btn" id="cal-sub-noshow" onclick="calSubTab('noshow')" style="flex:1;font-size:12px;">🚫 노쇼/보강</button>
+        <button class="subtab-btn" id="cal-sub-feedback" onclick="calSubTab('feedback')" style="flex:1;font-size:12px;">📝 피드백</button>
       </div>
 
-      <!-- 달력 -->
-      <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-bottom:6px;">
-        <div style="text-align:center;font-size:10px;font-weight:700;color:var(--peach);padding:4px 0;">일</div>
-        <div style="text-align:center;font-size:10px;font-weight:700;color:var(--muted);padding:4px 0;">월</div>
-        <div style="text-align:center;font-size:10px;font-weight:700;color:var(--muted);padding:4px 0;">화</div>
-        <div style="text-align:center;font-size:10px;font-weight:700;color:var(--muted);padding:4px 0;">수</div>
-        <div style="text-align:center;font-size:10px;font-weight:700;color:var(--muted);padding:4px 0;">목</div>
-        <div style="text-align:center;font-size:10px;font-weight:700;color:var(--muted);padding:4px 0;">금</div>
-        <div style="text-align:center;font-size:10px;font-weight:700;color:var(--muted);padding:4px 0;">토</div>
-      </div>
-      <div id="tc-cal-grid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-bottom:16px;"></div>
-
-      <!-- 이달 수업 목록 -->
-      <div style="background:white;border-radius:16px;padding:14px;margin-bottom:14px;box-shadow:var(--shadow);">
-        <div style="font-size:14px;font-weight:700;color:var(--choco);margin-bottom:10px;">📚 이달 수업 기록</div>
-        <div id="tc-lesson-list">
-          <div style="font-size:13px;color:var(--muted);text-align:center;padding:16px;">날짜를 클릭해서 수업을 기록해요</div>
+      <!-- 캘린더 서브패널 -->
+      <div id="cal-panel-calendar" style="padding:16px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+          <button onclick="tcPrevMonth()" style="background:none;border:none;cursor:pointer;font-size:20px;color:var(--muted);">‹</button>
+          <h3 id="tc-cal-title" style="font-size:17px;font-weight:700;color:var(--choco);"></h3>
+          <button onclick="tcNextMonth()" style="background:none;border:none;cursor:pointer;font-size:20px;color:var(--muted);">›</button>
         </div>
-        <!-- 이달 합계 -->
-        <div style="border-top:1px solid var(--border);margin-top:12px;padding-top:12px;">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
-            <span style="font-size:13px;color:var(--muted);">이달 총 수업</span>
-            <span id="tc-total-count" style="font-size:14px;font-weight:700;color:var(--choco);">0회</span>
-          </div>
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
-            <span style="font-size:13px;color:var(--muted);">예상 수업료</span>
-            <span id="tc-total-fee" style="font-size:16px;font-weight:900;color:var(--green);">₩0</span>
-          </div>
-          <div style="display:flex;justify-content:space-between;align-items:center;">
-            <span style="font-size:12px;color:var(--muted);">수수료 (10%, 첫달만)</span>
-            <span id="tc-commission" style="font-size:13px;color:var(--peach);">-₩0</span>
+        <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-bottom:6px;">
+          <div style="text-align:center;font-size:10px;font-weight:700;color:var(--peach);padding:4px 0;">일</div>
+          <div style="text-align:center;font-size:10px;font-weight:700;color:var(--muted);padding:4px 0;">월</div>
+          <div style="text-align:center;font-size:10px;font-weight:700;color:var(--muted);padding:4px 0;">화</div>
+          <div style="text-align:center;font-size:10px;font-weight:700;color:var(--muted);padding:4px 0;">수</div>
+          <div style="text-align:center;font-size:10px;font-weight:700;color:var(--muted);padding:4px 0;">목</div>
+          <div style="text-align:center;font-size:10px;font-weight:700;color:var(--muted);padding:4px 0;">금</div>
+          <div style="text-align:center;font-size:10px;font-weight:700;color:var(--muted);padding:4px 0;">토</div>
+        </div>
+        <div id="tc-cal-grid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-bottom:16px;"></div>
+        <div style="background:white;border-radius:16px;padding:14px;margin-bottom:14px;box-shadow:var(--shadow);">
+          <div style="font-size:14px;font-weight:700;color:var(--choco);margin-bottom:10px;">📚 이달 수업 기록</div>
+          <div id="tc-lesson-list"><div style="font-size:13px;color:var(--muted);text-align:center;padding:16px;">날짜를 클릭해서 수업을 기록해요</div></div>
+          <div style="border-top:1px solid var(--border);margin-top:12px;padding-top:12px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+              <span style="font-size:13px;color:var(--muted);">이달 총 수업</span>
+              <span id="tc-total-count" style="font-size:14px;font-weight:700;color:var(--choco);">0회</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+              <span style="font-size:13px;color:var(--muted);">예상 수업료</span>
+              <span id="tc-total-fee" style="font-size:16px;font-weight:900;color:var(--green);">₩0</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+              <span style="font-size:12px;color:var(--muted);">수수료 (10%, 첫달만)</span>
+              <span id="tc-commission" style="font-size:13px;color:var(--peach);">-₩0</span>
+            </div>
           </div>
         </div>
       </div>
 
-      <!-- 월간 피드백 -->
-      <div style="background:white;border-radius:16px;padding:14px;margin-bottom:14px;box-shadow:var(--shadow);">
-        <div style="font-size:14px;font-weight:700;color:var(--choco);margin-bottom:10px;">📝 이달 학생 피드백</div>
-        <div style="margin-bottom:10px;">
+      <!-- 노쇼/보강 서브패널 -->
+      <div id="cal-panel-noshow" style="padding:16px;display:none;">
+        <!-- 요약 카드 -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;">
+          <div style="background:linear-gradient(135deg,#FF6BAF,#FF2D78);border-radius:16px;padding:14px;color:white;text-align:center;">
+            <div style="font-size:24px;font-weight:900;" id="noshow-count">0</div>
+            <div style="font-size:11px;opacity:.85;">이달 노쇼</div>
+          </div>
+          <div style="background:linear-gradient(135deg,#3ECFB2,#2BA88E);border-radius:16px;padding:14px;color:white;text-align:center;">
+            <div style="font-size:24px;font-weight:900;" id="makeup-count">0</div>
+            <div style="font-size:11px;opacity:.85;">보강 예정</div>
+          </div>
+        </div>
+
+        <!-- 노쇼 기록하기 -->
+        <div style="background:white;border-radius:16px;padding:16px;margin-bottom:14px;box-shadow:var(--shadow);">
+          <div style="font-size:14px;font-weight:700;color:var(--choco);margin-bottom:12px;">🚫 노쇼 기록하기</div>
+          <select class="inp" id="ns-student" style="margin-bottom:8px;">
+            <option value="">학생 선택</option>
+          </select>
+          <input class="inp" id="ns-date" type="date" style="margin-bottom:8px;">
+          <select class="inp" id="ns-reason" style="margin-bottom:8px;">
+            <option value="nocontact">연락 없이 불참</option>
+            <option value="sameday">당일 취소</option>
+            <option value="before24">24시간 이전 취소</option>
+            <option value="sick">질병/긴급상황</option>
+          </select>
+          <div style="font-size:12px;font-weight:700;color:var(--muted);margin-bottom:8px;">보강 처리</div>
+          <div style="display:flex;gap:8px;margin-bottom:10px;">
+            <button class="ns-policy-btn on" id="np-makeup" onclick="setNsPolicy('makeup',this)" style="flex:1;padding:8px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;background:var(--cookie);color:white;border:none;font-family:inherit;">보강 진행</button>
+            <button class="ns-policy-btn" id="np-half" onclick="setNsPolicy('half',this)" style="flex:1;padding:8px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;background:var(--cream);color:var(--choco);border:1.5px solid var(--border);font-family:inherit;">50% 청구</button>
+            <button class="ns-policy-btn" id="np-free" onclick="setNsPolicy('free',this)" style="flex:1;padding:8px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;background:var(--cream);color:var(--choco);border:1.5px solid var(--border);font-family:inherit;">그냥 패스</button>
+          </div>
+          <div id="makeup-date-wrap" style="margin-bottom:10px;">
+            <label class="label">보강 예정일</label>
+            <input class="inp" id="ns-makeup-date" type="date">
+          </div>
+          <textarea class="inp" id="ns-memo" rows="2" placeholder="메모 (선택)" style="resize:none;"></textarea>
+          <button onclick="saveNoshow()" style="width:100%;padding:12px;background:var(--cookie);color:white;border:none;border-radius:100px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;margin-top:4px;">기록 저장 🚫</button>
+        </div>
+
+        <!-- 노쇼 이력 -->
+        <div style="background:white;border-radius:16px;padding:16px;box-shadow:var(--shadow);">
+          <div style="font-size:14px;font-weight:700;color:var(--choco);margin-bottom:12px;">📋 노쇼 이력</div>
+          <div id="noshow-list"><div style="text-align:center;padding:20px;color:var(--muted);font-size:13px;">노쇼 기록이 없어요 🎉</div></div>
+        </div>
+      </div>
+
+      <!-- 피드백 서브패널 -->
+      <div id="cal-panel-feedback" style="padding:16px;display:none;">
+        <!-- 피드백 알림 설정 -->
+        <div style="background:linear-gradient(135deg,#8B7FFF,#FF2D78);border-radius:16px;padding:16px;margin-bottom:14px;color:white;">
+          <div style="font-size:14px;font-weight:700;margin-bottom:4px;">📅 월별 피드백 자동 알림</div>
+          <div style="font-size:12px;opacity:.85;margin-bottom:12px;">매월 말일에 피드백 작성 알림을 보내드려요</div>
+          <div style="display:flex;align-items:center;justify-content:space-between;background:rgba(255,255,255,.15);border-radius:12px;padding:10px 14px;">
+            <span style="font-size:13px;font-weight:700;">자동 알림 받기</span>
+            <label style="position:relative;width:44px;height:24px;cursor:pointer;">
+              <input type="checkbox" id="feedback-alarm" onchange="toggleFeedbackAlarm(this)" style="opacity:0;width:0;height:0;">
+              <span id="feedback-alarm-track" style="position:absolute;inset:0;background:rgba(255,255,255,.3);border-radius:20px;transition:.3s;"></span>
+              <span id="feedback-alarm-thumb" style="position:absolute;top:3px;left:3px;width:18px;height:18px;background:white;border-radius:50%;transition:.3s;"></span>
+            </label>
+          </div>
+        </div>
+
+        <!-- 이달 피드백 작성 -->
+        <div style="background:white;border-radius:16px;padding:16px;margin-bottom:14px;box-shadow:var(--shadow);">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+            <div style="font-size:14px;font-weight:700;color:var(--choco);">📝 이달 피드백 작성</div>
+            <span id="feedback-month-badge" style="background:var(--pink-light);color:var(--cookie);font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;"></span>
+          </div>
           <select id="feedback-student" class="inp" style="margin-bottom:10px;" onchange="loadFeedback()">
             <option value="">학생 선택</option>
           </select>
-          <textarea id="feedback-text" class="inp" rows="4" placeholder="이번 달 학생 학습 현황을 작성해주세요&#10;예) 이차함수 개념 완료. 계산 실수가 줄었어요. 다음 달은 고난도 문제 도전 예정입니다." style="resize:none;line-height:1.7;"></textarea>
+          <!-- 학습 지표 -->
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;" id="feedback-stats-wrap" style="display:none;">
+            <div style="background:var(--cream);border-radius:12px;padding:10px;text-align:center;">
+              <div style="font-size:18px;font-weight:900;color:var(--choco);" id="fb-lesson-count">0</div>
+              <div style="font-size:11px;color:var(--muted);">이달 수업</div>
+            </div>
+            <div style="background:var(--cream);border-radius:12px;padding:10px;text-align:center;">
+              <div style="font-size:18px;font-weight:900;color:var(--cookie);" id="fb-noshow-count">0</div>
+              <div style="font-size:11px;color:var(--muted);">노쇼 횟수</div>
+            </div>
+          </div>
+          <!-- 수업 태도 평가 -->
+          <div style="margin-bottom:10px;">
+            <div style="font-size:12px;font-weight:700;color:var(--muted);margin-bottom:6px;">수업 태도</div>
+            <div style="display:flex;gap:6px;">
+              <button class="fb-att-btn on" onclick="setAttitude('great',this)" style="flex:1;padding:8px;border-radius:20px;font-size:11px;font-weight:700;cursor:pointer;background:var(--mint);color:white;border:none;font-family:inherit;">😄 훌륭해요</button>
+              <button class="fb-att-btn" onclick="setAttitude('good',this)" style="flex:1;padding:8px;border-radius:20px;font-size:11px;font-weight:700;cursor:pointer;background:var(--cream);color:var(--choco);border:1.5px solid var(--border);font-family:inherit;">🙂 보통이에요</button>
+              <button class="fb-att-btn" onclick="setAttitude('bad',this)" style="flex:1;padding:8px;border-radius:20px;font-size:11px;font-weight:700;cursor:pointer;background:var(--cream);color:var(--choco);border:1.5px solid var(--border);font-family:inherit;">😓 아쉬워요</button>
+            </div>
+          </div>
+          <textarea id="feedback-text" class="inp" rows="5" placeholder="이번 달 학생 학습 현황을 작성해주세요&#10;&#10;예) 이차함수 개념 완료. 계산 실수가 줄었어요 😊&#10;모의고사 대비 고난도 문제 다음 달 도전 예정입니다!" style="resize:none;line-height:1.7;"></textarea>
+          <div style="display:flex;gap:8px;margin-top:4px;">
+            <button onclick="saveFeedback()" style="flex:1;padding:12px;background:var(--cream);color:var(--choco);border:1.5px solid var(--border);border-radius:100px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">💾 임시 저장</button>
+            <button onclick="sendToParent()" style="flex:1;padding:12px;background:var(--cookie);color:white;border:none;border-radius:100px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">📨 학부모 전송</button>
+          </div>
         </div>
-        <div style="display:flex;gap:8px;">
-          <button onclick="saveFeedback()" style="flex:1;padding:12px;background:var(--cookie);color:white;border:none;border-radius:100px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">💾 저장</button>
-          <button onclick="sendToParent()" style="flex:1;padding:12px;background:var(--lavender);color:white;border:none;border-radius:100px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">📨 학부모님께 전송</button>
+
+        <!-- 지난 피드백 이력 -->
+        <div style="background:white;border-radius:16px;padding:16px;box-shadow:var(--shadow);">
+          <div style="font-size:14px;font-weight:700;color:var(--choco);margin-bottom:12px;">📚 피드백 이력</div>
+          <div id="feedback-history"><div style="text-align:center;padding:20px;color:var(--muted);font-size:13px;">학생을 선택하면 이력이 표시돼요</div></div>
         </div>
       </div>
 
@@ -2123,6 +2271,18 @@ function submitContract() {
   }).catch(e => { showLoad(false); toast('저장 실패: ' + e.message); });
 }
 
+function toggleGuideStep(el) {
+  const detail = el.querySelector('.guide-detail');
+  if (detail) detail.style.display = detail.style.display === 'none' ? 'block' : 'none';
+  const arrow = el.querySelector('span');
+  if (arrow) arrow.textContent = detail?.style.display === 'none' ? '›' : '∨';
+}
+function dismissGuide() {
+  const el = document.getElementById('trial-guide-section');
+  if (el) el.style.display = 'none';
+  if (currentUser) db.collection('users').doc(currentUser.uid).update({ guideHidden: true });
+}
+
 // ── 커뮤니티 ──
 let communityFilter = 'all';
 const categoryLabel = { tips:'💡 팁', qna:'❓ Q&A', price:'💰 시급', free:'💬 수다' };
@@ -2907,6 +3067,124 @@ function deleteLessonLog(id) {
 }
 
 // ── 피드백 ──
+// ── 수업계획 서브탭 ──
+function calSubTab(n) {
+  ['calendar','noshow','feedback'].forEach(t => {
+    const panel = document.getElementById('cal-panel-'+t);
+    const btn = document.getElementById('cal-sub-'+t);
+    if (panel) panel.style.display = t===n ? 'block' : 'none';
+    if (btn) btn.classList.toggle('on', t===n);
+  });
+  if (n === 'noshow') loadNoshowData();
+  if (n === 'feedback') {
+    loadFeedbackStudents();
+    const months = ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
+    const el = document.getElementById('feedback-month-badge');
+    if (el) el.textContent = tcCalYear + '년 ' + months[tcCalMonth];
+  }
+}
+
+// ── 노쇼/보강 ──
+let selectedNsPolicy = 'makeup';
+function setNsPolicy(policy, btn) {
+  selectedNsPolicy = policy;
+  document.querySelectorAll('.ns-policy-btn').forEach(b => {
+    b.style.background = 'var(--cream)'; b.style.color = 'var(--choco)'; b.style.border = '1.5px solid var(--border)';
+  });
+  btn.style.background = 'var(--cookie)'; btn.style.color = 'white'; btn.style.border = 'none';
+  document.getElementById('makeup-date-wrap').style.display = policy === 'makeup' ? 'block' : 'none';
+}
+
+function saveNoshow() {
+  const student = document.getElementById('ns-student').value;
+  const date = document.getElementById('ns-date').value;
+  const reason = document.getElementById('ns-reason').value;
+  const makeupDate = document.getElementById('ns-makeup-date').value;
+  const memo = document.getElementById('ns-memo').value.trim();
+  if (!student) { toast('학생을 선택해주세요'); return; }
+  if (!date) { toast('날짜를 선택해주세요'); return; }
+  if (selectedNsPolicy === 'makeup' && !makeupDate) { toast('보강 예정일을 선택해주세요'); return; }
+  showLoad(true);
+  db.collection('noshows').add({
+    teacherUid: currentUser.uid, student, date, reason,
+    policy: selectedNsPolicy, makeupDate: selectedNsPolicy === 'makeup' ? makeupDate : '',
+    memo, status: selectedNsPolicy === 'makeup' ? 'pending' : 'closed',
+    createdAt: new Date().toISOString()
+  }).then(() => {
+    showLoad(false);
+    toast('노쇼 기록됐어요 🚫');
+    document.getElementById('ns-student').value = '';
+    document.getElementById('ns-date').value = '';
+    document.getElementById('ns-memo').value = '';
+    document.getElementById('ns-makeup-date').value = '';
+    loadNoshowData();
+  }).catch(e => { showLoad(false); toast('저장 실패: ' + e.message); });
+}
+
+function loadNoshowData() {
+  if (!currentUser) return;
+  const monthStr = tcCalYear + '-' + String(tcCalMonth+1).padStart(2,'0');
+  db.collection('noshows').where('teacherUid','==',currentUser.uid).orderBy('createdAt','desc').limit(30).get().then(snap => {
+    const thisMonth = snap.docs.filter(d => d.data().date?.startsWith(monthStr));
+    const noshowEl = document.getElementById('noshow-count');
+    const makeupEl = document.getElementById('makeup-count');
+    if (noshowEl) noshowEl.textContent = thisMonth.length;
+    if (makeupEl) makeupEl.textContent = thisMonth.filter(d => d.data().status === 'pending').length;
+    const list = document.getElementById('noshow-list');
+    if (!list) return;
+    if (snap.empty) { list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--muted);font-size:13px;">노쇼 기록이 없어요 🎉</div>'; return; }
+    const reasonLabel = { nocontact:'연락없이 불참', sameday:'당일 취소', before24:'24시간 이전 취소', sick:'질병/긴급상황' };
+    const policyLabel = { makeup:'보강 예정', half:'50% 청구', free:'패스' };
+    const policyColor = { makeup:'var(--mint)', half:'var(--peach)', free:'var(--muted)' };
+    list.innerHTML = snap.docs.map(d => {
+      const n = d.data();
+      return `<div style="background:var(--cream);border-radius:14px;padding:12px;margin-bottom:10px;border-left:4px solid var(--cookie);">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+          <span style="font-size:13px;font-weight:700;color:var(--choco);">${n.student}</span>
+          <span style="font-size:11px;color:white;background:${policyColor[n.policy]};padding:2px 8px;border-radius:20px;font-weight:700;">${policyLabel[n.policy]||n.policy}</span>
+        </div>
+        <div style="font-size:12px;color:var(--muted);">📅 ${n.date} · ${reasonLabel[n.reason]||n.reason}</div>
+        ${n.makeupDate ? `<div style="font-size:12px;color:var(--mint);margin-top:4px;">🔄 보강일: ${n.makeupDate}</div>` : ''}
+        ${n.memo ? `<div style="font-size:12px;color:var(--muted);margin-top:4px;">📝 ${n.memo}</div>` : ''}
+        ${n.status === 'pending' ? `<button onclick="completeMakeup('${d.id}')" style="margin-top:8px;padding:6px 14px;background:var(--mint);color:white;border:none;border-radius:20px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;">✅ 보강 완료</button>` : ''}
+      </div>`;
+    }).join('');
+    // 노쇼 학생 셀렉트 업데이트
+    loadFeedbackStudentsTo('ns-student');
+  }).catch(() => {});
+}
+
+function completeMakeup(docId) {
+  db.collection('noshows').doc(docId).update({ status: 'done' }).then(() => {
+    toast('보강 완료 처리됐어요! ✅'); loadNoshowData();
+  });
+}
+
+// ── 피드백 알림 토글 ──
+let selectedAttitude = 'great';
+function setAttitude(val, btn) {
+  selectedAttitude = val;
+  document.querySelectorAll('.fb-att-btn').forEach(b => {
+    b.style.background = 'var(--cream)'; b.style.color = 'var(--choco)'; b.style.border = '1.5px solid var(--border)';
+  });
+  btn.style.background = 'var(--mint)'; btn.style.color = 'white'; btn.style.border = 'none';
+}
+
+function toggleFeedbackAlarm(checkbox) {
+  const track = document.getElementById('feedback-alarm-track');
+  const thumb = document.getElementById('feedback-alarm-thumb');
+  if (checkbox.checked) {
+    track.style.background = 'rgba(255,255,255,.8)';
+    thumb.style.left = '23px';
+    toast('매월 말일 피드백 알림이 설정됐어요 📅');
+    if (currentUser) db.collection('users').doc(currentUser.uid).update({ feedbackAlarm: true });
+  } else {
+    track.style.background = 'rgba(255,255,255,.3)';
+    thumb.style.left = '3px';
+    if (currentUser) db.collection('users').doc(currentUser.uid).update({ feedbackAlarm: false });
+  }
+}
+
 function saveFeedback() {
   const student = document.getElementById('feedback-student').value;
   const text = document.getElementById('feedback-text').value.trim();
@@ -2915,9 +3193,9 @@ function saveFeedback() {
   const monthStr = tcCalYear + '-' + String(tcCalMonth+1).padStart(2,'0');
   showLoad(true);
   db.collection('feedbacks').doc(currentUser.uid + '_' + student + '_' + monthStr).set({
-    teacherUid: currentUser.uid, student, text, month: monthStr,
+    teacherUid: currentUser.uid, student, text, month: monthStr, attitude: selectedAttitude,
     createdAt: new Date().toISOString()
-  }).then(() => { showLoad(false); toast('피드백 저장됐어요! 💾'); })
+  }).then(() => { showLoad(false); toast('피드백 저장됐어요! 💾'); loadFeedbackHistory(student); })
     .catch(e => { showLoad(false); toast('저장 실패: ' + e.message); });
 }
 
@@ -2925,10 +3203,56 @@ function loadFeedback() {
   const student = document.getElementById('feedback-student').value;
   if (!student) return;
   const monthStr = tcCalYear + '-' + String(tcCalMonth+1).padStart(2,'0');
+  // 이달 수업/노쇼 수 업데이트
+  const lessonCount = tcLessonLogs.filter(l => l.student === student).length;
+  const lcEl = document.getElementById('fb-lesson-count');
+  if (lcEl) lcEl.textContent = lessonCount;
   db.collection('feedbacks').doc(currentUser.uid + '_' + student + '_' + monthStr).get().then(snap => {
-    if (snap.exists) document.getElementById('feedback-text').value = snap.data().text || '';
-    else document.getElementById('feedback-text').value = '';
+    if (snap.exists) {
+      document.getElementById('feedback-text').value = snap.data().text || '';
+      selectedAttitude = snap.data().attitude || 'great';
+    } else document.getElementById('feedback-text').value = '';
   });
+  db.collection('noshows').where('teacherUid','==',currentUser.uid).where('student','==',student).get().then(snap => {
+    const monthNs = snap.docs.filter(d => d.data().date?.startsWith(monthStr)).length;
+    const el = document.getElementById('fb-noshow-count');
+    if (el) el.textContent = monthNs;
+  });
+  loadFeedbackHistory(student);
+}
+
+function loadFeedbackHistory(student) {
+  const histEl = document.getElementById('feedback-history');
+  if (!histEl || !student) return;
+  db.collection('feedbacks').where('teacherUid','==',currentUser.uid).where('student','==',student).orderBy('createdAt','desc').limit(6).get().then(snap => {
+    if (snap.empty) { histEl.innerHTML = '<div style="text-align:center;padding:16px;color:var(--muted);font-size:13px;">아직 피드백 이력이 없어요</div>'; return; }
+    const attEmoji = { great:'😄', good:'🙂', bad:'😓' };
+    histEl.innerHTML = snap.docs.map(d => {
+      const f = d.data();
+      return `<div style="background:var(--cream);border-radius:12px;padding:12px;margin-bottom:8px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+          <span style="font-size:12px;font-weight:700;color:var(--choco);">${f.month}</span>
+          <span style="font-size:14px;">${attEmoji[f.attitude]||'🙂'}</span>
+        </div>
+        <p style="font-size:12px;color:var(--muted);line-height:1.6;overflow:hidden;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;">${f.text}</p>
+      </div>`;
+    }).join('');
+  }).catch(() => {});
+}
+
+function loadFeedbackStudentsTo(selectId) {
+  if (!currentUser) return;
+  const sel = document.getElementById(selectId);
+  if (!sel) return;
+  db.collection('chatRequests').where('teacherUid','==',currentUser.uid).where('status','==','accepted').get().then(snap => {
+    const names = [];
+    const promises = snap.docs.map(d => db.collection('users').doc(d.data().studentUid).get());
+    Promise.all(promises).then(snaps => {
+      snaps.forEach(s => { if (s.exists) names.push(s.data().name || '학생'); });
+      const cur = sel.value;
+      sel.innerHTML = '<option value="">학생 선택</option>' + names.map(n => `<option value="${n}" ${n===cur?'selected':''}>${n}</option>`).join('');
+    });
+  }).catch(() => {});
 }
 
 function sendToParent() {
